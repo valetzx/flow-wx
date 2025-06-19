@@ -1,10 +1,14 @@
 // deno run -A server.ts
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { dirname, fromFileUrl, join } from "https://deno.land/std@0.224.0/path/mod.ts";
+import {
+  dirname,
+  fromFileUrl,
+  join,
+} from "https://deno.land/std@0.224.0/path/mod.ts";
 import cheerio from "npm:cheerio@1.0.0-rc.12";
 
 // ---------- 基础配置 ----------
-const PORT = Number(Deno.env.get("PORT") ?? 8000);           // Deno Deploy 会自动注入
+const PORT = Number(Deno.env.get("PORT") ?? 8000); // Deno Deploy 会自动注入
 const __dirname = dirname(fromFileUrl(import.meta.url));
 const indexHtml = await Deno.readTextFile(join(__dirname, "main.html"));
 
@@ -81,7 +85,7 @@ async function proxyImage(imgUrl: string): Promise<Response> {
   try {
     const wechatRes = await fetch(imgUrl, {
       headers: {
-        Referer: "https://mp.weixin.qq.com/",           // 关键！
+        Referer: "https://mp.weixin.qq.com/", // 关键！
         "User-Agent": "Mozilla/5.0 (Deno)",
       },
     });
@@ -94,8 +98,7 @@ async function proxyImage(imgUrl: string): Promise<Response> {
       status: 200,
       headers: {
         // 透传 Content-Type
-        "Content-Type":
-          wechatRes.headers.get("Content-Type") ?? "image/jpeg",
+        "Content-Type": wechatRes.headers.get("Content-Type") ?? "image/jpeg",
         // 强缓存一年
         "Cache-Control": "public, max-age=31536000, immutable",
       },
