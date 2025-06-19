@@ -190,11 +190,10 @@
 
       function createImage(src, alt) {
         const img = document.createElement('img');
-        img.className = 'masonry-item w-full rounded-2xl shadow object-cover hover:opacity-90 transition-opacity';
+        img.className = 'w-full rounded-t-2xl object-cover hover:opacity-90 transition-opacity';
         img.dataset.src = `/img?url=${src}`;
         img.alt = alt;
         img.loading = 'lazy';
-        // 随机高度以增强瀑布流效果
         const randomHeight = 180 + Math.random() * 120; // 180 - 300px
         img.style.height = `${randomHeight}px`;
         img.style.backgroundColor = getRandomColor();
@@ -210,16 +209,39 @@
         return img;
       }
 
+      function createCard(item) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'masonry-item bg-white rounded-2xl shadow hover:shadow-lg transition overflow-hidden flex flex-col';
+
+        if (item.imgSrc) {
+          const img = createImage(item.imgSrc, item.title);
+          wrapper.appendChild(img);
+        }
+
+        const text = document.createElement('div');
+        text.className = 'p-5 flex flex-col gap-2';
+
+        const h2 = document.createElement('h2');
+        h2.className = 'text-xl font-semibold text-slate-900';
+        h2.textContent = item.title;
+
+        const p = document.createElement('p');
+        p.className = 'text-sm text-gray-600 leading-relaxed';
+        p.textContent = item.description;
+
+        text.appendChild(h2);
+        text.appendChild(p);
+        wrapper.appendChild(text);
+
+        return wrapper;
+      }
+
       function renderPage() {
         gallery.innerHTML = '';
         const end = (currentPage + 1) * perPage;
         const items = allItems.slice(0, end);
         items.forEach((item) => {
-          if (item.type === 'title') {
-            gallery.insertAdjacentHTML('beforeend', item.html);
-          } else if (item.type === 'image') {
-            gallery.appendChild(createImage(item.src, item.alt));
-          }
+          gallery.appendChild(createCard(item));
         });
         if (end >= allItems.length) {
           loadMoreBtn.classList.add('hidden');
@@ -235,13 +257,10 @@
           const data = await res.json();
           const items = [];
           for (const [title, { description, images }] of Object.entries(data)) {
-            items.push({
-              type: 'title',
-              html: `<div class="masonry-item p-5 bg-white rounded-2xl shadow hover:shadow-lg transition flex flex-col gap-2">\n  <h2 class="text-xl font-semibold text-slate-900">${title}</h2>\n  <p class="text-sm text-gray-600 leading-relaxed">${description}</p>\n</div>`
-            });
-            images.forEach((src) => {
-              items.push({ type: 'image', src, alt: title });
-            });
+            const imgSrc = Array.isArray(images) && images.length > 0
+              ? images[Math.floor(Math.random() * images.length)]
+              : null;
+            items.push({ title, description, imgSrc });
           }
           allItems = items;
           renderPage();
