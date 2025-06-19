@@ -8,7 +8,7 @@ const PORT = Number(Deno.env.get("PORT") ?? 8000);           // Deno Deploy 会�
 const __dirname = dirname(fromFileUrl(import.meta.url));
 const indexHtml = await Deno.readTextFile(join(__dirname, "main.html"));
 const ideasHtml = await Deno.readTextFile(join(__dirname, "ideas.html"));
-
+const swHtml = await Deno.readTextFile(join(__dirname, "sw.js"));
 // 微信文章列表
 const urls = [
   "https://mp.weixin.qq.com/s?__biz=MzA5NzQ4ODg5OA==&tempkey=MTMyN19MSXM4UUljL1k1b0JFQ3l1cDFRZC1ycjB6eVpHT3UzX1pFXzc1QmVRaEdZU2xSYmJFdWU1aVI0TzhoWTk3UDZKalZMMGtCTFVuQi1PaWtjTWtSZzV4Q0RZYUdRRTlkUWVSYlJ1N0hwQ3dYekw4MEFQdWFjV1pqWGQ1YUN6WEd3cHp2ZU5Ua2NYR3dwbGZfYklxZGNONldJQ21qV2k1ejNjZDB6V1Fnfn4%3D&chksm=10a1584027d6d156adbdc5e78ac1c88b1c59eba36c0091f517860b53529a90f76fbc8881a206#rd",
@@ -135,6 +135,12 @@ async function handler(req: Request): Promise<Response> {
     }
   }
 
+  if (pathname === "/sw.js") {
+    return new Response(swHtml, {
+      headers: { "Content-Type": "text/html; charset=utf-8" },
+    });
+  }
+  
   // /img?url=ENCODED —— 微信图床反向代理
   if (pathname === "/img") {
     const imgUrl = searchParams.get("url");
