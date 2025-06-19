@@ -39,6 +39,23 @@
         background-color: #f1f5f9;
         color: #111827;
       }
+      nav.mobile {
+        top: auto;
+        bottom: 0;
+        left: 0;
+        height: 72px;
+        width: 100%;
+        flex-direction: row;
+        border-right: none;
+        border-top: 1px solid #e5e7eb;
+      }
+      nav.mobile .sidebar-link {
+        flex: 1;
+      }
+      body.mobile #content {
+        margin-left: 0;
+        margin-bottom: 72px;
+      }
     </style>
   </head>
   <body class="bg-gradient-to-br from-slate-50 to-slate-200 min-h-screen font-sans">
@@ -72,7 +89,7 @@
         </svg>
       </a>
     </nav>
-    <div class="ml-[72px]">
+    <div id="content" class="ml-[72px]">
     <header class="py-6 text-center">
       <h1 class="text-3xl font-bold tracking-tight text-slate-800">
         我的作品集
@@ -114,9 +131,23 @@
 
       const savedCols = parseInt(localStorage.getItem('columnCount')) || 4;
       const savedPerPage = parseInt(localStorage.getItem('perPage')) || 30;
-      columnCountInput.value = String(savedCols);
+
+      const navEl = document.querySelector('nav');
+      const contentEl = document.getElementById('content');
+      const isMobile = /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
+
+      const initialCols = isMobile ? 2 : savedCols;
+
+      columnCountInput.value = String(initialCols);
       perPageInput.value = String(savedPerPage);
-      gallery.style.columnCount = String(savedCols);
+      gallery.style.columnCount = String(initialCols);
+
+      if (isMobile) {
+        document.body.classList.add('mobile');
+        navEl.classList.add('mobile');
+        contentEl.classList.remove('ml-[72px]');
+        contentEl.classList.add('mb-[72px]');
+      }
 
       let allItems = [];
       let currentPage = 0;
