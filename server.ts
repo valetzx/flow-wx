@@ -182,15 +182,39 @@ async function handler(req: Request): Promise<Response> {
 
   // /api/test —— 抓取并返回指定微信文章 HTML
   if (pathname === "/api/test") {
-    const targetUrl =
-      "https://mp.weixin.qq.com/s/d-h4lk1eHbUvUV5HOZlb-Q";
+    const url = searchParams.get("url") || urls[0];
+    if (!url) return json({ error: "missing url" }, 400);
     try {
-      const html = await fetchWxArticle(targetUrl);
-      return new Response(html, {
+      const res = await fetch(url, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Deno)",
+          Referer: "https://mp.weixin.qq.com/",
+        },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const html = await res.text();
+      const $ = cheerio.load(html, { decodeEntities: false });
+      const title =
+        $("#activity-name").text().trim() ||
+        $(".rich_media_title").text().trim() ||
+        "article";
+      const content = $("#js_content").html() || "";
+      const page = `<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>${title}</title>
+  </head>
+  <body>
+    <h1>${title}</h1>
+    ${content}
+  </body>
+</html>`;
+      return new Response(page, {
         headers: { "Content-Type": "text/html; charset=utf-8" },
       });
     } catch (err) {
-      return new Response(String(err), { status: 500 });
+      return json({ error: err.message }, 500);
     }
   }
 
