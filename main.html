@@ -6,6 +6,7 @@
     <title>我的作品集</title>
     <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/viewer.min.css" />
     <style>
       /* Masonry 布局 */
       .masonry {
@@ -38,13 +39,6 @@
       .sidebar-link:hover {
         background-color: #f1f5f9;
         color: #111827;
-      }
-      #viewer {
-        background-color: rgba(0, 0, 0, 0.8);
-      }
-      #viewerImg {
-        transition: transform 0.2s ease;
-        transform-origin: center;
       }
     </style>
   </head>
@@ -108,10 +102,7 @@
         <button id="applySettings" class="w-full bg-blue-500 text-white py-1 rounded">应用</button>
       </div>
     </div>
-    <!-- 图片查看器 -->
-    <div id="viewer" class="fixed inset-0 hidden flex items-center justify-center z-50 overflow-hidden">
-      <img id="viewerImg" class="max-h-full max-w-full rounded-lg shadow-lg" />
-    </div>
+
 
     <script>
       const gallery = document.getElementById('gallery');
@@ -122,9 +113,7 @@
       const applySettings = document.getElementById('applySettings');
       const columnCountInput = document.getElementById('columnCountInput');
       const perPageInput = document.getElementById('perPageInput');
-      const viewer = document.getElementById('viewer');
-      const viewerImg = document.getElementById('viewerImg');
-      let scale = 1;
+      let galleryViewer;
 
       const savedCols = parseInt(localStorage.getItem('columnCount')) || 4;
       const savedPerPage = parseInt(localStorage.getItem('perPage')) || 30;
@@ -168,12 +157,6 @@
           img.style.backgroundColor = '';
           img.style.minHeight = '';
         });
-        img.addEventListener('click', () => {
-          viewerImg.src = img.src || img.dataset.src;
-          viewer.classList.remove('hidden');
-          scale = 1;
-          viewerImg.style.transform = 'scale(1)';
-        });
         observer.observe(img);
         return img;
       }
@@ -193,6 +176,11 @@
           loadMoreBtn.classList.add('hidden');
         } else {
           loadMoreBtn.classList.remove('hidden');
+        }
+        if (galleryViewer) {
+          galleryViewer.update();
+        } else if (typeof Viewer !== 'undefined') {
+          galleryViewer = new Viewer(gallery, { navbar: false });
         }
       }
 
@@ -246,29 +234,9 @@
         settingsPanel.classList.remove('flex');
       });
 
-      viewer.addEventListener('click', () => {
-        viewer.classList.add('hidden');
-        viewerImg.src = '';
-        scale = 1;
-        viewerImg.style.transform = 'scale(1)';
-      });
-
-      viewerImg.addEventListener('click', (e) => {
-        e.stopPropagation();
-      });
-
-      viewer.addEventListener('wheel', (e) => {
-        e.preventDefault();
-        if (e.deltaY < 0) {
-          scale = Math.min(scale * 1.1, 5);
-        } else {
-          scale = Math.max(scale / 1.1, 1);
-        }
-        viewerImg.style.transform = `scale(${scale})`;
-      });
-
       document.addEventListener('DOMContentLoaded', loadGallery);
     </script>
+    <script src="/viewer.min.js"></script>
 </div>
   </body>
 </html>

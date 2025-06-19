@@ -7,6 +7,8 @@ import cheerio from "npm:cheerio@1.0.0-rc.12";
 const PORT = Number(Deno.env.get("PORT") ?? 8000);           // Deno Deploy 会自动注入
 const __dirname = dirname(fromFileUrl(import.meta.url));
 const indexHtml = await Deno.readTextFile(join(__dirname, "main.html"));
+const viewerJs = await Deno.readTextFile(join(__dirname, "viewer.min.js"));
+const viewerCss = await Deno.readTextFile(join(__dirname, "viewer.min.css"));
 
 // 微信文章列表
 const urls = [
@@ -139,6 +141,18 @@ async function handler(req: Request): Promise<Response> {
     const imgUrl = searchParams.get("url");
     if (!imgUrl) return new Response("missing url", { status: 400 });
     return await proxyImage(imgUrl);
+  }
+
+  if (pathname === "/viewer.min.js") {
+    return new Response(viewerJs, {
+      headers: { "Content-Type": "application/javascript; charset=utf-8" },
+    });
+  }
+
+  if (pathname === "/viewer.min.css") {
+    return new Response(viewerCss, {
+      headers: { "Content-Type": "text/css; charset=utf-8" },
+    });
   }
 
   // 其他路径 —— 静态首页
