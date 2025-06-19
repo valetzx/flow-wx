@@ -39,11 +39,39 @@
         background-color: #f1f5f9;
         color: #111827;
       }
+      nav.mobile {
+        top: auto;
+        bottom: 0;
+        left: 0;
+        height: 72px;
+        width: 100%;
+        flex-direction: row;
+        border-right: none;
+        border-top: 1px solid #e5e7eb;
+      }
+      nav.mobile .sidebar-link {
+        flex: 1;
+      }
+      nav.mobile .sidebar-items {
+        flex-direction: row;
+        width: 100%;
+      }
+      nav.mobile .sidebar-items > * {
+        margin: 0;
+        flex: 1;
+      }
+      nav.mobile #moreBtn {
+        margin-top: 0;
+      }
+      body.mobile #content {
+        margin-left: 0;
+        margin-bottom: 72px;
+      }
     </style>
   </head>
   <body class="bg-gradient-to-br from-slate-50 to-slate-200 min-h-screen font-sans">
     <nav class="fixed top-0 left-0 h-screen w-[72px] bg-white border-r shadow flex flex-col items-center py-4">
-      <div class="flex flex-col items-center space-y-6">
+      <div class="sidebar-items flex flex-col items-center space-y-6">
         <a href="/" aria-label="主页" class="sidebar-link">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
           <path d="M7.54 23.15q-.2-2.05.26-3.93L9 14.04a7 7 0 0 1-.35-2.07c0-1.68.81-2.88 2.09-2.88.88 0 1.53.62 1.53 1.8q0 .57-.23 1.28l-.52 1.72q-.15.5-.15.92c0 1.2.91 1.87 2.08 1.87 2.09 0 3.57-2.16 3.57-4.96 0-3.12-2.04-5.12-5.05-5.12-3.36 0-5.49 2.19-5.49 5.24 0 1.22.38 2.36 1.11 3.14-.24.41-.5.48-.88.48-1.2 0-2.34-1.69-2.34-4 0-4 3.2-7.17 7.68-7.17 4.7 0 7.66 3.29 7.66 7.33s-2.88 7.15-5.98 7.15a3.8 3.8 0 0 1-3.06-1.48l-.62 2.5a11 11 0 0 1-1.62 3.67A11.98 11.98 0 0 0 24 12a11.99 11.99 0 1 0-24 0 12 12 0 0 0 7.54 11.15"/>
@@ -72,7 +100,7 @@
         </svg>
       </a>
     </nav>
-    <div class="ml-[72px]">
+    <div id="content" class="ml-[72px]">
     <header class="py-6 text-center">
       <h1 class="text-3xl font-bold tracking-tight text-slate-800">
         我的作品集
@@ -114,9 +142,23 @@
 
       const savedCols = parseInt(localStorage.getItem('columnCount')) || 4;
       const savedPerPage = parseInt(localStorage.getItem('perPage')) || 30;
-      columnCountInput.value = String(savedCols);
+
+      const navEl = document.querySelector('nav');
+      const contentEl = document.getElementById('content');
+      const isMobile = /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
+
+      const initialCols = isMobile ? 2 : savedCols;
+
+      columnCountInput.value = String(initialCols);
       perPageInput.value = String(savedPerPage);
-      gallery.style.columnCount = String(savedCols);
+      gallery.style.columnCount = String(initialCols);
+
+      if (isMobile) {
+        document.body.classList.add('mobile');
+        navEl.classList.add('mobile');
+        contentEl.classList.remove('ml-[72px]');
+        contentEl.classList.add('mb-[72px]');
+      }
 
       let allItems = [];
       let currentPage = 0;
@@ -142,6 +184,9 @@
         img.dataset.src = `/img?url=${src}`;
         img.alt = alt;
         img.loading = 'lazy';
+        // 随机高度以增强瀑布流效果
+        const randomHeight = 180 + Math.random() * 120; // 180 - 300px
+        img.style.height = `${randomHeight}px`;
         img.style.backgroundColor = getRandomColor();
         img.style.minHeight = '120px';
         img.style.opacity = '0';
