@@ -42,6 +42,10 @@
       #viewer {
         background-color: rgba(0, 0, 0, 0.8);
       }
+      #viewerImg {
+        transition: transform 0.2s ease;
+        transform-origin: center;
+      }
     </style>
   </head>
   <body class="bg-gradient-to-br from-slate-50 to-slate-200 min-h-screen font-sans">
@@ -105,7 +109,7 @@
       </div>
     </div>
     <!-- 图片查看器 -->
-    <div id="viewer" class="fixed inset-0 hidden items-center justify-center z-50">
+    <div id="viewer" class="fixed inset-0 hidden flex items-center justify-center z-50 overflow-hidden">
       <img id="viewerImg" class="max-h-full max-w-full rounded-lg shadow-lg" />
     </div>
 
@@ -120,6 +124,7 @@
       const perPageInput = document.getElementById('perPageInput');
       const viewer = document.getElementById('viewer');
       const viewerImg = document.getElementById('viewerImg');
+      let scale = 1;
 
       const savedCols = parseInt(localStorage.getItem('columnCount')) || 4;
       const savedPerPage = parseInt(localStorage.getItem('perPage')) || 30;
@@ -166,6 +171,8 @@
         img.addEventListener('click', () => {
           viewerImg.src = img.src || img.dataset.src;
           viewer.classList.remove('hidden');
+          scale = 1;
+          viewerImg.style.transform = 'scale(1)';
         });
         observer.observe(img);
         return img;
@@ -242,10 +249,22 @@
       viewer.addEventListener('click', () => {
         viewer.classList.add('hidden');
         viewerImg.src = '';
+        scale = 1;
+        viewerImg.style.transform = 'scale(1)';
       });
 
       viewerImg.addEventListener('click', (e) => {
         e.stopPropagation();
+      });
+
+      viewer.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        if (e.deltaY < 0) {
+          scale = Math.min(scale * 1.1, 5);
+        } else {
+          scale = Math.max(scale / 1.1, 1);
+        }
+        viewerImg.style.transform = `scale(${scale})`;
       });
 
       document.addEventListener('DOMContentLoaded', loadGallery);
