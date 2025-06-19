@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>作品集瀑布流预览</title>
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Masonry 布局 */
+      .masonry {
+        column-count: 3;
+        column-gap: 1rem;
+      }
+      @media (max-width: 1024px) {
+        .masonry {
+          column-count: 2;
+        }
+      }
+      @media (max-width: 640px) {
+        .masonry {
+          column-count: 1;
+        }
+      }
+      .masonry-item {
+        break-inside: avoid;
+        margin-bottom: 1rem;
+      }
+    </style>
+  </head>
+  <body class="bg-gradient-to-br from-slate-50 to-slate-200 min-h-screen font-sans">
+    <header class="py-6 text-center">
+      <h1 class="text-3xl font-bold tracking-tight text-slate-800">
+        作品集瀑布流预览
+      </h1>
+    </header>
+
+    <main class="px-4 max-w-screen-xl mx-auto">
+      <!-- Masonry 容器 -->
+      <div class="masonry" id="gallery"></div>
+    </main>
+
+    <script>
+      // 动态加载数据并渲染
+      async function loadGallery() {
+        try {
+          const res = await fetch('/api/wx');
+          if (!res.ok) throw new Error('Network response was not ok');
+          const data = await res.json();
+          const gallery = document.getElementById('gallery');
+          const fragments = [];
+
+          for (const [title, { description, images }] of Object.entries(data)) {
+            // 标题卡片
+            fragments.push(
+              `<div class=\"masonry-item p-5 bg-white rounded-2xl shadow hover:shadow-lg transition flex flex-col gap-2\">\n  <h2 class=\"text-xl font-semibold text-slate-900\">${title}</h2>\n  <p class=\"text-sm text-gray-600 leading-relaxed\">${description}</p>\n</div>`
+            );
+            // 图片
+            images.forEach((src) => {
+              fragments.push(
+                `<img class=\"masonry-item w-full rounded-2xl shadow object-cover hover:opacity-90 transition\" src=\"${src}\" alt=\"${title}\" loading=\"lazy\"/>`
+              );
+            });
+          }
+
+          gallery.innerHTML = fragments.join('');
+        } catch (err) {
+          console.error('加载画廊失败:', err);
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', loadGallery);
+    </script>
+  </body>
+</html>
