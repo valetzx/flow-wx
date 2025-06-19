@@ -131,14 +131,7 @@ async function handler(req: Request): Promise<Response> {
 
   /** 其余全部 404 */
   return new Response("Not Found", { status: 404 });
-
-// ---------- 辅助 ----------
-function json(data: unknown, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { "Content-Type": "application/json; charset=utf-8" },
-  });
-}}
+}
 
 // ---------- 启动 ----------
 serve(handler, { port: PORT });
