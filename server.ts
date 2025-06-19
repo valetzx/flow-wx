@@ -106,6 +106,85 @@ async function proxyImage(imgUrl: string): Promise<Response> {
   }
 }
 
+// 获取或抓取微信文章数据
+async function getWxData(): Promise<Record<string, unknown>> {
+  if (cache.data && Date.now() - cache.timestamp < CACHE_TTL) {
+    return cache.data as Record<string, unknown>;
+  }
+  const results = await Promise.allSettled(urls.map(scrape));
+  const merged: Record<string, unknown> = {};
+  results.forEach((r, i) => {
+    if (r.status === "fulfilled") {
+      Object.assign(merged, r.value);
+    } else {
+      merged[`(抓取失败) ${urls[i]}`] = { error: String(r.reason) };
+    }
+  });
+  cache = { data: merged, timestamp: Date.now() };
+  return merged;
+}
+
+// 根据抓取结果生成 Ideas 页面 HTML
+function renderIdeas(data: Record<string, any>): string {
+  const items: string[] = [];
+  for (const [title, val] of Object.entries<any>(data)) {
+    const desc = val.description ?? "";
+    const imgs: string[] = Array.isArray(val.images) ? val.images : [];
+    const json = val.jsonWx;
+    const paras = Array.isArray(json)
+      ? json
+      : json && typeof json === "object"
+      ? Object.values(json)
+      : [];
+    const randomImage = imgs.length > 0
+      ? `/img?url=${encodeURIComponent(imgs[Math.floor(Math.random() * imgs.length)])}`
+      : "";
+    if (paras.length === 0) {
+      items.push(`<div class="masonry-item bg-white rounded-xl shadow overflow-hidden">
+  ${randomImage ? `<img src="${randomImage}" class="w-full h-48 object-cover" loading="lazy">` : ""}
+  <div class="p-4 space-y-2">
+    <h2 class="text-lg font-semibold text-slate-900">${title}</h2>
+    <p class="text-sm text-gray-600">${desc}</p>
+  </div>
+</div>`);
+    } else {
+      paras.forEach((p: any, idx: number) => {
+        const pt = p.title ?? title;
+        const pd = p.desc ?? p.description ?? p.text ?? desc;
+        const img = randomImage || (imgs[idx % imgs.length] ? `/img?url=${encodeURIComponent(imgs[idx % imgs.length])}` : "");
+        items.push(`<div class="masonry-item bg-white rounded-xl shadow overflow-hidden">
+  ${img ? `<img src="${img}" class="w-full h-48 object-cover" loading="lazy">` : ""}
+  <div class="p-4 space-y-2">
+    <h2 class="text-lg font-semibold text-slate-900">${pt}</h2>
+    <p class="text-sm text-gray-600">${pd}</p>
+  </div>
+</div>`);
+      });
+    }
+  }
+
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ideas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      .masonry { column-count: 3; column-gap: 1rem; }
+      @media (max-width: 1024px) { .masonry { column-count: 2; } }
+      @media (max-width: 640px) { .masonry { column-count: 1; } }
+      .masonry-item { break-inside: avoid; margin-bottom: 1rem; }
+    </style>
+  </head>
+  <body class="bg-gradient-to-br from-slate-50 to-slate-200 min-h-screen">
+    <div class="masonry p-4">
+      ${items.join("\n")}
+    </div>
+  </body>
+</html>`;
+}
+
 // ---------- HTTP 路由 ----------
 async function handler(req: Request): Promise<Response> {
   const { pathname, searchParams } = new URL(req.url);
@@ -113,24 +192,23 @@ async function handler(req: Request): Promise<Response> {
   // /api/wx —— 抓取并返回 JSON
   if (pathname === "/api/wx") {
     try {
-      if (cache.data && Date.now() - cache.timestamp < CACHE_TTL) {
-        return json(cache.data);
-      }
-
-      const results = await Promise.allSettled(urls.map(scrape));
-      const merged: Record<string, unknown> = {};
-      results.forEach((r, i) => {
-        if (r.status === "fulfilled") {
-          Object.assign(merged, r.value);
-        } else {
-          merged[`(抓取失败) ${urls[i]}`] = { error: String(r.reason) };
-        }
-      });
-
-      cache = { data: merged, timestamp: Date.now() };
-      return json(merged);
+      const data = await getWxData();
+      return json(data);
     } catch (err) {
       return json({ error: err.message }, 500);
+    }
+  }
+
+  // /ideas —— 渲染文章列表
+  if (pathname === "/ideas") {
+    try {
+      const data = await getWxData();
+      const html = renderIdeas(data as Record<string, any>);
+      return new Response(html, {
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+      });
+    } catch (err) {
+      return new Response(err.message, { status: 500 });
     }
   }
 
