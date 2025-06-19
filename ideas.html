@@ -77,6 +77,15 @@
         margin-left: 0;
         margin-bottom: 72px;
       }
+      .notify-dot {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        width: 0.5rem;
+        height: 0.5rem;
+        background-color: #ef4444;
+        border-radius: 9999px;
+      }
     </style>
   </head>
   <body class="bg-gradient-to-br from-slate-50 to-slate-200 min-h-screen font-sans">
@@ -149,6 +158,25 @@
       const applySettings = document.getElementById('applySettings');
       const columnCountInput = document.getElementById('columnCountInput');
       const perPageInput = document.getElementById('perPageInput');
+
+      const homeLink = document.querySelector('a[aria-label="\u4e3b\u9875"]');
+      let notifyDot = null;
+
+      function showDot() {
+        if (!notifyDot) {
+          notifyDot = document.createElement('span');
+          notifyDot.className = 'notify-dot';
+          homeLink.classList.add('relative');
+          homeLink.appendChild(notifyDot);
+        }
+      }
+
+      function hideDot() {
+        if (notifyDot) {
+          notifyDot.remove();
+          notifyDot = null;
+        }
+      }
 
       const savedCols = parseInt(localStorage.getItem('columnCount')) || 4;
       const savedPerPage = parseInt(localStorage.getItem('perPage')) || 30;
@@ -236,6 +264,17 @@
         return wrapper;
       }
 
+      function buildItems(data) {
+        const items = [];
+        for (const [title, { description, images }] of Object.entries(data)) {
+          const imgSrc = Array.isArray(images) && images.length > 0
+            ? images[Math.floor(Math.random() * images.length)]
+            : null;
+          items.push({ title, description, imgSrc });
+        }
+        return items;
+      }
+
       function renderPage() {
         gallery.innerHTML = '';
         const end = (currentPage + 1) * perPage;
@@ -250,20 +289,38 @@
         }
       }
 
-      async function loadGallery() {
+      function applyData(data) {
+        allItems = buildItems(data);
+        currentPage = 0;
+        renderPage();
+      }
+
+      async function fetchLatest() {
+        const res = await fetch('/api/wx', { headers: { 'x-skip-cache': '1' } });
+        if (!res.ok) throw new Error('Network response was not ok');
+        return await res.json();
+      }
+
+      async function initGallery() {
+        const cachedStr = localStorage.getItem('wxData');
+        let cached;
+        if (cachedStr) {
+          try { cached = JSON.parse(cachedStr); } catch {}
+        }
+        if (cached) {
+          applyData(cached);
+        }
+
         try {
-          const res = await fetch('/api/wx');
-          if (!res.ok) throw new Error('Network response was not ok');
-          const data = await res.json();
-          const items = [];
-          for (const [title, { description, images }] of Object.entries(data)) {
-            const imgSrc = Array.isArray(images) && images.length > 0
-              ? images[Math.floor(Math.random() * images.length)]
-              : null;
-            items.push({ title, description, imgSrc });
+          const latest = await fetchLatest();
+          const latestStr = JSON.stringify(latest);
+          if (!cachedStr) {
+            localStorage.setItem('wxData', latestStr);
+            applyData(latest);
+          } else if (latestStr !== cachedStr) {
+            localStorage.setItem('wxDataNew', latestStr);
+            showDot();
           }
-          allItems = items;
-          renderPage();
         } catch (err) {
           console.error('加载画廊失败:', err);
         }
@@ -297,7 +354,23 @@
         settingsPanel.classList.remove('flex');
       });
 
-      document.addEventListener('DOMContentLoaded', loadGallery);
+      document.addEventListener('DOMContentLoaded', initGallery);
+      homeLink.addEventListener('click', () => {
+        const newStr = localStorage.getItem('wxDataNew');
+        if (newStr) {
+          localStorage.setItem('wxData', newStr);
+          localStorage.removeItem('wxDataNew');
+          hideDot();
+          try {
+            applyData(JSON.parse(newStr));
+          } catch (e) {}
+        }
+      });
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(console.error);
+        });
+      }
     </script>
 </div>
   </body>
