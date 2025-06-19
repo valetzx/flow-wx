@@ -10,10 +10,10 @@ const indexHtml = await Deno.readTextFile(join(__dirname, "main.html"));
 const ideasHtml = await Deno.readTextFile(join(__dirname, "ideas.html"));
 const swHtml = await Deno.readTextFile(join(__dirname, "sw.js"));
 // 微信文章列表
-const REMOTE_ARTICLE_URL = "https://raw.githubusercontent.com/valetzx/flow-wx/refs/heads/main/article.txt";
+const WX_URL = Deno.env.get('WX_URL') || "article.txt" ;
 let urls: string[] = [];
 try {
-  const res = await fetch(REMOTE_ARTICLE_URL);
+  const res = await fetch(WX_URL);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const text = await res.text();
   urls = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
