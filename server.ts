@@ -7,6 +7,7 @@ import cheerio from "npm:cheerio@1.0.0-rc.12";
 const PORT = Number(Deno.env.get("PORT") ?? 8000);           // Deno Deploy 会自动注入
 const __dirname = dirname(fromFileUrl(import.meta.url));
 const indexHtml = await Deno.readTextFile(join(__dirname, "main.html"));
+const ideasHtml = await Deno.readTextFile(join(__dirname, "ideas.html"));
 
 // 微信文章列表
 const urls = [
@@ -139,6 +140,13 @@ async function handler(req: Request): Promise<Response> {
     const imgUrl = searchParams.get("url");
     if (!imgUrl) return new Response("missing url", { status: 400 });
     return await proxyImage(imgUrl);
+  }
+
+  // /ideas —— 灵感瀑布流页面
+  if (pathname === "/ideas") {
+    return new Response(ideasHtml, {
+      headers: { "Content-Type": "text/html; charset=utf-8" },
+    });
   }
 
   // 其他路径 —— 静态首页
