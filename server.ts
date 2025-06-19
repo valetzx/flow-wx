@@ -13,6 +13,18 @@ const __dirname = dirname(fromFileUrl(import.meta.url));
 const indexHtml = await Deno.readTextFile(join(__dirname, "main.html"));
 const ideasHtml = await Deno.readTextFile(join(__dirname, "ideas.html"));
 const swHtml = await Deno.readTextFile(join(__dirname, "sw.js"));
+const fallbackSentences = [
+  "精彩内容等你发现",
+  "无题文章",
+  "这里没有标题",
+  "看看内容吧",
+  "分享的文章",
+];
+function randomSentence() {
+  return fallbackSentences[
+    Math.floor(Math.random() * fallbackSentences.length)
+  ];
+}
 // 微信文章列表
 const WX_URL = Deno.env.get("WX_URL") || "article.txt";
 let urls: string[] = [];
@@ -50,13 +62,11 @@ async function scrape(url: string) {
 
     const $ = cheerio.load(html, { decodeEntities: false });
 
-    const name =
-      $("#activity-name").text().trim() ||
+    const name = $("#activity-name").text().trim() ||
       $(".rich_media_title").text().trim() ||
-      url;
+      randomSentence();
 
-    const time =
-      $("#publish_time").text().trim() ||
+    const time = $("#publish_time").text().trim() ||
       $('meta[property="article:published_time"]').attr("content")?.trim();
 
     const description =
@@ -165,10 +175,9 @@ async function handler(req: Request): Promise<Response> {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const html = await res.text();
       const $ = cheerio.load(html, { decodeEntities: false });
-      const title =
-        $("#activity-name").text().trim() ||
+      const title = $("#activity-name").text().trim() ||
         $(".rich_media_title").text().trim() ||
-        "article";
+        randomSentence();
       // 将微信文章中的 data-src 替换为 src，方便直接展示图片
       $("#js_content img").each((_, el) => {
         const dataSrc = $(el).attr("data-src");
