@@ -137,7 +137,7 @@ async function handler(req: Request): Promise<Response> {
 
   if (pathname === "/sw.js") {
     return new Response(swHtml, {
-      headers: { "Content-Type": "text/html; charset=utf-8" },
+      headers: { "Content-Type": "text/javascript; charset=utf-8" },
     });
   }
   
