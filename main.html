@@ -142,6 +142,9 @@
         img.dataset.src = `/img?url=${src}`;
         img.alt = alt;
         img.loading = 'lazy';
+        // 随机高度以增强瀑布流效果
+        const randomHeight = 180 + Math.random() * 120; // 180 - 300px
+        img.style.height = `${randomHeight}px`;
         img.style.backgroundColor = getRandomColor();
         img.style.minHeight = '120px';
         img.style.opacity = '0';
