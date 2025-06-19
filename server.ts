@@ -10,10 +10,17 @@ const indexHtml = await Deno.readTextFile(join(__dirname, "main.html"));
 const ideasHtml = await Deno.readTextFile(join(__dirname, "ideas.html"));
 const swHtml = await Deno.readTextFile(join(__dirname, "sw.js"));
 // 微信文章列表
-const urls = [
-  "https://mp.weixin.qq.com/s?__biz=MzA5NzQ4ODg5OA==&tempkey=MTMyN19MSXM4UUljL1k1b0JFQ3l1cDFRZC1ycjB6eVpHT3UzX1pFXzc1QmVRaEdZU2xSYmJFdWU1aVI0TzhoWTk3UDZKalZMMGtCTFVuQi1PaWtjTWtSZzV4Q0RZYUdRRTlkUWVSYlJ1N0hwQ3dYekw4MEFQdWFjV1pqWGQ1YUN6WEd3cHp2ZU5Ua2NYR3dwbGZfYklxZGNONldJQ21qV2k1ejNjZDB6V1Fnfn4%3D&chksm=10a1584027d6d156adbdc5e78ac1c88b1c59eba36c0091f517860b53529a90f76fbc8881a206#rd",
-  "https://mp.weixin.qq.com/s/d-h4lk1eHbUvUV5HOZlb-Q",
-];
+const REMOTE_ARTICLE_URL = "https://raw.githubusercontent.com/valetzx/flow-wx/refs/heads/main/article.txt";
+let urls: string[] = [];
+try {
+  const res = await fetch(REMOTE_ARTICLE_URL);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const text = await res.text();
+  urls = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+} catch {
+  const localText = await Deno.readTextFile(join(__dirname, "article.txt"));
+  urls = localText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+}
 
 // 抓取结果缓存（JSON）
 const CACHE_TTL = 10 * 60 * 1000; // 10 分钟
