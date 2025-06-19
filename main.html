@@ -9,7 +9,7 @@
     <style>
       /* Masonry 布局 */
       .masonry {
-        column-count: 3;
+        column-count: 4;
         column-gap: 1rem;
       }
       @media (max-width: 1024px) {
@@ -93,10 +93,10 @@
           <button id="closeSettings" class="text-xl leading-none">&times;</button>
         </div>
         <label class="block text-sm">列数
-          <input id="columnCountInput" type="number" min="1" max="6" value="3" class="mt-1 w-full border rounded p-1" />
+          <input id="columnCountInput" type="number" min="1" max="6" value="4" class="mt-1 w-full border rounded p-1" />
         </label>
         <label class="block text-sm">每页图片数量
-          <input id="perPageInput" type="number" min="1" value="20" class="mt-1 w-full border rounded p-1" />
+          <input id="perPageInput" type="number" min="1" value="30" class="mt-1 w-full border rounded p-1" />
         </label>
         <button id="applySettings" class="w-full bg-blue-500 text-white py-1 rounded">应用</button>
       </div>
@@ -112,9 +112,15 @@
       const columnCountInput = document.getElementById('columnCountInput');
       const perPageInput = document.getElementById('perPageInput');
 
+      const savedCols = parseInt(localStorage.getItem('columnCount')) || 4;
+      const savedPerPage = parseInt(localStorage.getItem('perPage')) || 30;
+      columnCountInput.value = String(savedCols);
+      perPageInput.value = String(savedPerPage);
+      gallery.style.columnCount = String(savedCols);
+
       let allItems = [];
       let currentPage = 0;
-      let perPage = Number(perPageInput.value);
+      let perPage = savedPerPage;
 
       const observer = new IntersectionObserver((entries, obs) => {
         entries.forEach((entry) => {
@@ -196,6 +202,8 @@
         const cols = Math.max(1, parseInt(columnCountInput.value) || 1);
         perPage = Math.max(1, parseInt(perPageInput.value) || 1);
         gallery.style.columnCount = String(cols);
+        localStorage.setItem('columnCount', String(cols));
+        localStorage.setItem('perPage', String(perPage));
         currentPage = 0;
         renderPage();
         settingsPanel.classList.add('hidden');
