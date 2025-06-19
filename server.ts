@@ -1,25 +1,35 @@
 // deno run -A server.ts
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { dirname, fromFileUrl, join } from "https://deno.land/std@0.224.0/path/mod.ts";
+import {
+  dirname,
+  fromFileUrl,
+  join,
+} from "https://deno.land/std@0.224.0/path/mod.ts";
 import cheerio from "npm:cheerio@1.0.0-rc.12";
 
 // ---------- 基础配置 ----------
-const PORT = Number(Deno.env.get("PORT") ?? 8000);           // Deno Deploy 会自动注入
+const PORT = Number(Deno.env.get("PORT") ?? 8000); // Deno Deploy 会自动注入
 const __dirname = dirname(fromFileUrl(import.meta.url));
 const indexHtml = await Deno.readTextFile(join(__dirname, "main.html"));
 const ideasHtml = await Deno.readTextFile(join(__dirname, "ideas.html"));
 const swHtml = await Deno.readTextFile(join(__dirname, "sw.js"));
 // 微信文章列表
-const WX_URL = Deno.env.get('WX_URL') || "article.txt" ;
+const WX_URL = Deno.env.get("WX_URL") || "article.txt";
 let urls: string[] = [];
 try {
   const res = await fetch(WX_URL);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const text = await res.text();
-  urls = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  urls = text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
 } catch {
   const localText = await Deno.readTextFile(join(__dirname, "article.txt"));
-  urls = localText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  urls = localText
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
 }
 
 // 抓取结果缓存（JSON）
@@ -70,7 +80,7 @@ async function scrape(url: string) {
       }
     }
 
-    return { [name]: { time, description, images, jsonWx } };
+    return { [name]: { time, description, images, jsonWx, url } };
   } finally {
     clearTimeout(timer);
   }
@@ -89,7 +99,7 @@ async function proxyImage(imgUrl: string): Promise<Response> {
   try {
     const wechatRes = await fetch(imgUrl, {
       headers: {
-        Referer: "https://mp.weixin.qq.com/",           // 关键！
+        Referer: "https://mp.weixin.qq.com/", // 关键！
         "User-Agent": "Mozilla/5.0 (Deno)",
       },
     });
@@ -102,8 +112,7 @@ async function proxyImage(imgUrl: string): Promise<Response> {
       status: 200,
       headers: {
         // 透传 Content-Type
-        "Content-Type":
-          wechatRes.headers.get("Content-Type") ?? "image/jpeg",
+        "Content-Type": wechatRes.headers.get("Content-Type") ?? "image/jpeg",
         // 强缓存一年
         "Cache-Control": "public, max-age=31536000, immutable",
       },
@@ -142,12 +151,57 @@ async function handler(req: Request): Promise<Response> {
     }
   }
 
+  // /api/test —— 抓取单篇文章并返回 HTML
+  if (pathname === "/api/test") {
+    const url = searchParams.get("url") || urls[0];
+    if (!url) return json({ error: "missing url" }, 400);
+    try {
+      const res = await fetch(url, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Deno)",
+          Referer: "https://mp.weixin.qq.com/",
+        },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const html = await res.text();
+      const $ = cheerio.load(html, { decodeEntities: false });
+      const title =
+        $("#activity-name").text().trim() ||
+        $(".rich_media_title").text().trim() ||
+        "article";
+      // 将微信文章中的 data-src 替换为 src，方便直接展示图片
+      $("#js_content img").each((_, el) => {
+        const dataSrc = $(el).attr("data-src");
+        if (dataSrc) {
+          $(el).attr("src", dataSrc);
+        }
+      });
+      const content = $("#js_content").html() || "";
+      const page = `<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>${title}</title>
+  </head>
+  <body>
+    <h1>${title}</h1>
+    ${content}
+  </body>
+</html>`;
+      return new Response(page, {
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+      });
+    } catch (err) {
+      return json({ error: err.message }, 500);
+    }
+  }
+
   if (pathname === "/sw.js") {
     return new Response(swHtml, {
       headers: { "Content-Type": "text/javascript; charset=utf-8" },
     });
   }
-  
+
   // /img?url=ENCODED —— 微信图床反向代理
   if (pathname === "/img") {
     const imgUrl = searchParams.get("url");

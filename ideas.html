@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
@@ -33,7 +33,9 @@
         padding: 0.5rem;
         border-radius: 0.375rem;
         color: #6b7280;
-        transition: background-color 0.2s, color 0.2s;
+        transition:
+          background-color 0.2s,
+          color 0.2s;
       }
       .sidebar-link:hover {
         background-color: #f1f5f9;
@@ -88,290 +90,414 @@
       }
     </style>
   </head>
-  <body class="bg-gradient-to-br from-slate-50 to-slate-200 min-h-screen font-sans">
-    <nav class="fixed top-0 left-0 h-screen w-[72px] bg-white border-r shadow flex flex-col items-center py-4">
-      <div class="sidebar-items flex flex-col items-center gap-y-6 h-full w-full">
+  <body
+    class="bg-gradient-to-br from-slate-50 to-slate-200 min-h-screen font-sans"
+  >
+    <nav
+      class="fixed top-0 left-0 h-screen w-[72px] bg-white border-r shadow flex flex-col items-center py-4"
+    >
+      <div
+        class="sidebar-items flex flex-col items-center gap-y-6 h-full w-full"
+      >
         <a href="#" aria-label="主页" class="sidebar-link">
-        <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
-          <path d="M7.54 23.15q-.2-2.05.26-3.93L9 14.04a7 7 0 0 1-.35-2.07c0-1.68.81-2.88 2.09-2.88.88 0 1.53.62 1.53 1.8q0 .57-.23 1.28l-.52 1.72q-.15.5-.15.92c0 1.2.91 1.87 2.08 1.87 2.09 0 3.57-2.16 3.57-4.96 0-3.12-2.04-5.12-5.05-5.12-3.36 0-5.49 2.19-5.49 5.24 0 1.22.38 2.36 1.11 3.14-.24.41-.5.48-.88.48-1.2 0-2.34-1.69-2.34-4 0-4 3.2-7.17 7.68-7.17 4.7 0 7.66 3.29 7.66 7.33s-2.88 7.15-5.98 7.15a3.8 3.8 0 0 1-3.06-1.48l-.62 2.5a11 11 0 0 1-1.62 3.67A11.98 11.98 0 0 0 24 12a11.99 11.99 0 1 0-24 0 12 12 0 0 0 7.54 11.15"/>
-        </svg>
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+            <path
+              d="M7.54 23.15q-.2-2.05.26-3.93L9 14.04a7 7 0 0 1-.35-2.07c0-1.68.81-2.88 2.09-2.88.88 0 1.53.62 1.53 1.8q0 .57-.23 1.28l-.52 1.72q-.15.5-.15.92c0 1.2.91 1.87 2.08 1.87 2.09 0 3.57-2.16 3.57-4.96 0-3.12-2.04-5.12-5.05-5.12-3.36 0-5.49 2.19-5.49 5.24 0 1.22.38 2.36 1.11 3.14-.24.41-.5.48-.88.48-1.2 0-2.34-1.69-2.34-4 0-4 3.2-7.17 7.68-7.17 4.7 0 7.66 3.29 7.66 7.33s-2.88 7.15-5.98 7.15a3.8 3.8 0 0 1-3.06-1.48l-.62 2.5a11 11 0 0 1-1.62 3.67A11.98 11.98 0 0 0 24 12a11.99 11.99 0 1 0-24 0 12 12 0 0 0 7.54 11.15"
+            />
+          </svg>
         </a>
         <a href="/" aria-label="首页" class="sidebar-link" id="homeBtn">
-        <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
-          <path d="M4.6 22.73A107 107 0 0 0 11 23h2.22c2.43-.04 4.6-.16 6.18-.27A3.9 3.9 0 0 0 23 18.8v-8.46a4 4 0 0 0-1.34-3L14.4.93a3.63 3.63 0 0 0-4.82 0L2.34 7.36A4 4 0 0 0 1 10.35v8.46a3.9 3.9 0 0 0 3.6 3.92M13.08 2.4l7.25 6.44a2 2 0 0 1 .67 1.5v8.46a1.9 1.9 0 0 1-1.74 1.92q-1.39.11-3.26.19V16a4 4 0 0 0-8 0v4.92q-1.87-.08-3.26-.19A1.9 1.9 0 0 1 3 18.81v-8.46a2 2 0 0 1 .67-1.5l7.25-6.44a1.63 1.63 0 0 1 2.16 0M13.12 21h-2.24a1 1 0 0 1-.88-1v-4a2 2 0 1 1 4 0v4a1 1 0 0 1-.88 1" />
-        </svg>
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+            <path
+              d="M4.6 22.73A107 107 0 0 0 11 23h2.22c2.43-.04 4.6-.16 6.18-.27A3.9 3.9 0 0 0 23 18.8v-8.46a4 4 0 0 0-1.34-3L14.4.93a3.63 3.63 0 0 0-4.82 0L2.34 7.36A4 4 0 0 0 1 10.35v8.46a3.9 3.9 0 0 0 3.6 3.92M13.08 2.4l7.25 6.44a2 2 0 0 1 .67 1.5v8.46a1.9 1.9 0 0 1-1.74 1.92q-1.39.11-3.26.19V16a4 4 0 0 0-8 0v4.92q-1.87-.08-3.26-.19A1.9 1.9 0 0 1 3 18.81v-8.46a2 2 0 0 1 .67-1.5l7.25-6.44a1.63 1.63 0 0 1 2.16 0M13.12 21h-2.24a1 1 0 0 1-.88-1v-4a2 2 0 1 1 4 0v4a1 1 0 0 1-.88 1"
+            />
+          </svg>
         </a>
         <a href="/ideas" aria-label="探索" id="idealBtn" class="sidebar-link">
-        <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
-          <path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4M9.42 7.24a3 3 0 0 0-2.18 2.18L5.7 15.57a2.25 2.25 0 0 0 2.73 2.73l6.15-1.54a3 3 0 0 0 2.18-2.18l1.54-6.15a2.25 2.25 0 0 0-2.73-2.73zm6.94.7-1.54 6.15a1 1 0 0 1-.73.73l-6.15 1.54a.25.25 0 0 1-.3-.3L9.18 9.9a1 1 0 0 1 .73-.73l6.15-1.54a.25.25 0 0 1 .3.3M12 24a12 12 0 1 0 0-24 12 12 0 0 0 0 24M2 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0" />
-        </svg>
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+            <path
+              d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4M9.42 7.24a3 3 0 0 0-2.18 2.18L5.7 15.57a2.25 2.25 0 0 0 2.73 2.73l6.15-1.54a3 3 0 0 0 2.18-2.18l1.54-6.15a2.25 2.25 0 0 0-2.73-2.73zm6.94.7-1.54 6.15a1 1 0 0 1-.73.73l-6.15 1.54a.25.25 0 0 1-.3-.3L9.18 9.9a1 1 0 0 1 .73-.73l6.15-1.54a.25.25 0 0 1 .3.3M12 24a12 12 0 1 0 0-24 12 12 0 0 0 0 24M2 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0"
+            />
+          </svg>
         </a>
         <a href="/add/" aria-label="创建" id="addBtn" class="sidebar-link">
-        <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
-          <path d="M11 11H6v2h5v5h2v-5h5v-2h-5V6h-2zM5 1a4 4 0 0 0-4 4v14a4 4 0 0 0 4 4h14a4 4 0 0 0 4-4V5a4 4 0 0 0-4-4zm16 4v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h14a2 2 0 0 1 2 2"/>
-        </svg>
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+            <path
+              d="M11 11H6v2h5v5h2v-5h5v-2h-5V6h-2zM5 1a4 4 0 0 0-4 4v14a4 4 0 0 0 4 4h14a4 4 0 0 0 4-4V5a4 4 0 0 0-4-4zm16 4v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h14a2 2 0 0 1 2 2"
+            />
+          </svg>
         </a>
-      <a href="#" aria-label="更多" id="moreBtn" class="sidebar-link mt-auto">
-        <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
-          <path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10m3 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
-          <path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10m3 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0m1.13-10.29A2 2 0 0 0 14.7.31a12 12 0 0 0-5.4 0c-.73.17-1.26.74-1.43 1.4l-.58 2.14-2.14-.57a2 2 0 0 0-1.93.54 12 12 0 0 0-2.7 4.67c-.22.72.01 1.46.5 1.95L2.59 12l-1.57 1.56a2 2 0 0 0-.5 1.95 12 12 0 0 0 2.7 4.68c.51.54 1.27.72 1.93.54l2.14-.58.58 2.14c.17.67.7 1.24 1.43 1.4a12 12 0 0 0 5.4 0 2 2 0 0 0 1.43-1.4l.58-2.14 2.13.58c.67.18 1.43 0 1.94-.55a12 12 0 0 0 2.7-4.67 2 2 0 0 0-.5-1.94L21.4 12l1.57-1.56c.49-.5.71-1.23.5-1.95a12 12 0 0 0-2.7-4.67 2 2 0 0 0-1.93-.54l-2.14.57zm-6.34.54a10 10 0 0 1 4.42 0l.56 2.12a2 2 0 0 0 2.45 1.41l2.13-.57a10 10 0 0 1 2.2 3.83L20 10.59a2 2 0 0 0 0 2.83l1.55 1.55a10 10 0 0 1-2.2 3.82l-2.13-.57a2 2 0 0 0-2.44 1.42l-.57 2.12a10 10 0 0 1-4.42 0l-.57-2.12a2 2 0 0 0-2.45-1.42l-2.12.57a10 10 0 0 1-2.2-3.82L4 13.42a2 2 0 0 0 0-2.83L2.45 9.03a10 10 0 0 1 2.2-3.82l2.13.57a2 2 0 0 0 2.44-1.41z"/>
-        </svg>
-      </a>
+        <a href="#" aria-label="更多" id="moreBtn" class="sidebar-link mt-auto">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+            <path
+              d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10m3 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0"
+            />
+            <path
+              d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10m3 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0m1.13-10.29A2 2 0 0 0 14.7.31a12 12 0 0 0-5.4 0c-.73.17-1.26.74-1.43 1.4l-.58 2.14-2.14-.57a2 2 0 0 0-1.93.54 12 12 0 0 0-2.7 4.67c-.22.72.01 1.46.5 1.95L2.59 12l-1.57 1.56a2 2 0 0 0-.5 1.95 12 12 0 0 0 2.7 4.68c.51.54 1.27.72 1.93.54l2.14-.58.58 2.14c.17.67.7 1.24 1.43 1.4a12 12 0 0 0 5.4 0 2 2 0 0 0 1.43-1.4l.58-2.14 2.13.58c.67.18 1.43 0 1.94-.55a12 12 0 0 0 2.7-4.67 2 2 0 0 0-.5-1.94L21.4 12l1.57-1.56c.49-.5.71-1.23.5-1.95a12 12 0 0 0-2.7-4.67 2 2 0 0 0-1.93-.54l-2.14.57zm-6.34.54a10 10 0 0 1 4.42 0l.56 2.12a2 2 0 0 0 2.45 1.41l2.13-.57a10 10 0 0 1 2.2 3.83L20 10.59a2 2 0 0 0 0 2.83l1.55 1.55a10 10 0 0 1-2.2 3.82l-2.13-.57a2 2 0 0 0-2.44 1.42l-.57 2.12a10 10 0 0 1-4.42 0l-.57-2.12a2 2 0 0 0-2.45-1.42l-2.12.57a10 10 0 0 1-2.2-3.82L4 13.42a2 2 0 0 0 0-2.83L2.45 9.03a10 10 0 0 1 2.2-3.82l2.13.57a2 2 0 0 0 2.44-1.41z"
+            />
+          </svg>
+        </a>
       </div>
     </nav>
     <div id="content" class="ml-[72px]">
-    <header class="py-6 text-center">
-      <h1 class="text-3xl font-bold tracking-tight text-slate-800">
-        文章列表
-      </h1>
-    </header>
+      <header class="py-6 text-center">
+        <h1 class="text-3xl font-bold tracking-tight text-slate-800">
+          文章列表
+        </h1>
+      </header>
 
-    <main class="px-4 max-w-screen-xl mx-auto">
-      <!-- Masonry 容器 -->
-      <div class="masonry" id="gallery"></div>
-      <button id="loadMore" class="mt-4 mx-auto block px-4 py-2 rounded bg-gray-200 text-gray-700 hidden">加载更多</button>
-    </main>
+      <main class="px-4 max-w-screen-xl mx-auto">
+        <!-- Masonry 容器 -->
+        <div class="masonry" id="gallery"></div>
+        <button
+          id="loadMore"
+          class="mt-4 mx-auto block px-4 py-2 rounded bg-gray-200 text-gray-700 hidden"
+        >
+          加载更多
+        </button>
+      </main>
 
-    <!-- 设置面板 -->
-    <div id="settingsPanel" class="fixed inset-0 bg-black/50 hidden items-center justify-center">
-      <div class="bg-white rounded-xl p-4 w-72 space-y-3">
-        <div class="flex justify-between items-center">
-          <h2 class="font-semibold">设置</h2>
-          <button id="closeSettings" class="text-xl leading-none">&times;</button>
+      <!-- 设置面板 -->
+      <div
+        id="settingsPanel"
+        class="fixed inset-0 bg-black/50 hidden items-center justify-center"
+      >
+        <div class="bg-white rounded-xl p-4 w-72 space-y-3">
+          <div class="flex justify-between items-center">
+            <h2 class="font-semibold">设置</h2>
+            <button id="closeSettings" class="text-xl leading-none">
+              &times;
+            </button>
+          </div>
+          <label class="block text-sm"
+            >列数
+            <input
+              id="columnCountInput"
+              type="number"
+              min="1"
+              max="6"
+              value="4"
+              class="mt-1 w-full border rounded p-1"
+            />
+          </label>
+          <label class="block text-sm"
+            >每页图片数量
+            <input
+              id="perPageInput"
+              type="number"
+              min="1"
+              value="30"
+              class="mt-1 w-full border rounded p-1"
+            />
+          </label>
+          <button
+            id="applySettings"
+            class="w-full bg-blue-500 text-white py-1 rounded"
+          >
+            应用
+          </button>
         </div>
-        <label class="block text-sm">列数
-          <input id="columnCountInput" type="number" min="1" max="6" value="4" class="mt-1 w-full border rounded p-1" />
-        </label>
-        <label class="block text-sm">每页图片数量
-          <input id="perPageInput" type="number" min="1" value="30" class="mt-1 w-full border rounded p-1" />
-        </label>
-        <button id="applySettings" class="w-full bg-blue-500 text-white py-1 rounded">应用</button>
       </div>
-    </div>
 
-    <script>
-      const gallery = document.getElementById('gallery');
-      const loadMoreBtn = document.getElementById('loadMore');
-      const settingsPanel = document.getElementById('settingsPanel');
-      const moreBtn = document.getElementById('moreBtn');
-      const closeSettings = document.getElementById('closeSettings');
-      const applySettings = document.getElementById('applySettings');
-      const columnCountInput = document.getElementById('columnCountInput');
-      const perPageInput = document.getElementById('perPageInput');
+      <!-- 文章弹窗 -->
+      <div
+        id="articleModal"
+        class="fixed inset-0 bg-black/50 hidden items-center justify-center"
+      >
+        <div
+          class="bg-white rounded-xl w-11/12 max-w-3xl h-[80vh] overflow-auto relative p-4"
+        >
+          <button id="closeArticle" class="absolute top-2 right-4 text-2xl">
+            &times;
+          </button>
+          <div id="articleContent" class="prose max-w-none"></div>
+        </div>
+      </div>
 
-      const homeLink = document.querySelector('a[aria-label="\u4e3b\u9875"]');
-      let notifyDot = null;
+      <script>
+        const gallery = document.getElementById("gallery");
+        const loadMoreBtn = document.getElementById("loadMore");
+        const settingsPanel = document.getElementById("settingsPanel");
+        const moreBtn = document.getElementById("moreBtn");
+        const closeSettings = document.getElementById("closeSettings");
+        const applySettings = document.getElementById("applySettings");
+        const columnCountInput = document.getElementById("columnCountInput");
+        const perPageInput = document.getElementById("perPageInput");
+        const articleModal = document.getElementById("articleModal");
+        const closeArticle = document.getElementById("closeArticle");
+        const articleContent = document.getElementById("articleContent");
 
-      function showDot() {
-        if (!notifyDot) {
-          notifyDot = document.createElement('span');
-          notifyDot.className = 'notify-dot';
-          homeLink.classList.add('relative');
-          homeLink.appendChild(notifyDot);
-        }
-      }
+        const homeLink = document.querySelector('a[aria-label="\u4e3b\u9875"]');
+        let notifyDot = null;
 
-      function hideDot() {
-        if (notifyDot) {
-          notifyDot.remove();
-          notifyDot = null;
-        }
-      }
-
-      const savedCols = parseInt(localStorage.getItem('columnCount')) || 4;
-      const savedPerPage = parseInt(localStorage.getItem('perPage')) || 30;
-
-      const navEl = document.querySelector('nav');
-      const contentEl = document.getElementById('content');
-      const isMobile = /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
-
-      const initialCols = isMobile ? 2 : savedCols;
-
-      columnCountInput.value = String(initialCols);
-      perPageInput.value = String(savedPerPage);
-      gallery.style.columnCount = String(initialCols);
-
-      if (isMobile) {
-        document.body.classList.add('mobile');
-        navEl.classList.add('mobile');
-        contentEl.classList.remove('ml-[72px]');
-        contentEl.classList.add('mb-[72px]');
-      }
-
-      let allItems = [];
-      let currentPage = 0;
-      let perPage = savedPerPage;
-
-      const observer = new IntersectionObserver((entries, obs) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const img = entry.target;
-            img.src = img.dataset.src;
-            obs.unobserve(img);
+        function showDot() {
+          if (!notifyDot) {
+            notifyDot = document.createElement("span");
+            notifyDot.className = "notify-dot";
+            homeLink.classList.add("relative");
+            homeLink.appendChild(notifyDot);
           }
-        });
-      }, { rootMargin: '100px' });
-
-      function getRandomColor() {
-        return '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0');
-      }
-
-      function createImage(src, alt) {
-        const img = document.createElement('img');
-        img.className = 'w-full rounded-t-2xl object-cover hover:opacity-90 transition-opacity';
-        img.dataset.src = `/img?url=${src}`;
-        img.alt = alt;
-        img.loading = 'lazy';
-        const randomHeight = 180 + Math.random() * 120; // 180 - 300px
-        img.style.height = `${randomHeight}px`;
-        img.style.backgroundColor = getRandomColor();
-        img.style.minHeight = '120px';
-        img.style.opacity = '0';
-        img.style.transition = 'opacity 0.5s';
-        img.addEventListener('load', () => {
-          img.style.opacity = '1';
-          img.style.backgroundColor = '';
-          img.style.minHeight = '';
-        });
-        observer.observe(img);
-        return img;
-      }
-
-      function createCard(item) {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'masonry-item bg-white rounded-2xl shadow hover:shadow-lg transition overflow-hidden flex flex-col';
-
-        if (item.imgSrc) {
-          const img = createImage(item.imgSrc, item.title);
-          wrapper.appendChild(img);
         }
 
-        const text = document.createElement('div');
-        text.className = 'p-5 flex flex-col gap-2';
-
-        const h2 = document.createElement('h2');
-        h2.className = 'text-xl font-semibold text-slate-900';
-        h2.textContent = item.title;
-
-        const p = document.createElement('p');
-        p.className = 'text-sm text-gray-600 leading-relaxed';
-        p.textContent = item.description;
-
-        text.appendChild(h2);
-        text.appendChild(p);
-        wrapper.appendChild(text);
-
-        return wrapper;
-      }
-
-      function buildItems(data) {
-        const items = [];
-        for (const [title, { description, images }] of Object.entries(data)) {
-          const imgSrc = Array.isArray(images) && images.length > 0
-            ? images[Math.floor(Math.random() * images.length)]
-            : null;
-          items.push({ title, description, imgSrc });
-        }
-        return items;
-      }
-
-      function renderPage() {
-        gallery.innerHTML = '';
-        const end = (currentPage + 1) * perPage;
-        const items = allItems.slice(0, end);
-        items.forEach((item) => {
-          gallery.appendChild(createCard(item));
-        });
-        if (end >= allItems.length) {
-          loadMoreBtn.classList.add('hidden');
-        } else {
-          loadMoreBtn.classList.remove('hidden');
-        }
-      }
-
-      function applyData(data) {
-        allItems = buildItems(data);
-        currentPage = 0;
-        renderPage();
-      }
-
-      async function fetchLatest() {
-        const res = await fetch('/api/wx', { headers: { 'x-skip-cache': '1' } });
-        if (!res.ok) throw new Error('Network response was not ok');
-        return await res.json();
-      }
-
-      async function initGallery() {
-        const cachedStr = localStorage.getItem('wxData');
-        let cached;
-        if (cachedStr) {
-          try { cached = JSON.parse(cachedStr); } catch {}
-        }
-        if (cached) {
-          applyData(cached);
-        }
-
-        try {
-          const latest = await fetchLatest();
-          const latestStr = JSON.stringify(latest);
-          if (!cachedStr) {
-            localStorage.setItem('wxData', latestStr);
-            applyData(latest);
-          } else if (latestStr !== cachedStr) {
-            localStorage.setItem('wxDataNew', latestStr);
-            showDot();
+        function hideDot() {
+          if (notifyDot) {
+            notifyDot.remove();
+            notifyDot = null;
           }
-        } catch (err) {
-          console.error('加载画廊失败:', err);
         }
-      }
 
-      loadMoreBtn.addEventListener('click', () => {
-        currentPage++;
-        renderPage();
-      });
+        function showArticle(html) {
+          articleContent.innerHTML = html;
+          articleModal.classList.remove("hidden");
+          articleModal.classList.add("flex");
+        }
 
-      moreBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        settingsPanel.classList.remove('hidden');
-        settingsPanel.classList.add('flex');
-      });
+        function hideArticle() {
+          articleModal.classList.add("hidden");
+          articleModal.classList.remove("flex");
+          articleContent.innerHTML = "";
+        }
 
-      closeSettings.addEventListener('click', () => {
-        settingsPanel.classList.add('hidden');
-        settingsPanel.classList.remove('flex');
-      });
+        const savedCols = parseInt(localStorage.getItem("columnCount")) || 4;
+        const savedPerPage = parseInt(localStorage.getItem("perPage")) || 30;
 
-      applySettings.addEventListener('click', () => {
-        const cols = Math.max(1, parseInt(columnCountInput.value) || 1);
-        perPage = Math.max(1, parseInt(perPageInput.value) || 1);
-        gallery.style.columnCount = String(cols);
-        localStorage.setItem('columnCount', String(cols));
-        localStorage.setItem('perPage', String(perPage));
-        currentPage = 0;
-        renderPage();
-        settingsPanel.classList.add('hidden');
-        settingsPanel.classList.remove('flex');
-      });
+        const navEl = document.querySelector("nav");
+        const contentEl = document.getElementById("content");
+        const isMobile = /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(
+          navigator.userAgent,
+        );
 
-      document.addEventListener('DOMContentLoaded', initGallery);
-      homeLink.addEventListener('click', () => {
-        const newStr = localStorage.getItem('wxDataNew');
-        if (newStr) {
-          localStorage.setItem('wxData', newStr);
-          localStorage.removeItem('wxDataNew');
-          hideDot();
+        const initialCols = isMobile ? 2 : savedCols;
+
+        columnCountInput.value = String(initialCols);
+        perPageInput.value = String(savedPerPage);
+        gallery.style.columnCount = String(initialCols);
+
+        if (isMobile) {
+          document.body.classList.add("mobile");
+          navEl.classList.add("mobile");
+          contentEl.classList.remove("ml-[72px]");
+          contentEl.classList.add("mb-[72px]");
+        }
+
+        let allItems = [];
+        let currentPage = 0;
+        let perPage = savedPerPage;
+
+        const observer = new IntersectionObserver(
+          (entries, obs) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                const img = entry.target;
+                img.src = img.dataset.src;
+                obs.unobserve(img);
+              }
+            });
+          },
+          { rootMargin: "100px" },
+        );
+
+        function getRandomColor() {
+          return (
+            "#" +
+            Math.floor(Math.random() * 0xffffff)
+              .toString(16)
+              .padStart(6, "0")
+          );
+        }
+
+        function createImage(src, alt) {
+          const img = document.createElement("img");
+          img.className =
+            "w-full rounded-t-2xl object-cover hover:opacity-90 transition-opacity";
+          img.dataset.src = `/img?url=${src}`;
+          img.alt = alt;
+          img.loading = "lazy";
+          const randomHeight = 180 + Math.random() * 120; // 180 - 300px
+          img.style.height = `${randomHeight}px`;
+          img.style.backgroundColor = getRandomColor();
+          img.style.minHeight = "120px";
+          img.style.opacity = "0";
+          img.style.transition = "opacity 0.5s";
+          img.addEventListener("load", () => {
+            img.style.opacity = "1";
+            img.style.backgroundColor = "";
+            img.style.minHeight = "";
+          });
+          observer.observe(img);
+          return img;
+        }
+
+        function createCard(item) {
+          const wrapper = document.createElement("div");
+          wrapper.className =
+            "masonry-item bg-white rounded-2xl shadow hover:shadow-lg transition overflow-hidden flex flex-col cursor-pointer";
+          wrapper.dataset.url = item.url;
+
+          if (item.imgSrc) {
+            const img = createImage(item.imgSrc, item.title);
+            wrapper.appendChild(img);
+          }
+
+          const text = document.createElement("div");
+          text.className = "p-5 flex flex-col gap-2";
+
+          const h2 = document.createElement("h2");
+          h2.className = "text-xl font-semibold text-slate-900";
+          h2.textContent = item.title;
+
+          const p = document.createElement("p");
+          p.className = "text-sm text-gray-600 leading-relaxed";
+          p.textContent = item.description;
+
+          text.appendChild(h2);
+          text.appendChild(p);
+          wrapper.appendChild(text);
+
+          wrapper.addEventListener("click", async () => {
+            const url = wrapper.dataset.url;
+            if (!url) return;
+            const key = "article:" + url;
+            let html = localStorage.getItem(key);
+            if (!html) {
+              try {
+                const res = await fetch(
+                  `/api/test?url=${encodeURIComponent(url)}`,
+                );
+                html = await res.text();
+                if (res.ok) {
+                  localStorage.setItem(key, html);
+                }
+              } catch (err) {
+                html = "<p>加载失败</p>";
+              }
+            }
+            showArticle(html);
+          });
+
+          return wrapper;
+        }
+
+        function buildItems(data) {
+          const items = [];
+          for (const [title, { description, images, url }] of Object.entries(
+            data,
+          )) {
+            const imgSrc =
+              Array.isArray(images) && images.length > 0
+                ? images[Math.floor(Math.random() * images.length)]
+                : null;
+            items.push({ title, description, imgSrc, url });
+          }
+          return items;
+        }
+
+        function renderPage() {
+          gallery.innerHTML = "";
+          const end = (currentPage + 1) * perPage;
+          const items = allItems.slice(0, end);
+          items.forEach((item) => {
+            gallery.appendChild(createCard(item));
+          });
+          if (end >= allItems.length) {
+            loadMoreBtn.classList.add("hidden");
+          } else {
+            loadMoreBtn.classList.remove("hidden");
+          }
+        }
+
+        function applyData(data) {
+          allItems = buildItems(data);
+          currentPage = 0;
+          renderPage();
+        }
+
+        async function fetchLatest() {
+          const res = await fetch("/api/wx", {
+            headers: { "x-skip-cache": "1" },
+          });
+          if (!res.ok) throw new Error("Network response was not ok");
+          return await res.json();
+        }
+
+        async function initGallery() {
+          const cachedStr = localStorage.getItem("wxData");
+          let cached;
+          if (cachedStr) {
+            try {
+              cached = JSON.parse(cachedStr);
+            } catch {}
+          }
+          if (cached) {
+            applyData(cached);
+          }
+
           try {
-            applyData(JSON.parse(newStr));
-          } catch (e) {}
+            const latest = await fetchLatest();
+            const latestStr = JSON.stringify(latest);
+            if (!cachedStr) {
+              localStorage.setItem("wxData", latestStr);
+              applyData(latest);
+            } else if (latestStr !== cachedStr) {
+              localStorage.setItem("wxDataNew", latestStr);
+              showDot();
+            }
+          } catch (err) {
+            console.error("加载画廊失败:", err);
+          }
         }
-      });
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(console.error);
+
+        loadMoreBtn.addEventListener("click", () => {
+          currentPage++;
+          renderPage();
         });
-      }
-    </script>
-</div>
+
+        moreBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          settingsPanel.classList.remove("hidden");
+          settingsPanel.classList.add("flex");
+        });
+
+        closeSettings.addEventListener("click", () => {
+          settingsPanel.classList.add("hidden");
+          settingsPanel.classList.remove("flex");
+        });
+
+        closeArticle.addEventListener("click", hideArticle);
+        articleModal.addEventListener("click", (e) => {
+          if (e.target === articleModal) hideArticle();
+        });
+
+        applySettings.addEventListener("click", () => {
+          const cols = Math.max(1, parseInt(columnCountInput.value) || 1);
+          perPage = Math.max(1, parseInt(perPageInput.value) || 1);
+          gallery.style.columnCount = String(cols);
+          localStorage.setItem("columnCount", String(cols));
+          localStorage.setItem("perPage", String(perPage));
+          currentPage = 0;
+          renderPage();
+          settingsPanel.classList.add("hidden");
+          settingsPanel.classList.remove("flex");
+        });
+
+        document.addEventListener("DOMContentLoaded", initGallery);
+        homeLink.addEventListener("click", () => {
+          const newStr = localStorage.getItem("wxDataNew");
+          if (newStr) {
+            localStorage.setItem("wxData", newStr);
+            localStorage.removeItem("wxDataNew");
+            hideDot();
+            try {
+              applyData(JSON.parse(newStr));
+            } catch (e) {}
+          }
+        });
+        if ("serviceWorker" in navigator) {
+          window.addEventListener("load", () => {
+            navigator.serviceWorker.register("/sw.js").catch(console.error);
+          });
+        }
+      </script>
+    </div>
   </body>
 </html>
