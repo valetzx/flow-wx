@@ -194,10 +194,20 @@ async function handler(req: Request): Promise<Response> {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const html = await res.text();
       const $ = cheerio.load(html, { decodeEntities: false });
+
       const title =
         $("#activity-name").text().trim() ||
         $(".rich_media_title").text().trim() ||
         "article";
+
+      // 微信文章图片多在 data-src 属性中，直接返回原始 HTML 无法显示
+      $("#js_content img").each((_, el) => {
+        const dataSrc = $(el).attr("data-src");
+        if (dataSrc) {
+          $(el).attr("src", dataSrc.split("?")[0]);
+        }
+      });
+
       const content = $("#js_content").html() || "";
       const page = `<!DOCTYPE html>
 <html lang="zh-CN">
