@@ -132,12 +132,25 @@
         });
       }, { rootMargin: '100px' });
 
+      function getRandomColor() {
+        return '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0');
+      }
+
       function createImage(src, alt) {
         const img = document.createElement('img');
-        img.className = 'masonry-item w-full rounded-2xl shadow object-cover hover:opacity-90 transition';
+        img.className = 'masonry-item w-full rounded-2xl shadow object-cover hover:opacity-90 transition-opacity';
         img.dataset.src = `/img?url=${src}`;
         img.alt = alt;
         img.loading = 'lazy';
+        img.style.backgroundColor = getRandomColor();
+        img.style.minHeight = '120px';
+        img.style.opacity = '0';
+        img.style.transition = 'opacity 0.5s';
+        img.addEventListener('load', () => {
+          img.style.opacity = '1';
+          img.style.backgroundColor = '';
+          img.style.minHeight = '';
+        });
         observer.observe(img);
         return img;
       }
