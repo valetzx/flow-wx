@@ -65,7 +65,7 @@
         </svg>
         </a>
       </div>
-      <a href="#" aria-label="更多" class="sidebar-link mt-auto">
+      <a href="#" aria-label="更多" id="moreBtn" class="sidebar-link mt-auto">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
           <path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10m3 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
           <path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10m3 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0m1.13-10.29A2 2 0 0 0 14.7.31a12 12 0 0 0-5.4 0c-.73.17-1.26.74-1.43 1.4l-.58 2.14-2.14-.57a2 2 0 0 0-1.93.54 12 12 0 0 0-2.7 4.67c-.22.72.01 1.46.5 1.95L2.59 12l-1.57 1.56a2 2 0 0 0-.5 1.95 12 12 0 0 0 2.7 4.68c.51.54 1.27.72 1.93.54l2.14-.58.58 2.14c.17.67.7 1.24 1.43 1.4a12 12 0 0 0 5.4 0 2 2 0 0 0 1.43-1.4l.58-2.14 2.13.58c.67.18 1.43 0 1.94-.55a12 12 0 0 0 2.7-4.67 2 2 0 0 0-.5-1.94L21.4 12l1.57-1.56c.49-.5.71-1.23.5-1.95a12 12 0 0 0-2.7-4.67 2 2 0 0 0-1.93-.54l-2.14.57zm-6.34.54a10 10 0 0 1 4.42 0l.56 2.12a2 2 0 0 0 2.45 1.41l2.13-.57a10 10 0 0 1 2.2 3.83L20 10.59a2 2 0 0 0 0 2.83l1.55 1.55a10 10 0 0 1-2.2 3.82l-2.13-.57a2 2 0 0 0-2.44 1.42l-.57 2.12a10 10 0 0 1-4.42 0l-.57-2.12a2 2 0 0 0-2.45-1.42l-2.12.57a10 10 0 0 1-2.2-3.82L4 13.42a2 2 0 0 0 0-2.83L2.45 9.03a10 10 0 0 1 2.2-3.82l2.13.57a2 2 0 0 0 2.44-1.41z"/>
@@ -82,36 +82,125 @@
     <main class="px-4 max-w-screen-xl mx-auto">
       <!-- Masonry 容器 -->
       <div class="masonry" id="gallery"></div>
+      <button id="loadMore" class="mt-4 mx-auto block px-4 py-2 rounded bg-gray-200 text-gray-700 hidden">加载更多</button>
     </main>
 
+    <!-- 设置面板 -->
+    <div id="settingsPanel" class="fixed inset-0 bg-black/50 hidden items-center justify-center">
+      <div class="bg-white rounded-xl p-4 w-72 space-y-3">
+        <div class="flex justify-between items-center">
+          <h2 class="font-semibold">设置</h2>
+          <button id="closeSettings" class="text-xl leading-none">&times;</button>
+        </div>
+        <label class="block text-sm">列数
+          <input id="columnCountInput" type="number" min="1" max="6" value="3" class="mt-1 w-full border rounded p-1" />
+        </label>
+        <label class="block text-sm">每页图片数量
+          <input id="perPageInput" type="number" min="1" value="20" class="mt-1 w-full border rounded p-1" />
+        </label>
+        <button id="applySettings" class="w-full bg-blue-500 text-white py-1 rounded">应用</button>
+      </div>
+    </div>
+
     <script>
-      // 动态加载数据并渲染
+      const gallery = document.getElementById('gallery');
+      const loadMoreBtn = document.getElementById('loadMore');
+      const settingsPanel = document.getElementById('settingsPanel');
+      const moreBtn = document.getElementById('moreBtn');
+      const closeSettings = document.getElementById('closeSettings');
+      const applySettings = document.getElementById('applySettings');
+      const columnCountInput = document.getElementById('columnCountInput');
+      const perPageInput = document.getElementById('perPageInput');
+
+      let allItems = [];
+      let currentPage = 0;
+      let perPage = Number(perPageInput.value);
+
+      const observer = new IntersectionObserver((entries, obs) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            img.src = img.dataset.src;
+            obs.unobserve(img);
+          }
+        });
+      }, { rootMargin: '100px' });
+
+      function createImage(src, alt) {
+        const img = document.createElement('img');
+        img.className = 'masonry-item w-full rounded-2xl shadow object-cover hover:opacity-90 transition';
+        img.dataset.src = `/img?url=${src}`;
+        img.alt = alt;
+        img.loading = 'lazy';
+        observer.observe(img);
+        return img;
+      }
+
+      function renderPage() {
+        gallery.innerHTML = '';
+        const end = (currentPage + 1) * perPage;
+        const items = allItems.slice(0, end);
+        items.forEach((item) => {
+          if (item.type === 'title') {
+            gallery.insertAdjacentHTML('beforeend', item.html);
+          } else if (item.type === 'image') {
+            gallery.appendChild(createImage(item.src, item.alt));
+          }
+        });
+        if (end >= allItems.length) {
+          loadMoreBtn.classList.add('hidden');
+        } else {
+          loadMoreBtn.classList.remove('hidden');
+        }
+      }
+
       async function loadGallery() {
         try {
           const res = await fetch('/api/wx');
           if (!res.ok) throw new Error('Network response was not ok');
           const data = await res.json();
-          const gallery = document.getElementById('gallery');
-          const fragments = [];
-
+          const items = [];
           for (const [title, { description, images }] of Object.entries(data)) {
-            // 标题卡片
-            fragments.push(
-              `<div class=\"masonry-item p-5 bg-white rounded-2xl shadow hover:shadow-lg transition flex flex-col gap-2\">\n  <h2 class=\"text-xl font-semibold text-slate-900\">${title}</h2>\n  <p class=\"text-sm text-gray-600 leading-relaxed\">${description}</p>\n</div>`
-            );
-            // 图片
+            items.push({
+              type: 'title',
+              html: `<div class="masonry-item p-5 bg-white rounded-2xl shadow hover:shadow-lg transition flex flex-col gap-2">\n  <h2 class="text-xl font-semibold text-slate-900">${title}</h2>\n  <p class="text-sm text-gray-600 leading-relaxed">${description}</p>\n</div>`
+            });
             images.forEach((src) => {
-              fragments.push(
-                `<img class=\"masonry-item w-full rounded-2xl shadow object-cover hover:opacity-90 transition\" src=\"/img?url=${src}\" alt=\"${title}\" loading=\"lazy\"/>`
-              );
+              items.push({ type: 'image', src, alt: title });
             });
           }
-
-          gallery.innerHTML = fragments.join('');
+          allItems = items;
+          renderPage();
         } catch (err) {
           console.error('加载画廊失败:', err);
         }
       }
+
+      loadMoreBtn.addEventListener('click', () => {
+        currentPage++;
+        renderPage();
+      });
+
+      moreBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        settingsPanel.classList.remove('hidden');
+        settingsPanel.classList.add('flex');
+      });
+
+      closeSettings.addEventListener('click', () => {
+        settingsPanel.classList.add('hidden');
+        settingsPanel.classList.remove('flex');
+      });
+
+      applySettings.addEventListener('click', () => {
+        const cols = Math.max(1, parseInt(columnCountInput.value) || 1);
+        perPage = Math.max(1, parseInt(perPageInput.value) || 1);
+        gallery.style.columnCount = String(cols);
+        currentPage = 0;
+        renderPage();
+        settingsPanel.classList.add('hidden');
+        settingsPanel.classList.remove('flex');
+      });
 
       document.addEventListener('DOMContentLoaded', loadGallery);
     </script>
