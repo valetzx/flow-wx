@@ -84,6 +84,31 @@ function proxifyHtml(html: string): string {
   );
 }
 
+// ---------- 抓取微信文章 HTML ----------
+async function fetchWxArticle(url: string): Promise<string> {
+  const res = await fetch(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (Deno)",
+      Referer: "https://mp.weixin.qq.com/",
+    },
+  });
+  if (!res.ok) {
+    throw new Error(`fetch article failed: ${res.status}`);
+  }
+  const raw = await res.text();
+
+  const $ = cheerio.load(raw, { decodeEntities: false });
+  const title =
+    $("#activity-name").text().trim() ||
+    $(".rich_media_title").text().trim() ||
+    "微信文章";
+  const content = $("#js_content").html() || "";
+
+  const body = proxifyHtml(content);
+
+  return `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>${title}</title></head><body>${body}</body></html>`;
+}
+
 // ---------- 反向代理图片 ----------
 async function proxyImage(imgUrl: string): Promise<Response> {
   try {
@@ -153,6 +178,20 @@ async function handler(req: Request): Promise<Response> {
     const imgUrl = searchParams.get("url");
     if (!imgUrl) return new Response("missing url", { status: 400 });
     return await proxyImage(imgUrl);
+  }
+
+  // /api/test —— 抓取并返回指定微信文章 HTML
+  if (pathname === "/api/test") {
+    const targetUrl =
+      "https://mp.weixin.qq.com/s/d-h4lk1eHbUvUV5HOZlb-Q";
+    try {
+      const html = await fetchWxArticle(targetUrl);
+      return new Response(html, {
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+      });
+    } catch (err) {
+      return new Response(String(err), { status: 500 });
+    }
   }
 
   // /ideas —— 灵感瀑布流页面
