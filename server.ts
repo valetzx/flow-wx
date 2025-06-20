@@ -13,6 +13,7 @@ const __dirname = dirname(fromFileUrl(import.meta.url));
 const indexHtml = await Deno.readTextFile(join(__dirname, "main.html"));
 const ideasHtml = await Deno.readTextFile(join(__dirname, "ideas.html"));
 const swHtml = await Deno.readTextFile(join(__dirname, "sw.js"));
+const adminHtml = await Deno.readTextFile(join(__dirname, "admin.html"));
 const fallbackSentences = [
   "小荷才露尖尖角",
   "早有蜻蜓立上头",
@@ -259,6 +260,13 @@ async function handler(req: Request): Promise<Response> {
     const imgUrl = searchParams.get("url");
     if (!imgUrl) return new Response("missing url", { status: 400 });
     return await proxyImage(imgUrl);
+  }
+
+  // /@admin —— 管理页面
+  if (pathname === "/@admin") {
+    return new Response(adminHtml, {
+      headers: { "Content-Type": "text/html; charset=utf-8" },
+    });
   }
 
   // /ideas —— 灵感瀑布流页面

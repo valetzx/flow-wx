@@ -233,6 +233,11 @@
       const modalImg = document.getElementById('modalImg');
       let imgScale = 1;
 
+      const apiDomain = localStorage.getItem('apiDomain') || '';
+      function withDomain(path) {
+        return apiDomain ? apiDomain.replace(/\/$/, '') + path : path;
+      }
+
       const homeLink = document.querySelector('a[aria-label="\u4e3b\u9875"]');
       let notifyDot = null;
 
@@ -306,7 +311,7 @@
       function createImage(src, alt) {
         const img = document.createElement('img');
         img.className = 'masonry-item w-full rounded-2xl shadow object-cover hover:opacity-90 transition-opacity';
-        img.dataset.src = `/img?url=${src}`;
+        img.dataset.src = withDomain(`/img?url=${src}`);
         img.alt = alt;
         img.loading = 'lazy';
         // 随机高度以增强瀑布流效果
@@ -366,7 +371,9 @@
       }
 
       async function fetchLatest() {
-        const res = await fetch('/api/wx', { headers: { 'x-skip-cache': '1' } });
+        const res = await fetch(withDomain('/api/wx'), {
+          headers: { 'x-skip-cache': '1' },
+        });
         if (!res.ok) throw new Error('Network response was not ok');
         return await res.json();
       }

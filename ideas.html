@@ -294,6 +294,11 @@
         const clearCacheBtn = document.getElementById('clearCache');
         let dailyData = null;
 
+        const apiDomain = localStorage.getItem('apiDomain') || '';
+        function withDomain(path) {
+          return apiDomain ? apiDomain.replace(/\/$/, '') + path : path;
+        }
+
         const homeLink = document.querySelector('a[aria-label="\u4e3b\u9875"]');
         let notifyDot = null;
 
@@ -394,7 +399,7 @@
           const img = document.createElement("img");
           img.className =
             "w-full rounded-t-2xl object-cover hover:opacity-90 transition-opacity aspect-video";
-          img.dataset.src = `/img?url=${src}`;
+          img.dataset.src = withDomain(`/img?url=${src}`);
           img.alt = alt;
           img.loading = "lazy";
           const randomHeight = 180 + Math.random() * 120; // 180 - 300px
@@ -457,7 +462,7 @@
               showLoading();
               try {
                 const res = await fetch(
-                  `/api/article?url=${encodeURIComponent(url)}`,
+                  withDomain(`/api/article?url=${encodeURIComponent(url)}`),
                 );
                 html = await res.text();
                 if (res.ok) {
@@ -544,7 +549,7 @@
         }
 
         async function fetchLatest() {
-          const res = await fetch("/api/wx", {
+          const res = await fetch(withDomain("/api/wx"), {
             headers: { "x-skip-cache": "1" },
           });
           if (!res.ok) throw new Error("Network response was not ok");
@@ -552,7 +557,7 @@
         }
 
         async function fetchDaily() {
-          const res = await fetch("/api/daily", {
+          const res = await fetch(withDomain("/api/daily"), {
             headers: { "x-skip-cache": "1" },
           });
           if (!res.ok) throw new Error("Network response was not ok");
