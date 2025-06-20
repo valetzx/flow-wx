@@ -246,6 +246,19 @@
       function withDomain(path) {
         return buildUrl(path, apiDomains[0]);
       }
+      function loadImgWithFallback(img) {
+        const path = img.dataset.path;
+        if (!path) return;
+        let index = 0;
+        function attempt() {
+          img.src = buildUrl(path, apiDomains[index] || '');
+        }
+        img.onerror = () => {
+          index++;
+          if (index < apiDomains.length) attempt();
+        };
+        attempt();
+      }
       async function fetchWithFallback(path, options = {}) {
         if (path.startsWith('/api/wx') || path.startsWith('/api/article') || path.startsWith('/api/daily')) {
           return fetch(path, options);
@@ -319,7 +332,7 @@
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             const img = entry.target;
-            img.src = img.dataset.src;
+            loadImgWithFallback(img);
             obs.unobserve(img);
           }
         });
@@ -332,7 +345,7 @@
       function createImage(src, alt) {
         const img = document.createElement('img');
         img.className = 'masonry-item w-full rounded-2xl shadow object-cover hover:opacity-90 transition-opacity';
-        img.dataset.src = withDomain(`/img?url=${src}`);
+        img.dataset.path = `/img?url=${src}`;
         img.alt = alt;
         img.loading = 'lazy';
         // 随机高度以增强瀑布流效果
@@ -348,7 +361,7 @@
           img.style.minHeight = '';
         });
         observer.observe(img);
-        img.addEventListener('click', () => openImage(img.dataset.src || img.src));
+        img.addEventListener('click', () => openImage(img.src || buildUrl(img.dataset.path, apiDomains[0])));
         return img;
       }
 

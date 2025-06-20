@@ -301,11 +301,24 @@
         if (apiDomains.length === 0 && Array.isArray(window.API_DOMAINS)) {
           apiDomains = window.API_DOMAINS;
         }
-        function buildUrl(path, domain) {
-          return domain ? domain.replace(/\/$/, '') + path : path;
-        }
-        function withDomain(path) {
-          return buildUrl(path, apiDomains[0]);
+       function buildUrl(path, domain) {
+         return domain ? domain.replace(/\/$/, '') + path : path;
+       }
+       function withDomain(path) {
+         return buildUrl(path, apiDomains[0]);
+       }
+        function loadImgWithFallback(img) {
+          const path = img.dataset.path;
+          if (!path) return;
+          let index = 0;
+          function attempt() {
+            img.src = buildUrl(path, apiDomains[index] || '');
+          }
+          img.onerror = () => {
+            index++;
+            if (index < apiDomains.length) attempt();
+          };
+          attempt();
         }
         async function fetchWithFallback(path, options = {}) {
         if (path.startsWith('/api/wx') || path.startsWith('/api/article') || path.startsWith('/api/daily')) {
@@ -399,7 +412,7 @@
             entries.forEach((entry) => {
               if (entry.isIntersecting) {
                 const img = entry.target;
-                img.src = img.dataset.src;
+                loadImgWithFallback(img);
                 obs.unobserve(img);
               }
             });
@@ -420,7 +433,7 @@
           const img = document.createElement("img");
           img.className =
             "w-full rounded-t-2xl object-cover hover:opacity-90 transition-opacity aspect-video";
-          img.dataset.src = withDomain(`/img?url=${src}`);
+          img.dataset.path = `/img?url=${src}`;
           img.alt = alt;
           img.loading = "lazy";
           const randomHeight = 180 + Math.random() * 120; // 180 - 300px
