@@ -83,7 +83,7 @@ async function scrape(url: string) {
     });
 
     // 解析 <catch id="json-wx">
-    let jsonWxRaw = $("catch#json-wx").html()?.trim();
+    const jsonWxRaw = $("catch#json-wx").html()?.trim();
     let jsonWx: unknown;
     if (jsonWxRaw) {
       try {
@@ -101,10 +101,25 @@ async function scrape(url: string) {
 
 // ---------- 工具：把文章 HTML 里的微信图片替换成代理地址 (可选) ----------
 function proxifyHtml(html: string): string {
-  return html.replace(
-    /https?:\/\/mmbiz[^"'?]+\.(?:jpg|jpeg|png|gif)/g,
-    (m) => `/img?url=${encodeURIComponent(m)}`,
-  );
+  const $ = cheerio.load(html, { decodeEntities: false });
+
+  // background-image or other url() references in style attributes
+  $('[style]').each((_, el) => {
+    let style = $(el).attr('style') ?? '';
+    style = style.replace(
+      /url\((['"]?)(https?:\/\/[^'"\)]+)\1\)/g,
+      (match, quote, url) => {
+        if (url.includes('mmbiz')) {
+          const clean = url.replace(/&amp;/g, '&');
+          return `url(${quote}/img?url=${encodeURIComponent(clean)}${quote})`;
+        }
+        return match;
+      },
+    );
+    $(el).attr('style', style);
+  });
+
+  return $.html();
 }
 
 // ---------- 反向代理图片 ----------
@@ -130,7 +145,7 @@ async function proxyImage(imgUrl: string): Promise<Response> {
         "Cache-Control": "public, max-age=31536000, immutable",
       },
     });
-  } catch (e) {
+  } catch (_e) {
     // 微信有时 302 空图 + 403，统统返回 502 方便前端兜底
     return new Response("proxy error", { status: 502 });
   }
