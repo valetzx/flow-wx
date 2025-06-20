@@ -91,7 +91,29 @@
       nav.mobile .notify-dot {
         right: 2rem;
       }
-
+      /* 弹窗文章样式美化 */
+      #articleModal > div {
+        box-shadow: 0 10px 25px rgb(0 0 0 / 0.2);
+      }
+      #articleContent img {
+        width: 100%;
+        object-fit: cover;
+        aspect-ratio: 16/9;
+        border-radius: 0.5rem;
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+      }
+      #articleContent h1,
+      #articleContent h2,
+      #articleContent h3 {
+        margin-top: 1.25rem;
+        font-weight: 600;
+      }
+      #articleContent p {
+        line-height: 1.7;
+        margin-bottom: 1rem;
+      }
+      
     </style>
   </head>
   <body
@@ -324,7 +346,7 @@
         function createImage(src, alt) {
           const img = document.createElement("img");
           img.className =
-            "w-full rounded-t-2xl object-cover hover:opacity-90 transition-opacity";
+            "w-full rounded-t-2xl object-cover hover:opacity-90 transition-opacity aspect-video";
           img.dataset.src = `/img?url=${src}`;
           img.alt = alt;
           img.loading = "lazy";
@@ -358,11 +380,11 @@
           text.className = "p-5 flex flex-col gap-2";
 
           const h2 = document.createElement("h2");
-          h2.className = "text-xl font-semibold text-slate-900";
+          h2.className = "text-xl font-semibold text-slate-900 tracking-tight mb-1";
           h2.textContent = item.title;
 
           const p = document.createElement("p");
-          p.className = "text-sm text-gray-600 leading-relaxed";
+          p.className = "text-sm text-gray-600 leading-relaxed mb-2";
           p.textContent = item.description;
 
           const link = document.createElement("a");
