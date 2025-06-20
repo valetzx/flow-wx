@@ -294,9 +294,27 @@
         const clearCacheBtn = document.getElementById('clearCache');
         let dailyData = null;
 
-        const apiDomain = localStorage.getItem('apiDomain') || '';
+        const stored = localStorage.getItem('apiDomains') || localStorage.getItem('apiDomain') || '';
+        let apiDomains = stored
+          ? stored.split(/\r?\n|,/).map((s) => s.trim()).filter(Boolean)
+          : [];
+        if (apiDomains.length === 0 && Array.isArray(window.API_DOMAINS)) {
+          apiDomains = window.API_DOMAINS;
+        }
+        function buildUrl(path, domain) {
+          return domain ? domain.replace(/\/$/, '') + path : path;
+        }
         function withDomain(path) {
-          return apiDomain ? apiDomain.replace(/\/$/, '') + path : path;
+          return buildUrl(path, apiDomains[0]);
+        }
+        async function fetchWithFallback(path, options = {}) {
+          for (const d of apiDomains) {
+            try {
+              const res = await fetch(buildUrl(path, d), options);
+              if (res.ok) return res;
+            } catch {}
+          }
+          return fetch(path, options);
         }
 
         const homeLink = document.querySelector('a[aria-label="\u4e3b\u9875"]');
@@ -461,8 +479,8 @@
             if (!html) {
               showLoading();
               try {
-                const res = await fetch(
-                  withDomain(`/api/article?url=${encodeURIComponent(url)}`),
+                const res = await fetchWithFallback(
+                  `/api/article?url=${encodeURIComponent(url)}`,
                 );
                 html = await res.text();
                 if (res.ok) {
@@ -549,7 +567,7 @@
         }
 
         async function fetchLatest() {
-          const res = await fetch(withDomain("/api/wx"), {
+          const res = await fetchWithFallback("/api/wx", {
             headers: { "x-skip-cache": "1" },
           });
           if (!res.ok) throw new Error("Network response was not ok");
@@ -557,7 +575,7 @@
         }
 
         async function fetchDaily() {
-          const res = await fetch(withDomain("/api/daily"), {
+          const res = await fetchWithFallback("/api/daily", {
             headers: { "x-skip-cache": "1" },
           });
           if (!res.ok) throw new Error("Network response was not ok");
