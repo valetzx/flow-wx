@@ -174,6 +174,7 @@ export default {
           }
         });
         cache = { data: merged, timestamp: Date.now() };
+        console.log("GET /api/wx result", merged);
         return json(merged);
       } catch (err) {
         return json({ error: err.message }, 500);
@@ -220,6 +221,7 @@ export default {
         });
         const content = proxifyHtml($('#js_content').html() || "");
         const page = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8" /><title>${title}</title></head><body><h1 class="text-2xl font-semibold mb-2">${title}</h1>${content}</body></html>`;
+        console.log("GET /api/article", { url, title });
         return new Response(page, {
           headers: { "Content-Type": "text/html; charset=utf-8" },
         });
