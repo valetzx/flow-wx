@@ -3,8 +3,10 @@ import * as cheerio from "cheerio";
 import mainHtml from "./main.html";
 import ideasHtml from "./ideas.html";
 import adminHtml from "./admin.html";
-import swHtml from "./sw.js";
+// import swHtml from "./sw.js";
 import articleText from "./article.txt";
+const swHtml = await (await fetch(new URL('./sw.js', import.meta.url))).text();
+
 
 const DAILY_URL = "https://www.cikeee.com/api?app_key=pub_23020990025";
 const DAILY_TTL = 60 * 60 * 8000;
