@@ -27,6 +27,9 @@ function randomSentence() {
 }
 // 微信文章列表
 const WX_URL = Deno.env.get("WX_URL") || "article.txt";
+const DAILY_URL = "https://www.cikeee.com/api?app_key=pub_23020990025";
+const DAILY_TTL = 60 * 60 * 1000; // 1 小时
+let dailyCache: { data: unknown; timestamp: number } = { data: null, timestamp: 0 };
 let urls: string[] = [];
 try {
   const res = await fetch(WX_URL);
@@ -156,6 +159,22 @@ async function handler(req: Request): Promise<Response> {
 
       cache = { data: merged, timestamp: Date.now() };
       return json(merged);
+    } catch (err) {
+      return json({ error: err.message }, 500);
+    }
+  }
+
+  // /api/daily —— 获取每日电影台词等信息
+  if (pathname === "/api/daily") {
+    try {
+      if (dailyCache.data && Date.now() - dailyCache.timestamp < DAILY_TTL) {
+        return json(dailyCache.data);
+      }
+      const res = await fetch(DAILY_URL);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      dailyCache = { data, timestamp: Date.now() };
+      return json(data);
     } catch (err) {
       return json({ error: err.message }, 500);
     }
