@@ -147,23 +147,44 @@
     </main>
 
     <!-- 设置面板 -->
-    <div id="settingsPanel" class="fixed inset-0 bg-black/50 hidden items-center justify-center">
-      <div class="bg-white rounded-xl p-4 w-72 space-y-3">
-        <div class="flex justify-between items-center">
-          <h2 class="font-semibold">设置</h2>
-          <button id="closeSettings" class="text-xl leading-none">&times;</button>
-        </div>
-        <label class="block text-sm">列数
-          <input id="columnCountInput" type="number" min="1" max="6" value="4" class="mt-1 w-full border rounded p-1" />
-        </label>
-        <label class="block text-sm">每页图片数量
-          <input id="perPageInput" type="number" min="1" value="30" class="mt-1 w-full border rounded p-1" />
-        </label>
+      <div
+        id="settingsPanel"
+        class="fixed inset-0 bg-black/50 hidden items-center justify-center"
+      >
+        <div class="bg-white rounded-xl p-4 w-72 space-y-3">
+          <div class="flex justify-between items-center">
+            <h2 class="font-semibold">设置</h2>
+            <button id="closeSettings" class="text-xl leading-none">
+              &times;
+            </button>
+          </div>
+          <label class="block text-sm"
+            >列数
+            <input
+              id="columnCountInput"
+              type="number"
+              min="1"
+              max="6"
+              value="4"
+              class="mt-1 w-full border rounded p-1"
+            />
+          </label>
+          <label class="block text-sm"
+            >加载卡片数量
+            <input
+              id="perPageInput"
+              type="number"
+              min="1"
+              value="30"
+              class="mt-1 w-full border rounded p-1"
+            />
+          </label>
           <button id="applySettings" class="w-full bg-blue-500 text-white py-1 rounded">应用</button>
-          <button id="clearCache" class="w-full bg-red-500 text-white py-1 rounded">清理缓存</button>      </div>
+          <button id="clearCache" class="w-full bg-red-500 text-white py-1 rounded">清理缓存</button> 
            <footer class="text-xs text-center text-gray-400 my-4">
               <a href="https://github.com/valetzx/flow-wx" class="hover:underline">查看项目源码 </a> · <a href="#">联系我吧</a>
-        </footer>
+          </footer>
+        </div>
       </div>
 
     <!-- 图片查看弹窗 -->
