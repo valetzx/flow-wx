@@ -130,6 +130,29 @@
           transform: rotate(360deg);
         }
       }
+
+      #articleModal > div,
+      #settingsPanel > div {
+        transform: scale(0.9);
+        opacity: 0;
+        transition: transform 0.2s, opacity 0.2s;
+      }
+
+      #articleModal.show > div,
+      #settingsPanel.show > div {
+        animation: modalZoom 0.2s forwards;
+      }
+
+      @keyframes modalZoom {
+        from {
+          transform: scale(0.9);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
       
     </style>
   </head>
@@ -293,14 +316,14 @@
         function showArticle(html) {
           articleContent.innerHTML = html;
           articleModal.classList.remove("hidden");
-          articleModal.classList.add("flex");
+          articleModal.classList.add("flex", "show");
         }
 
         function showLoading() {
           articleContent.innerHTML =
             '<div class="h-40 flex items-center justify-center"><div class="spinner"></div></div>';
           articleModal.classList.remove("hidden");
-          articleModal.classList.add("flex");
+          articleModal.classList.add("flex", "show");
         }
 
         function showMovie(data) {
@@ -310,12 +333,12 @@
             <p>${data.mov_intro}</p>
           `;
           articleModal.classList.remove("hidden");
-          articleModal.classList.add("flex");
+          articleModal.classList.add("flex", "show");
         }
 
         function hideArticle() {
           articleModal.classList.add("hidden");
-          articleModal.classList.remove("flex");
+          articleModal.classList.remove("flex", "show");
           articleContent.innerHTML = "";
         }
 
@@ -597,12 +620,12 @@
         moreBtn.addEventListener("click", (e) => {
           e.preventDefault();
           settingsPanel.classList.remove("hidden");
-          settingsPanel.classList.add("flex");
+          settingsPanel.classList.add("flex", "show");
         });
 
         closeSettings.addEventListener("click", () => {
           settingsPanel.classList.add("hidden");
-          settingsPanel.classList.remove("flex");
+          settingsPanel.classList.remove("flex", "show");
         });
 
         closeArticle.addEventListener("click", hideArticle);
@@ -619,7 +642,7 @@
           currentPage = 0;
           renderPage();
           settingsPanel.classList.add('hidden');
-          settingsPanel.classList.remove('flex');
+          settingsPanel.classList.remove('flex', 'show');
         });
 
         clearCacheBtn.addEventListener('click', async () => {
