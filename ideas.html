@@ -230,6 +230,7 @@
         const articleModal = document.getElementById("articleModal");
         const closeArticle = document.getElementById("closeArticle");
         const articleContent = document.getElementById("articleContent");
+        let dailyData = null;
 
         const homeLink = document.querySelector('a[aria-label="\u4e3b\u9875"]');
         let notifyDot = null;
@@ -252,6 +253,16 @@
 
         function showArticle(html) {
           articleContent.innerHTML = html;
+          articleModal.classList.remove("hidden");
+          articleModal.classList.add("flex");
+        }
+
+        function showMovie(data) {
+          articleContent.innerHTML = `
+            <h2 class="text-2xl font-semibold mb-2">${data.mov_title}</h2>
+            <p class="text-sm text-gray-500 mb-4">${data.mov_rating}分 ${Array.isArray(data.mov_type) ? data.mov_type.join(" ") : data.mov_type} ${data.mov_year} ${data.mov_area}</p>
+            <p>${data.mov_text}</p>
+          `;
           articleModal.classList.remove("hidden");
           articleModal.classList.add("flex");
         }
@@ -382,6 +393,30 @@
           return wrapper;
         }
 
+        function createDailyCard(item) {
+          const wrapper = document.createElement("div");
+          wrapper.className = "masonry-item bg-white rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer";
+          if (item.mov_pic) {
+            const img = document.createElement("img");
+            img.className = "w-full object-cover";
+            img.src = item.mov_pic;
+            wrapper.appendChild(img);
+          }
+          const text = document.createElement("div");
+          text.className = "p-5 flex flex-col gap-2";
+          const h2 = document.createElement("h2");
+          h2.className = "text-xl font-semibold text-slate-900";
+          h2.textContent = item.mov_title;
+          const p = document.createElement("p");
+          p.className = "text-sm text-gray-600 leading-relaxed";
+          p.textContent = item.mov_text;
+          text.appendChild(h2);
+          text.appendChild(p);
+          wrapper.appendChild(text);
+          wrapper.addEventListener("click", () => showMovie(item));
+          return wrapper;
+        }
+
         function buildItems(data) {
           const items = [];
           for (const [title, { description, images, url }] of Object.entries(
@@ -398,6 +433,9 @@
 
         function renderPage() {
           gallery.innerHTML = "";
+          if (dailyData) {
+            gallery.appendChild(createDailyCard(dailyData));
+          }
           const end = (currentPage + 1) * perPage;
           const items = allItems.slice(0, end);
           items.forEach((item) => {
@@ -418,6 +456,14 @@
 
         async function fetchLatest() {
           const res = await fetch("/api/wx", {
+            headers: { "x-skip-cache": "1" },
+          });
+          if (!res.ok) throw new Error("Network response was not ok");
+          return await res.json();
+        }
+
+        async function fetchDaily() {
+          const res = await fetch("/api/daily", {
             headers: { "x-skip-cache": "1" },
           });
           if (!res.ok) throw new Error("Network response was not ok");
@@ -448,6 +494,32 @@
             }
           } catch (err) {
             console.error("加载画廊失败:", err);
+          }
+        }
+
+        async function loadDaily() {
+          const cachedStr = localStorage.getItem("dailyData");
+          let cached;
+          if (cachedStr) {
+            try {
+              cached = JSON.parse(cachedStr);
+            } catch {}
+          }
+          if (cached) {
+            dailyData = cached;
+            renderPage();
+          }
+
+          try {
+            const latest = await fetchDaily();
+            const latestStr = JSON.stringify(latest);
+            if (!cachedStr || latestStr !== cachedStr) {
+              localStorage.setItem("dailyData", latestStr);
+              dailyData = latest;
+              renderPage();
+            }
+          } catch (err) {
+            console.error("加载每日电影失败:", err);
           }
         }
 
@@ -484,7 +556,10 @@
           settingsPanel.classList.remove("flex");
         });
 
-        document.addEventListener("DOMContentLoaded", initGallery);
+        document.addEventListener("DOMContentLoaded", () => {
+          initGallery();
+          loadDaily();
+        });
         homeLink.addEventListener("click", () => {
           const newStr = localStorage.getItem("wxDataNew");
           if (newStr) {

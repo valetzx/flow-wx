@@ -1,4 +1,4 @@
-const CACHE_NAME = "wx-cache-v1";
+const CACHE_NAME = "wx-cache-v2";
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
@@ -20,7 +20,7 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
-  if (url.pathname === "/api/wx") {
+  if (url.pathname === "/api/wx" || url.pathname === "/api/daily") {
     if (event.request.headers.get("x-skip-cache")) {
       event.respondWith(fetchAndCache(event.request));
     } else {
@@ -36,7 +36,7 @@ self.addEventListener("fetch", (event) => {
 async function fetchAndCache(request) {
   const cache = await caches.open(CACHE_NAME);
   const res = await fetch(request);
-  if (res.ok) await cache.put("/api/wx", res.clone());
+  if (res.ok) await cache.put(request, res.clone());
   return res;
 }
 
