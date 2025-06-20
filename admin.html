@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="p-4">
+    <h1 class="text-xl font-bold mb-4">设置 API 域名</h1>
+    <div class="mb-4">
+      <input id="domainInput" type="text" placeholder="https://example.com" class="border p-2 w-full" />
+    </div>
+    <button id="saveBtn" class="bg-blue-500 text-white px-4 py-2 rounded">保存</button>
+    <script>
+      const input = document.getElementById('domainInput');
+      input.value = localStorage.getItem('apiDomain') || '';
+      document.getElementById('saveBtn').addEventListener('click', () => {
+        localStorage.setItem('apiDomain', input.value.trim());
+        alert('已保存');
+      });
+    </script>
+  </body>
+</html>
