@@ -14,11 +14,11 @@ const indexHtml = await Deno.readTextFile(join(__dirname, "main.html"));
 const ideasHtml = await Deno.readTextFile(join(__dirname, "ideas.html"));
 const swHtml = await Deno.readTextFile(join(__dirname, "sw.js"));
 const fallbackSentences = [
-  "精彩内容等你发现",
-  "无题文章",
-  "这里没有标题",
+  "小荷才露尖尖角",
+  "早有蜻蜓立上头",
+  "采菊东篱下",
+  "悠然见南山",
   "看看内容吧",
-  "分享的文章",
 ];
 function randomSentence() {
   return fallbackSentences[
