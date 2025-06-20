@@ -367,7 +367,7 @@
 
           const link = document.createElement("a");
           link.className =
-            "text-blue-600 text-sm hover:underline self-start";
+            "text-xs text-gray-400 hover:underline self-end";
           link.textContent = "查看原文";
           link.href = item.url;
           link.target = "_blank";
@@ -423,7 +423,7 @@
           const source = document.createElement("a");
           source.className = "text-xs text-gray-400 hover:underline self-end";
           source.textContent = "来自此刻电影";
-          source.href = item.mov_link || "https://www.cikeee.com";
+          source.href = "https://www.cikeee.cc/";
           source.target = "_blank";
           source.rel = "noopener noreferrer";
           source.addEventListener("click", (e) => e.stopPropagation());
