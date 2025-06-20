@@ -1,4 +1,4 @@
-const CACHE_NAME = "wx-cache-v2";
+export default `const CACHE_NAME = "wx-cache-v2";
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
@@ -60,3 +60,4 @@ async function cacheThenNetwork(request) {
     throw err;
   }
 }
+`;
