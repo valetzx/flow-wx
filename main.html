@@ -149,8 +149,8 @@
         <label class="block text-sm">每页图片数量
           <input id="perPageInput" type="number" min="1" value="30" class="mt-1 w-full border rounded p-1" />
         </label>
-        <button id="applySettings" class="w-full bg-blue-500 text-white py-1 rounded">应用</button>
-      </div>
+          <button id="applySettings" class="w-full bg-blue-500 text-white py-1 rounded">应用</button>
+          <button id="clearCache" class="w-full bg-red-500 text-white py-1 rounded">清理缓存</button>      </div>
     </div>
 
     <script>
@@ -162,6 +162,7 @@
       const applySettings = document.getElementById('applySettings');
       const columnCountInput = document.getElementById('columnCountInput');
       const perPageInput = document.getElementById('perPageInput');
+      const clearCacheBtn = document.getElementById('clearCache');
 
       const homeLink = document.querySelector('a[aria-label="\u4e3b\u9875"]');
       let notifyDot = null;
@@ -340,6 +341,15 @@
         settingsPanel.classList.remove('flex');
       });
 
+      clearCacheBtn.addEventListener('click', async () => {
+        ['wxData', 'wxDataNew', 'columnCount', 'perPage'].forEach((k) => localStorage.removeItem(k));
+        if ('caches' in window) {
+          const names = await caches.keys();
+          await Promise.all(names.map((n) => caches.delete(n)));
+        }
+        location.reload();
+      });
+
       document.addEventListener('DOMContentLoaded', initGallery);
       homeLink.addEventListener('click', () => {
         const newStr = localStorage.getItem('wxDataNew');
@@ -358,6 +368,9 @@
         });
       }
     </script>
-</div>
+      <footer class="text-xs text-center text-gray-400 my-4">
+        查看项目源码 <a href="https://github.com/valetzx/flow-wx" class="hover:underline"></a> · 联系我吧 <a href="#"></a>
+      </footer>
+    </div>
   </body>
 </html>

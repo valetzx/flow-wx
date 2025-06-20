@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
@@ -220,12 +220,8 @@
               class="mt-1 w-full border rounded p-1"
             />
           </label>
-          <button
-            id="applySettings"
-            class="w-full bg-blue-500 text-white py-1 rounded"
-          >
-            应用
-          </button>
+          <button id="applySettings" class="w-full bg-blue-500 text-white py-1 rounded">应用</button>
+          <button id="clearCache" class="w-full bg-red-500 text-white py-1 rounded">清理缓存</button>      </div>
         </div>
       </div>
 
@@ -256,6 +252,7 @@
         const articleModal = document.getElementById("articleModal");
         const closeArticle = document.getElementById("closeArticle");
         const articleContent = document.getElementById("articleContent");
+        const clearCacheBtn = document.getElementById('clearCache');
         let dailyData = null;
 
         const homeLink = document.querySelector('a[aria-label="\u4e3b\u9875"]');
@@ -588,16 +585,25 @@
           if (e.target === articleModal) hideArticle();
         });
 
-        applySettings.addEventListener("click", () => {
+        applySettings.addEventListener('click', () => {
           const cols = Math.max(1, parseInt(columnCountInput.value) || 1);
           perPage = Math.max(1, parseInt(perPageInput.value) || 1);
           gallery.style.columnCount = String(cols);
-          localStorage.setItem("columnCount", String(cols));
-          localStorage.setItem("perPage", String(perPage));
+          localStorage.setItem('columnCount', String(cols));
+          localStorage.setItem('perPage', String(perPage));
           currentPage = 0;
           renderPage();
-          settingsPanel.classList.add("hidden");
-          settingsPanel.classList.remove("flex");
+          settingsPanel.classList.add('hidden');
+          settingsPanel.classList.remove('flex');
+        });
+
+        clearCacheBtn.addEventListener('click', async () => {
+          ['wxData', 'wxDataNew', 'columnCount', 'perPage'].forEach((k) => localStorage.removeItem(k));
+          if ('caches' in window) {
+            const names = await caches.keys();
+            await Promise.all(names.map((n) => caches.delete(n)));
+          }
+          location.reload();
         });
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -621,6 +627,9 @@
           });
         }
       </script>
+      <footer class="text-xs text-center text-gray-400 my-4">
+        查看项目源码 <a href="https://github.com/valetzx/flow-wx" class="underline">https://github.com/valetzx/flow-wx</a>，联系我吧
+      </footer>
     </div>
   </body>
 </html>
