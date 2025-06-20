@@ -261,7 +261,7 @@
           articleContent.innerHTML = `
             <h2 class="text-2xl font-semibold mb-2">${data.mov_title}</h2>
             <p class="text-sm text-gray-500 mb-4">${data.mov_rating}分 ${Array.isArray(data.mov_type) ? data.mov_type.join(" ") : data.mov_type} ${data.mov_year} ${data.mov_area}</p>
-            <p>${data.mov_text}</p>
+            <p>${data.mov_intro}</p>
           `;
           articleModal.classList.remove("hidden");
           articleModal.classList.add("flex");
@@ -278,7 +278,7 @@
 
         const navEl = document.querySelector("nav");
         const contentEl = document.getElementById("content");
-        const isMobile = /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(
+        const isMobile = /Mobi|Android|iPhone|Windows Phone/i.test(
           navigator.userAgent,
         );
 
