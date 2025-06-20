@@ -3,7 +3,7 @@ import * as cheerio from "cheerio";
 import mainHtml from "./main.html";
 import ideasHtml from "./ideas.html";
 import adminHtml from "./admin.html";
-import swHtml from "./sw.js?raw";
+import swHtml from "./sw.js";
 import articleText from "./article.txt";
 
 const DAILY_URL = "https://www.cikeee.com/api?app_key=pub_23020990025";
