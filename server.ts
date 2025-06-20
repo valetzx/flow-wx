@@ -153,7 +153,7 @@ function proxifyHtml(html: string): string {
       (match, quote, url) => {
         if (url.includes('mmbiz')) {
           const clean = url.replace(/&amp;/g, '&');
-          return `url(${quote}/img?url=${encodeURIComponent(clean)}${quote})`;
+          return `url(${quote}?url=${encodeURIComponent(clean)}${quote})`;
         }
         return match;
       },
@@ -265,7 +265,7 @@ async function handler(req: Request): Promise<Response> {
       $("#js_content img").each((_, el) => {
         const src = $(el).attr("data-src") || $(el).attr("src");
         if (src) {
-          const imgPath = `/img?url=${encodeURIComponent(src)}`;
+          const imgPath = `?url=${encodeURIComponent(src)}`;
           const domain = imgDomains[0];
           const full = domain ? domain.replace(/\/$/, "") + imgPath : imgPath;
           $(el).attr("src", full);

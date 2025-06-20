@@ -351,7 +351,7 @@
       function createImage(src, alt) {
         const img = document.createElement('img');
         img.className = 'masonry-item w-full rounded-2xl shadow object-cover hover:opacity-90 transition-opacity';
-        img.dataset.path = `/img?url=${src}`;
+        img.dataset.path = `?url=${src}`;
         img.alt = alt;
         img.loading = 'lazy';
         // 随机高度以增强瀑布流效果

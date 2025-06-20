@@ -439,7 +439,7 @@
           const img = document.createElement("img");
           img.className =
             "w-full rounded-t-2xl object-cover hover:opacity-90 transition-opacity aspect-video";
-          img.dataset.path = `/img?url=${src}`;
+          img.dataset.path = `?url=${src}`;
           img.alt = alt;
           img.loading = "lazy";
           const randomHeight = 180 + Math.random() * 120; // 180 - 300px
