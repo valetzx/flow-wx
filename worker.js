@@ -229,9 +229,10 @@ export default {
     }
 
     if (pathname === "/sw.js") {
-      const swHtml = await (await fetch(new URL('./sw.js', import.meta.url))).text();
-      return new Response(swHtml, {
-        headers: { "Content-Type": "text/javascript; charset=utf-8" },
+        const swUrl = new URL('./sw.js', import.meta.url);
+        const swScript = await (await fetch(swUrl)).text();
+        return new Response(swScript, {
+          headers: { "Content-Type": "application/javascript" }
       });
     }
 
