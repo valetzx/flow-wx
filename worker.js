@@ -6,6 +6,16 @@ import adminHtml from "./admin.html";
 // import swHtml from "./sw.js";
 import articleText from "./article.txt";
 
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+  "Access-Control-Allow-Headers": "*",
+};
+
+function withCors(headers = {}) {
+  return { ...headers, ...CORS_HEADERS };
+}
+
 
 
 const DAILY_URL = "https://www.cikeee.com/api?app_key=pub_23020990025";
@@ -89,17 +99,20 @@ async function proxyImage(imgUrl) {
       },
     });
     if (!wechatRes.ok) {
-      return new Response("fetch image fail", { status: wechatRes.status });
+      return new Response("fetch image fail", {
+        status: wechatRes.status,
+        headers: withCors(),
+      });
     }
     return new Response(wechatRes.body, {
       status: 200,
-      headers: {
+      headers: withCors({
         "Content-Type": wechatRes.headers.get("Content-Type") || "image/jpeg",
         "Cache-Control": "public, max-age=31536000, immutable",
-      },
+      }),
     });
   } catch {
-    return new Response("proxy error", { status: 502 });
+    return new Response("proxy error", { status: 502, headers: withCors() });
   }
 }
 
@@ -143,12 +156,16 @@ async function scrape(url) {
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { "Content-Type": "application/json; charset=utf-8" },
+    headers: withCors({ "Content-Type": "application/json; charset=utf-8" }),
   });
 }
 
 export default {
   async fetch(req, env) {
+    if (req.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: withCors() });
+    }
+
     const { pathname, searchParams } = new URL(req.url);
     const apiDomains = (env.API_DOMAINS || "")
       .split(/[,\s]+/)
@@ -227,7 +244,7 @@ export default {
         const content = proxifyHtml($('#js_content').html() || "");
         const page = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8" /><title>${title}</title></head><body><h1 class="text-2xl font-semibold mb-2">${title}</h1>${content}</body></html>`;
         return new Response(page, {
-          headers: { "Content-Type": "text/html; charset=utf-8" },
+          headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
         });
       } catch (err) {
         return json({ error: err.message }, 500);
@@ -300,30 +317,30 @@ async function cacheThenNetwork(request) {
 }
         `;
         return new Response(swHtml, {
-          headers: { "Content-Type": "application/javascript" }
+          headers: withCors({ "Content-Type": "application/javascript" })
       });
     }
 
     if (pathname === "/img") {
       const imgUrl = searchParams.get("url");
-      if (!imgUrl) return new Response("missing url", { status: 400 });
+      if (!imgUrl) return new Response("missing url", { status: 400, headers: withCors() });
       return await proxyImage(imgUrl);
     }
 
     if (pathname === "/@admin") {
       return new Response(adminPage, {
-        headers: { "Content-Type": "text/html; charset=utf-8" },
+        headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
       });
     }
 
     if (pathname === "/ideas") {
       return new Response(ideasPage, {
-        headers: { "Content-Type": "text/html; charset=utf-8" },
+        headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
       });
     }
 
     return new Response(indexHtml, {
-      headers: { "Content-Type": "text/html; charset=utf-8" },
+      headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
     });
   },
 };
