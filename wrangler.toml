@@ -6,3 +6,5 @@ compatibility_flags = ["nodejs_compat"]
 [[rules]]
 globs = ["**/*.html", "article.txt", "sw.js"]
 type = "Text"
+fallthrough = true
+
