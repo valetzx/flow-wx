@@ -199,9 +199,10 @@ async function handler(req: Request): Promise<Response> {
         randomSentence();
       // 将微信文章中的 data-src 替换为 src，方便直接展示图片
       $("#js_content img").each((_, el) => {
-        const dataSrc = $(el).attr("data-src");
-        if (dataSrc) {
-          $(el).attr("src", dataSrc);
+        const src = $(el).attr("data-src") || $(el).attr("src");
+        if (src) {
+          $(el).attr("src", `/img?url=${encodeURIComponent(src)}`);
+          $(el).removeAttr("data-src");
         }
       });
       const content = $("#js_content").html() || "";
