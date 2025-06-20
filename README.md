@@ -13,4 +13,6 @@
 2. 运行 `wrangler publish` 部署。
 3. 部署前可通过 `wrangler dev` 本地调试。
 
+项目中的 HTML 与文本文件会在构建时作为字符串引入，规则已在 `wrangler.toml` 中配置。
+
 Workers 会读取 `WX_URL` 与 `API_DOMAINS` 这两个环境变量。
