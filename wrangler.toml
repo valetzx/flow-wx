@@ -8,3 +8,6 @@ globs = ["**/*.html", "article.txt", "sw.js"]
 type = "Text"
 fallthrough = true
 
+[observability]
+enabled = true
+head_sampling_rate = 1
