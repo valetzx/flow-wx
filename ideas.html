@@ -365,8 +365,18 @@
           p.className = "text-sm text-gray-600 leading-relaxed";
           p.textContent = item.description;
 
+          const link = document.createElement("a");
+          link.className =
+            "text-blue-600 text-sm hover:underline self-start";
+          link.textContent = "查看原文";
+          link.href = item.url;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.addEventListener("click", (e) => e.stopPropagation());
+
           text.appendChild(h2);
           text.appendChild(p);
+          text.appendChild(link);
           wrapper.appendChild(text);
 
           wrapper.addEventListener("click", async () => {
@@ -410,8 +420,16 @@
           const p = document.createElement("p");
           p.className = "text-sm text-gray-600 leading-relaxed";
           p.textContent = item.mov_text;
+          const source = document.createElement("a");
+          source.className = "text-xs text-gray-400 hover:underline self-end";
+          source.textContent = "来自此刻电影";
+          source.href = item.mov_link || "https://www.cikeee.com";
+          source.target = "_blank";
+          source.rel = "noopener noreferrer";
+          source.addEventListener("click", (e) => e.stopPropagation());
           text.appendChild(h2);
           text.appendChild(p);
+          text.appendChild(source);
           wrapper.appendChild(text);
           wrapper.addEventListener("click", () => showMovie(item));
           return wrapper;
