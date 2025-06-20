@@ -117,6 +117,19 @@
         text-align: justify;
         text-justify: inter-ideograph;
       }
+      .spinner {
+        border: 4px solid #e5e7eb;
+        border-top-color: #3b82f6;
+        border-radius: 50%;
+        width: 2rem;
+        height: 2rem;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
       
     </style>
   </head>
@@ -283,6 +296,13 @@
           articleModal.classList.add("flex");
         }
 
+        function showLoading() {
+          articleContent.innerHTML =
+            '<div class="h-40 flex items-center justify-center"><div class="spinner"></div></div>';
+          articleModal.classList.remove("hidden");
+          articleModal.classList.add("flex");
+        }
+
         function showMovie(data) {
           articleContent.innerHTML = `
             <h2 class="text-2xl font-semibold mb-2">${data.mov_title}</h2>
@@ -411,6 +431,7 @@
             const key = "article:" + url;
             let html = localStorage.getItem(key);
             if (!html) {
+              showLoading();
               try {
                 const res = await fetch(
                   `/api/article?url=${encodeURIComponent(url)}`,
@@ -422,6 +443,7 @@
               } catch (err) {
                 html = "<p>加载失败</p>";
               }
+              await new Promise((r) => setTimeout(r, 300));
             }
             showArticle(html);
           });
