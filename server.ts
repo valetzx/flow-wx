@@ -15,10 +15,15 @@ const apiDomains = apiDomainsEnv
   .split(/[,\s]+/)
   .map((d) => d.trim())
   .filter(Boolean);
+const imgDomainsEnv = Deno.env.get("IMG_DOMAINS") || "";
+const imgDomains = imgDomainsEnv
+  .split(/[,\s]+/)
+  .map((d) => d.trim())
+  .filter(Boolean);
 
 function injectConfig(html: string): string {
-  if (apiDomains.length === 0) return html;
-  const script = `<script>window.API_DOMAINS=${JSON.stringify(apiDomains)};</script>`;
+  if (apiDomains.length === 0 && imgDomains.length === 0) return html;
+  const script = `<script>window.API_DOMAINS=${JSON.stringify(apiDomains)};window.IMG_DOMAINS=${JSON.stringify(imgDomains)};</script>`;
   return html.replace("</head>", `${script}</head>`);
 }
 
@@ -244,7 +249,7 @@ async function handler(req: Request): Promise<Response> {
         const src = $(el).attr("data-src") || $(el).attr("src");
         if (src) {
           const imgPath = `/img?url=${encodeURIComponent(src)}`;
-          const domain = apiDomains[0];
+          const domain = imgDomains[0];
           const full = domain ? domain.replace(/\/$/, "") + imgPath : imgPath;
           $(el).attr("src", full);
           $(el).removeAttr("data-src");

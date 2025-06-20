@@ -56,9 +56,11 @@ async function getUrls(env) {
   return urls;
 }
 
-function injectConfig(html, apiDomains) {
-  if (!apiDomains.length) return html;
-  const script = `<script>window.API_DOMAINS=${JSON.stringify(apiDomains)};</script>`;
+function injectConfig(html, apiDomains, imgDomains) {
+  if (!apiDomains.length && !imgDomains.length) return html;
+  const script = `<script>window.API_DOMAINS=${JSON.stringify(
+    apiDomains,
+  )};window.IMG_DOMAINS=${JSON.stringify(imgDomains)};</script>`;
   return html.replace("</head>", `${script}</head>`);
 }
 
@@ -152,10 +154,14 @@ export default {
       .split(/[,\s]+/)
       .map((d) => d.trim())
       .filter(Boolean);
+    const imgDomains = (env.IMG_DOMAINS || "")
+      .split(/[,\s]+/)
+      .map((d) => d.trim())
+      .filter(Boolean);
 
-    const indexHtml = injectConfig(mainHtml, apiDomains);
-    const ideasPage = injectConfig(ideasHtml, apiDomains);
-    const adminPage = injectConfig(adminHtml, apiDomains);
+    const indexHtml = injectConfig(mainHtml, apiDomains, imgDomains);
+    const ideasPage = injectConfig(ideasHtml, apiDomains, imgDomains);
+    const adminPage = injectConfig(adminHtml, apiDomains, imgDomains);
 
     const urls = await getUrls(env);
 
