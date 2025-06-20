@@ -247,6 +247,9 @@
         return buildUrl(path, apiDomains[0]);
       }
       async function fetchWithFallback(path, options = {}) {
+        if (path.startsWith('/api/wx') || path.startsWith('/api/article') || path.startsWith('/api/daily')) {
+          return fetch(path, options);
+        }
         for (const d of apiDomains) {
           try {
             const res = await fetch(buildUrl(path, d), options);
