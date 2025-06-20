@@ -19,6 +19,14 @@ const fallbackSentences = [
   "采菊东篱下",
   "悠然见南山",
   "看看内容吧",
+  "日长篱落无人过", 
+  "惟有蜻蜓蛱蝶飞",
+  "小娃撑小艇",
+  "日长篱落无人过", 
+  "惟有蜻蜓蛱蝶飞",
+  "偷采白莲回",
+  "不解藏踪迹", 
+  "浮萍一道开",
 ];
 function randomSentence() {
   return fallbackSentences[
@@ -28,7 +36,7 @@ function randomSentence() {
 // 微信文章列表
 const WX_URL = Deno.env.get("WX_URL") || "article.txt";
 const DAILY_URL = "https://www.cikeee.com/api?app_key=pub_23020990025";
-const DAILY_TTL = 60 * 60 * 1000; // 1 小时
+const DAILY_TTL = 60 * 60 * 8000; // 1 小时
 let dailyCache: { data: unknown; timestamp: number } = { data: null, timestamp: 0 };
 let urls: string[] = [];
 try {
