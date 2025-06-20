@@ -294,37 +294,43 @@
         const clearCacheBtn = document.getElementById('clearCache');
         let dailyData = null;
 
-        const stored = localStorage.getItem('apiDomains') || localStorage.getItem('apiDomain') || '';
-        let apiDomains = stored
-          ? stored.split(/\r?\n|,/).map((s) => s.trim()).filter(Boolean)
+        const apiStored = localStorage.getItem('apiDomains') || localStorage.getItem('apiDomain') || '';
+        const imgStored = localStorage.getItem('imgDomains') || '';
+        let apiDomains = apiStored
+          ? apiStored.split(/\r?\n|,/).map((s) => s.trim()).filter(Boolean)
+          : [];
+        let imgDomains = imgStored
+          ? imgStored.split(/\r?\n|,/).map((s) => s.trim()).filter(Boolean)
           : [];
         if (apiDomains.length === 0 && Array.isArray(window.API_DOMAINS)) {
           apiDomains = window.API_DOMAINS;
+        }
+        if (imgDomains.length === 0 && Array.isArray(window.IMG_DOMAINS)) {
+          imgDomains = window.IMG_DOMAINS;
         }
        function buildUrl(path, domain) {
          return domain ? domain.replace(/\/$/, '') + path : path;
        }
        function withDomain(path) {
-         return buildUrl(path, apiDomains[0]);
+         return buildUrl(path, imgDomains[0]);
        }
         function loadImgWithFallback(img) {
           const path = img.dataset.path;
           if (!path) return;
           let index = 0;
           function attempt() {
-            img.src = buildUrl(path, apiDomains[index] || '');
+            img.src = buildUrl(path, imgDomains[index] || '');
           }
           img.onerror = () => {
             index++;
-            if (index < apiDomains.length) attempt();
+            if (index < imgDomains.length) attempt();
           };
           attempt();
         }
         async function fetchWithFallback(path, options = {}) {
-        if (path.startsWith('/api/wx') || path.startsWith('/api/article') || path.startsWith('/api/daily')) {
-          return fetch(path, options);
-        }
-          for (const d of apiDomains) {
+          const isApi = path.startsWith('/api/wx') || path.startsWith('/api/article') || path.startsWith('/api/daily');
+          const domains = isApi ? apiDomains : imgDomains;
+          for (const d of domains) {
             try {
               const res = await fetch(buildUrl(path, d), options);
               if (res.ok) return res;
