@@ -413,7 +413,7 @@
             if (!html) {
               try {
                 const res = await fetch(
-                  `/api/test?url=${encodeURIComponent(url)}`,
+                  `/api/article?url=${encodeURIComponent(url)}`,
                 );
                 html = await res.text();
                 if (res.ok) {

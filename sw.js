@@ -28,7 +28,7 @@ self.addEventListener("fetch", (event) => {
     }
   } else if (url.pathname.startsWith("/img")) {
     event.respondWith(cacheThenNetwork(event.request));
-  } else if (url.pathname === "/api/test") {
+  } else if (url.pathname === "/api/article") {
     event.respondWith(cacheThenNetwork(event.request));
   }
 });
