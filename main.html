@@ -89,7 +89,17 @@
       nav.mobile .notify-dot {
         right: 2rem;
       }
-      
+
+      /* 图片放大查看弹窗 */
+      #imageModal {
+        background-color: rgba(0, 0, 0, 0.8);
+      }
+      #imageModal img {
+        max-width: 90vw;
+        max-height: 90vh;
+        transition: transform 0.2s;
+      }
+
     </style>
   </head>
   <body class="bg-gradient-to-br from-slate-50 to-slate-200 min-h-screen font-sans">
@@ -153,8 +163,13 @@
           <button id="clearCache" class="w-full bg-red-500 text-white py-1 rounded">清理缓存</button>      </div>
            <footer class="text-xs text-center text-gray-400 my-4">
               <a href="https://github.com/valetzx/flow-wx" class="hover:underline">查看项目源码 </a> · <a href="#">联系我吧</a>
-          </footer>
-        </div>
+        </footer>
+      </div>
+
+    <!-- 图片查看弹窗 -->
+    <div id="imageModal" class="fixed inset-0 hidden items-center justify-center">
+      <img id="modalImg" src="" alt="preview" class="rounded" />
+    </div>
 
     <script>
       const gallery = document.getElementById('gallery');
@@ -166,6 +181,9 @@
       const columnCountInput = document.getElementById('columnCountInput');
       const perPageInput = document.getElementById('perPageInput');
       const clearCacheBtn = document.getElementById('clearCache');
+      const imageModal = document.getElementById('imageModal');
+      const modalImg = document.getElementById('modalImg');
+      let imgScale = 1;
 
       const homeLink = document.querySelector('a[aria-label="\u4e3b\u9875"]');
       let notifyDot = null;
@@ -184,6 +202,20 @@
           notifyDot.remove();
           notifyDot = null;
         }
+      }
+
+      function openImage(src) {
+        imgScale = 1;
+        modalImg.src = src;
+        modalImg.style.transform = 'scale(1)';
+        imageModal.classList.remove('hidden');
+        imageModal.classList.add('flex');
+      }
+
+      function closeImage() {
+        imageModal.classList.add('hidden');
+        imageModal.classList.remove('flex');
+        modalImg.src = '';
       }
 
       const savedCols = parseInt(localStorage.getItem('columnCount')) || 4;
@@ -243,6 +275,7 @@
           img.style.minHeight = '';
         });
         observer.observe(img);
+        img.addEventListener('click', () => openImage(img.dataset.src || img.src));
         return img;
       }
 
@@ -351,6 +384,21 @@
           await Promise.all(names.map((n) => caches.delete(n)));
         }
         location.reload();
+      });
+
+      imageModal.addEventListener('click', (e) => {
+        if (e.target === imageModal) closeImage();
+      });
+
+      imageModal.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const factor = e.deltaY < 0 ? 1.1 : 0.9;
+        imgScale = Math.min(5, Math.max(1, imgScale * factor));
+        modalImg.style.transform = `scale(${imgScale})`;
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeImage();
       });
 
       document.addEventListener('DOMContentLoaded', initGallery);
