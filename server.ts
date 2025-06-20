@@ -243,7 +243,10 @@ async function handler(req: Request): Promise<Response> {
       $("#js_content img").each((_, el) => {
         const src = $(el).attr("data-src") || $(el).attr("src");
         if (src) {
-          $(el).attr("src", `/img?url=${encodeURIComponent(src)}`);
+          const imgPath = `/img?url=${encodeURIComponent(src)}`;
+          const domain = apiDomains[0];
+          const full = domain ? domain.replace(/\/$/, "") + imgPath : imgPath;
+          $(el).attr("src", full);
           $(el).removeAttr("data-src");
         }
       });
