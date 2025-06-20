@@ -7,16 +7,17 @@
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body class="p-4">
-    <h1 class="text-xl font-bold mb-4">设置 API 域名</h1>
+    <h1 class="text-xl font-bold mb-4">设置 API 域名（一行一个）</h1>
     <div class="mb-4">
-      <input id="domainInput" type="text" placeholder="https://example.com" class="border p-2 w-full" />
+      <textarea id="domainInput" placeholder="https://a.com" class="border p-2 w-full h-32"></textarea>
     </div>
     <button id="saveBtn" class="bg-blue-500 text-white px-4 py-2 rounded">保存</button>
     <script>
       const input = document.getElementById('domainInput');
-      input.value = localStorage.getItem('apiDomain') || '';
+      input.value = localStorage.getItem('apiDomains') || localStorage.getItem('apiDomain') || '';
       document.getElementById('saveBtn').addEventListener('click', () => {
-        localStorage.setItem('apiDomain', input.value.trim());
+        localStorage.setItem('apiDomains', input.value.trim());
+        localStorage.removeItem('apiDomain');
         alert('已保存');
       });
     </script>

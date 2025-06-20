@@ -10,10 +10,28 @@ import cheerio from "npm:cheerio@1.0.0-rc.12";
 // ---------- 基础配置 ----------
 const PORT = Number(Deno.env.get("PORT") ?? 8000); // Deno Deploy 会自动注入
 const __dirname = dirname(fromFileUrl(import.meta.url));
-const indexHtml = await Deno.readTextFile(join(__dirname, "main.html"));
-const ideasHtml = await Deno.readTextFile(join(__dirname, "ideas.html"));
+const apiDomainsEnv = Deno.env.get("API_DOMAINS") || "";
+const apiDomains = apiDomainsEnv
+  .split(/[,\s]+/)
+  .map((d) => d.trim())
+  .filter(Boolean);
+
+function injectConfig(html: string): string {
+  if (apiDomains.length === 0) return html;
+  const script = `<script>window.API_DOMAINS=${JSON.stringify(apiDomains)};</script>`;
+  return html.replace("</head>", `${script}</head>`);
+}
+
+const indexHtml = injectConfig(
+  await Deno.readTextFile(join(__dirname, "main.html")),
+);
+const ideasHtml = injectConfig(
+  await Deno.readTextFile(join(__dirname, "ideas.html")),
+);
 const swHtml = await Deno.readTextFile(join(__dirname, "sw.js"));
-const adminHtml = await Deno.readTextFile(join(__dirname, "admin.html"));
+const adminHtml = injectConfig(
+  await Deno.readTextFile(join(__dirname, "admin.html")),
+);
 const fallbackSentences = [
   "小荷才露尖尖角",
   "早有蜻蜓立上头",
