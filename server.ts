@@ -205,7 +205,7 @@ async function handler(req: Request): Promise<Response> {
           $(el).removeAttr("data-src");
         }
       });
-      const content = $("#js_content").html() || "";
+      const content = proxifyHtml($("#js_content").html() || "");
       const page = `<!DOCTYPE html>
 <html lang="zh-CN">
   <head>
