@@ -7,6 +7,16 @@ import {
 } from "https://deno.land/std@0.224.0/path/mod.ts";
 import cheerio from "npm:cheerio@1.0.0-rc.12";
 
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+  "Access-Control-Allow-Headers": "*",
+};
+
+function withCors(headers: HeadersInit = {}): HeadersInit {
+  return { ...headers, ...CORS_HEADERS };
+}
+
 // ---------- 基础配置 ----------
 const PORT = Number(Deno.env.get("PORT") ?? 8000); // Deno Deploy 会自动注入
 const __dirname = dirname(fromFileUrl(import.meta.url));
@@ -165,26 +175,33 @@ async function proxyImage(imgUrl: string): Promise<Response> {
     });
 
     if (!wechatRes.ok) {
-      return new Response("fetch image fail", { status: wechatRes.status });
+      return new Response("fetch image fail", {
+        status: wechatRes.status,
+        headers: withCors(),
+      });
     }
 
     return new Response(wechatRes.body, {
       status: 200,
-      headers: {
+      headers: withCors({
         // 透传 Content-Type
         "Content-Type": wechatRes.headers.get("Content-Type") ?? "image/jpeg",
         // 强缓存一年
         "Cache-Control": "public, max-age=31536000, immutable",
-      },
+      }),
     });
   } catch (_e) {
     // 微信有时 302 空图 + 403，统统返回 502 方便前端兜底
-    return new Response("proxy error", { status: 502 });
+    return new Response("proxy error", { status: 502, headers: withCors() });
   }
 }
 
 // ---------- HTTP 路由 ----------
 async function handler(req: Request): Promise<Response> {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: withCors() });
+  }
+
   const { pathname, searchParams } = new URL(req.url);
 
   // /api/wx —— 抓取并返回 JSON
@@ -268,7 +285,7 @@ async function handler(req: Request): Promise<Response> {
   </body>
 </html>`;
       return new Response(page, {
-        headers: { "Content-Type": "text/html; charset=utf-8" },
+        headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
       });
     } catch (err) {
       return json({ error: err.message }, 500);
@@ -277,34 +294,34 @@ async function handler(req: Request): Promise<Response> {
 
   if (pathname === "/sw.js") {
     return new Response(swHtml, {
-      headers: { "Content-Type": "text/javascript; charset=utf-8" },
+      headers: withCors({ "Content-Type": "text/javascript; charset=utf-8" }),
     });
   }
 
   // /img?url=ENCODED —— 微信图床反向代理
   if (pathname === "/img") {
     const imgUrl = searchParams.get("url");
-    if (!imgUrl) return new Response("missing url", { status: 400 });
+    if (!imgUrl) return new Response("missing url", { status: 400, headers: withCors() });
     return await proxyImage(imgUrl);
   }
 
   // /@admin —— 管理页面
   if (pathname === "/@admin") {
     return new Response(adminHtml, {
-      headers: { "Content-Type": "text/html; charset=utf-8" },
+      headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
     });
   }
 
   // /ideas —— 灵感瀑布流页面
   if (pathname === "/ideas") {
     return new Response(ideasHtml, {
-      headers: { "Content-Type": "text/html; charset=utf-8" },
+      headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
     });
   }
 
   // 其他路径 —— 静态首页
   return new Response(indexHtml, {
-    headers: { "Content-Type": "text/html; charset=utf-8" },
+    headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
   });
 }
 
@@ -312,7 +329,7 @@ async function handler(req: Request): Promise<Response> {
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { "Content-Type": "application/json; charset=utf-8" },
+    headers: withCors({ "Content-Type": "application/json; charset=utf-8" }),
   });
 }
 
