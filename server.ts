@@ -36,7 +36,7 @@ function randomSentence() {
 // 微信文章列表
 const WX_URL = Deno.env.get("WX_URL") || "article.txt";
 const DAILY_URL = "https://www.cikeee.com/api?app_key=pub_23020990025";
-const DAILY_TTL = Deno.env.get("DAILY_TTL") || '60 * 60 * 8000';
+const DAILY_TTL = 60 * 60 * 8000;
 let dailyCache: { data: unknown; timestamp: number } = { data: null, timestamp: 0 };
 let urls: string[] = [];
 try {
@@ -56,7 +56,7 @@ try {
 }
 
 // 抓取结果缓存（JSON）
-const CACHE_TTL = Deno.env.get("CACHE_TTL") || '60 * 60 * 1000';
+const CACHE_TTL = 60 * 60 * 1000;
 let cache: { data: unknown; timestamp: number } = { data: null, timestamp: 0 };
 
 // ---------- 业务函数 ----------
