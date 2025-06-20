@@ -5,7 +5,7 @@ import ideasHtml from "./ideas.html";
 import adminHtml from "./admin.html";
 // import swHtml from "./sw.js";
 import articleText from "./article.txt";
-const swHtml = await (await fetch(new URL('./sw.js', import.meta.url))).text();
+
 
 
 const DAILY_URL = "https://www.cikeee.com/api?app_key=pub_23020990025";
@@ -229,6 +229,7 @@ export default {
     }
 
     if (pathname === "/sw.js") {
+      const swHtml = await (await fetch(new URL('./sw.js', import.meta.url))).text();
       return new Response(swHtml, {
         headers: { "Content-Type": "text/javascript; charset=utf-8" },
       });
