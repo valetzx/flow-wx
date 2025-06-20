@@ -97,7 +97,34 @@
       #imageModal img {
         max-width: 90vw;
         max-height: 90vh;
-        transition: transform 0.2s;
+        transform: scale(0.9);
+        opacity: 0;
+        transition: transform 0.2s, opacity 0.2s;
+      }
+
+      #imageModal.show img {
+        animation: modalZoom 0.2s forwards;
+      }
+
+      #settingsPanel > div {
+        transform: scale(0.9);
+        opacity: 0;
+        transition: transform 0.2s, opacity 0.2s;
+      }
+
+      #settingsPanel.show > div {
+        animation: modalZoom 0.2s forwards;
+      }
+
+      @keyframes modalZoom {
+        from {
+          transform: scale(0.9);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
       }
 
     </style>
@@ -228,14 +255,13 @@
       function openImage(src) {
         imgScale = 1;
         modalImg.src = src;
-        modalImg.style.transform = 'scale(1)';
         imageModal.classList.remove('hidden');
-        imageModal.classList.add('flex');
+        imageModal.classList.add('flex', 'show');
       }
 
       function closeImage() {
         imageModal.classList.add('hidden');
-        imageModal.classList.remove('flex');
+        imageModal.classList.remove('flex', 'show');
         modalImg.src = '';
       }
 
@@ -378,12 +404,12 @@
       moreBtn.addEventListener('click', (e) => {
         e.preventDefault();
         settingsPanel.classList.remove('hidden');
-        settingsPanel.classList.add('flex');
+        settingsPanel.classList.add('flex', 'show');
       });
 
       closeSettings.addEventListener('click', () => {
         settingsPanel.classList.add('hidden');
-        settingsPanel.classList.remove('flex');
+        settingsPanel.classList.remove('flex', 'show');
       });
 
       applySettings.addEventListener('click', () => {
@@ -395,7 +421,7 @@
         currentPage = 0;
         renderPage();
         settingsPanel.classList.add('hidden');
-        settingsPanel.classList.remove('flex');
+        settingsPanel.classList.remove('flex', 'show');
       });
 
       clearCacheBtn.addEventListener('click', async () => {
