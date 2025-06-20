@@ -213,7 +213,7 @@ async function handler(req: Request): Promise<Response> {
     <title>${title}</title>
   </head>
   <body>
-    <h1>${title}</h1>
+    <h1 class="text-2xl font-semibold mb-2">${title}</h1>
     ${content}
   </body>
 </html>`;
