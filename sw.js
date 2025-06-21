@@ -26,7 +26,7 @@ self.addEventListener("fetch", (event) => {
     } else {
       event.respondWith(cacheThenNetwork(event.request));
     }
-  } else if (url.pathname.startsWith("/img") && url.hostname === IMG_CACHE) {
+  } else if (url.pathname.startsWith("/wechat") && url.hostname === IMG_CACHE && (url.pathname.startsWith("/img")) {
     event.respondWith(cacheThenNetwork(event.request));
   } else if (url.pathname === "/api/article") {
     event.respondWith(cacheThenNetwork(event.request));
