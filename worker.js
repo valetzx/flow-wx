@@ -257,7 +257,7 @@ export default {
 const IMG_CACHE = ${JSON.stringify(cacheImgDomain)};
 const CACHE_NAME = "wx-cache-v2";
 const META_CACHE = "wx-cache-meta-v1";
-const MAX_IMG_CACHE_AGE = 6 * 24 * 60 * 60 * 1000;
+const CACHE_AGE = 6 * 24 * 60 * 60 * 1000;
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
@@ -335,7 +335,7 @@ async function cacheThenNetwork(request) {
       const metaRes = await meta.match(request.url);
       if (metaRes) {
         const ts = parseInt(await metaRes.text());
-        if (!Number.isNaN(ts) && Date.now() - ts < MAX_IMG_CACHE_AGE) {
+        if (!Number.isNaN(ts) && Date.now() - ts < CACHE_AGE) {
           fetch(request)
             .then(async (res) => {
               if (res.ok || res.type === "opaque") {
