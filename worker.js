@@ -316,15 +316,19 @@ async function fetchAndCache(request) {
   const cache = await caches.open(CACHE_NAME);
   const res = await fetch(request);
   if (res.ok || res.type === "opaque") {
-    const resForCache = res.clone();
-    const headers = new Headers(resForCache.headers);
-    headers.set(TS_HEADER, Date.now().toString());
-    const cachedRes = new Response(resForCache.body, {
-      status: resForCache.status,
-      statusText: resForCache.statusText,
-      headers,
-    });
-    await cache.put(request, cachedRes);
+    if (res.type === "opaque") {
+      await cache.put(request, res.clone());
+    } else {
+      const resForCache = res.clone();
+      const headers = new Headers(resForCache.headers);
+      headers.set(TS_HEADER, Date.now().toString());
+      const cachedRes = new Response(resForCache.body, {
+        status: resForCache.status,
+        statusText: resForCache.statusText,
+        headers,
+      });
+      await cache.put(request, cachedRes);
+    }
   }
   return res;
 }
@@ -340,15 +344,19 @@ async function cacheThenNetwork(request) {
     fetch(request)
       .then(async (res) => {
         if (res.ok || res.type === "opaque") {
-          const resForCache = res.clone();
-          const headers = new Headers(resForCache.headers);
-          headers.set(TS_HEADER, Date.now().toString());
-          const cachedRes = new Response(resForCache.body, {
-            status: resForCache.status,
-            statusText: resForCache.statusText,
-            headers,
-          });
-          await cache.put(request, cachedRes);
+          if (res.type === "opaque") {
+            await cache.put(request, res.clone());
+          } else {
+            const resForCache = res.clone();
+            const headers = new Headers(resForCache.headers);
+            headers.set(TS_HEADER, Date.now().toString());
+            const cachedRes = new Response(resForCache.body, {
+              status: resForCache.status,
+              statusText: resForCache.statusText,
+              headers,
+            });
+            await cache.put(request, cachedRes);
+          }
         }
       })
       .catch(() => {});
@@ -357,15 +365,19 @@ async function cacheThenNetwork(request) {
   try {
     const res = await fetch(request);
     if (res.ok || res.type === "opaque") {
-      const resForCache = res.clone();
-      const headers = new Headers(resForCache.headers);
-      headers.set(TS_HEADER, Date.now().toString());
-      const cachedRes = new Response(resForCache.body, {
-        status: resForCache.status,
-        statusText: resForCache.statusText,
-        headers,
-      });
-      await cache.put(request, cachedRes);
+      if (res.type === "opaque") {
+        await cache.put(request, res.clone());
+      } else {
+        const resForCache = res.clone();
+        const headers = new Headers(resForCache.headers);
+        headers.set(TS_HEADER, Date.now().toString());
+        const cachedRes = new Response(resForCache.body, {
+          status: resForCache.status,
+          statusText: resForCache.statusText,
+          headers,
+        });
+        await cache.put(request, cachedRes);
+      }
     }
     return res;
   } catch (err) {
