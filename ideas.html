@@ -166,6 +166,47 @@
           opacity: 1;
         }
       }
+
+      /* 开关样式 */
+      .toggle {
+        position: relative;
+        display: inline-block;
+        width: 40px;
+        height: 20px;
+      }
+      .toggle input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        inset: 0;
+        background-color: #cbd5e1;
+        border-radius: 9999px;
+        transition: background-color 0.2s;
+      }
+      .toggle-slider::before {
+        content: '';
+        position: absolute;
+        height: 16px;
+        width: 16px;
+        left: 2px;
+        bottom: 2px;
+        background-color: white;
+        border-radius: 9999px;
+        transition: transform 0.2s;
+      }
+      .toggle input:checked + .toggle-slider {
+        background-color: #3b82f6;
+      }
+      .toggle input:checked + .toggle-slider::before {
+        transform: translateX(20px);
+      }
+      .dark .toggle-slider {
+        background-color: #4b5563;
+      }
       
     </style>
   </head>
@@ -269,9 +310,12 @@
               class="mt-1 w-full border rounded p-1"
             />
           </label>
-          <label class="flex items-center justify-between text-sm">
+          <label class="flex items-center justify-between text-sm cursor-pointer">
             <span>暗色模式</span>
-            <input id="darkModeToggle" type="checkbox" class="ml-2" />
+            <span class="toggle ml-2">
+              <input id="darkModeToggle" type="checkbox" />
+              <span class="toggle-slider"></span>
+            </span>
           </label>
           <button id="applySettings" class="w-full bg-blue-500 text-white py-1 rounded">应用</button>
           <button id="clearCache" class="w-full bg-red-500 text-white py-1 rounded">清理缓存</button>
