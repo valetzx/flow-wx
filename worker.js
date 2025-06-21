@@ -327,20 +327,11 @@ async function cacheThenNetwork(request) {
   const cache = await caches.open(CACHE_NAME);
   const meta = await caches.open(META_CACHE);
   const cached = await cache.match(request);
-  const isImg = request.destination === "image";
   if (cached) {
     const metaRes = await meta.match(request.url);
-    if (isImg && metaRes) {
+    if (metaRes) {
       const ts = parseInt(await metaRes.text());
       if (!Number.isNaN(ts) && Date.now() - ts < CACHE_AGE) {
-        fetch(request)
-          .then(async (res) => {
-            if (res.ok || res.type === "opaque") {
-              await cache.put(request, res.clone());
-              await meta.put(request.url, new Response(Date.now().toString()));
-            }
-          })
-          .catch(() => {});
         return cached;
       }
     }
