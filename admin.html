@@ -34,8 +34,8 @@
       });
 
       const CACHE_NAME = 'wx-cache-v2';
-      const META_CACHE = 'wx-cache-meta-v1';
       const CACHE_AGE = 6 * 24 * 60 * 60 * 1000;
+      const TS_HEADER = 'X-Cache-Timestamp';
 
       async function loadCache() {
         const box = document.getElementById('cacheInfo');
@@ -45,7 +45,6 @@
         }
         try {
           const cache = await caches.open(CACHE_NAME);
-          const meta = await caches.open(META_CACHE);
           const keys = await cache.keys();
           if (keys.length === 0) {
             box.textContent = '无缓存数据';
@@ -53,11 +52,11 @@
           }
           const items = [];
           for (const req of keys) {
-            const metaRes = await meta.match(req.url);
+            const cachedRes = await cache.match(req.url);
             let cachedTime = '未知';
             let expireTime = '未知';
-            if (metaRes) {
-              const ts = parseInt(await metaRes.text());
+            if (cachedRes) {
+              const ts = parseInt(cachedRes.headers.get(TS_HEADER));
               if (!Number.isNaN(ts)) {
                 cachedTime = new Date(ts).toLocaleString();
                 expireTime = new Date(ts + CACHE_AGE).toLocaleString();
