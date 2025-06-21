@@ -17,6 +17,10 @@
       <textarea id="imgInput" placeholder="https://img.com" class="border p-2 w-full h-24"></textarea>
     </div>
     <button id="saveBtn" class="bg-blue-500 text-white px-4 py-2 rounded">保存</button>
+    <div class="mt-8">
+      <h2 class="text-lg font-semibold mb-2">缓存信息</h2>
+      <div id="cacheInfo" class="space-y-2 text-sm text-gray-700">加载中...</div>
+    </div>
     <script>
       const apiInput = document.getElementById('apiInput');
       const imgInput = document.getElementById('imgInput');
@@ -28,6 +32,49 @@
         localStorage.removeItem('apiDomain');
         alert('已保存');
       });
+
+      const CACHE_NAME = 'wx-cache-v2';
+      const META_CACHE = 'wx-cache-meta-v1';
+      const CACHE_AGE = 6 * 24 * 60 * 60 * 1000;
+
+      async function loadCache() {
+        const box = document.getElementById('cacheInfo');
+        if (!('caches' in window)) {
+          box.textContent = '此浏览器不支持 CacheStorage';
+          return;
+        }
+        try {
+          const cache = await caches.open(CACHE_NAME);
+          const meta = await caches.open(META_CACHE);
+          const keys = await cache.keys();
+          if (keys.length === 0) {
+            box.textContent = '无缓存数据';
+            return;
+          }
+          const items = [];
+          for (const req of keys) {
+            const metaRes = await meta.match(req.url);
+            let cachedTime = '未知';
+            let expireTime = '未知';
+            if (metaRes) {
+              const ts = parseInt(await metaRes.text());
+              if (!Number.isNaN(ts)) {
+                cachedTime = new Date(ts).toLocaleString();
+                expireTime = new Date(ts + CACHE_AGE).toLocaleString();
+              }
+            }
+            items.push(
+              `<li><div class="break-all">${req.url}</div><div class="text-gray-500">缓存时间: ${cachedTime}，到期时间: ${expireTime}</div></li>`
+            );
+          }
+          box.innerHTML = `<ul class="list-disc pl-5 space-y-2">${items.join('')}</ul>`;
+        } catch (e) {
+          box.textContent = '读取缓存失败';
+          console.error(e);
+        }
+      }
+
+      window.addEventListener('load', loadCache);
     </script>
   </body>
 </html>
