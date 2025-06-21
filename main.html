@@ -268,11 +268,11 @@
       const themeStored = localStorage.getItem('theme');
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       let isDark = themeStored ? themeStored === 'dark' : prefersDark;
-      document.documentElement.classList.toggle('dark', isDark);
+      document.documentElement.classList[isDark ? 'add' : 'remove']('dark');
       darkModeToggle.checked = isDark;
       darkModeToggle.addEventListener('change', () => {
         isDark = darkModeToggle.checked;
-        document.documentElement.classList.toggle('dark', isDark);
+        document.documentElement.classList[isDark ? 'add' : 'remove']('dark');
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
       });
       function buildUrl(path, domain) {
@@ -405,7 +405,7 @@
           items.push({
             type: 'title',
             html:
-              `<div class="masonry-item p-5 bg-white rounded-2xl shadow hover:shadow-lg transition flex flex-col gap-2">\n  <h2 class="text-xl font-semibold text-slate-900">${title}</h2>\n  <p class="text-sm text-gray-600 leading-relaxed">${description}</p>\n</div>`
+              `<div class="masonry-item p-5 bg-white dark:bg-gray-800 dark:text-gray-200 rounded-2xl shadow hover:shadow-lg transition flex flex-col gap-2">\n  <h2 class="text-xl font-semibold text-slate-900 dark:text-gray-100">${title}</h2>\n  <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">${description}</p>\n</div>`
           });
           images.forEach((src) => {
             items.push({ type: 'image', src, alt: title });
