@@ -316,19 +316,15 @@ async function fetchAndCache(request) {
   const cache = await caches.open(CACHE_NAME);
   const res = await fetch(request);
   if (res.ok || res.type === "opaque") {
-    if (res.type === "opaque") {
-      await cache.put(request, res.clone());
-    } else {
-      const resForCache = res.clone();
-      const headers = new Headers(resForCache.headers);
-      headers.set(TS_HEADER, Date.now().toString());
-      const cachedRes = new Response(resForCache.body, {
-        status: resForCache.status,
-        statusText: resForCache.statusText,
-        headers,
-      });
-      await cache.put(request, cachedRes);
-    }
+    const resForCache = res.clone();
+    const headers = new Headers(resForCache.headers);
+    headers.set(TS_HEADER, Date.now().toString());
+    const cachedRes = new Response(resForCache.body, {
+      status: resForCache.status || 200,
+      statusText: resForCache.statusText || "",
+      headers,
+    });
+    await cache.put(request, cachedRes);
   }
   return res;
 }
@@ -341,43 +337,21 @@ async function cacheThenNetwork(request) {
     if (!Number.isNaN(ts) && Date.now() - ts < CACHE_AGE) {
       return cached;
     }
-    fetch(request)
-      .then(async (res) => {
-        if (res.ok || res.type === "opaque") {
-          if (res.type === "opaque") {
-            await cache.put(request, res.clone());
-          } else {
-            const resForCache = res.clone();
-            const headers = new Headers(resForCache.headers);
-            headers.set(TS_HEADER, Date.now().toString());
-            const cachedRes = new Response(resForCache.body, {
-              status: resForCache.status,
-              statusText: resForCache.statusText,
-              headers,
-            });
-            await cache.put(request, cachedRes);
-          }
-        }
-      })
-      .catch(() => {});
+    fetchAndCache(request).catch(() => {});
     return cached;
   }
   try {
     const res = await fetch(request);
     if (res.ok || res.type === "opaque") {
-      if (res.type === "opaque") {
-        await cache.put(request, res.clone());
-      } else {
-        const resForCache = res.clone();
-        const headers = new Headers(resForCache.headers);
-        headers.set(TS_HEADER, Date.now().toString());
-        const cachedRes = new Response(resForCache.body, {
-          status: resForCache.status,
-          statusText: resForCache.statusText,
-          headers,
-        });
-        await cache.put(request, cachedRes);
-      }
+      const resForCache = res.clone();
+      const headers = new Headers(resForCache.headers);
+      headers.set(TS_HEADER, Date.now().toString());
+      const cachedRes = new Response(resForCache.body, {
+        status: resForCache.status || 200,
+        statusText: resForCache.statusText || "",
+        headers,
+      });
+      await cache.put(request, cachedRes);
     }
     return res;
   } catch (err) {

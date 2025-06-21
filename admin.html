@@ -19,7 +19,20 @@
     <button id="saveBtn" class="bg-blue-500 text-white px-4 py-2 rounded">保存</button>
     <div class="mt-8">
       <h2 class="text-lg font-semibold mb-2">缓存信息</h2>
-      <div id="cacheInfo" class="space-y-2 text-sm text-gray-700">加载中...</div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm border divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th data-key="url" class="p-2 cursor-pointer text-left">URL</th>
+              <th data-key="cached" class="p-2 cursor-pointer text-left">缓存时间</th>
+              <th data-key="expire" class="p-2 cursor-pointer text-left">到期时间</th>
+              <th data-key="size" class="p-2 cursor-pointer text-right">大小</th>
+            </tr>
+          </thead>
+          <tbody id="cacheRows" class="divide-y divide-gray-200"></tbody>
+        </table>
+      </div>
+      <div id="totalBox" class="mt-2 font-semibold text-sm text-gray-700"></div>
     </div>
     <script>
       const apiInput = document.getElementById('apiInput');
@@ -44,46 +57,87 @@
         return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
       }
 
+      const sortState = { key: 'cached', asc: false };
+      let cacheItems = [];
+
+      function render() {
+        const tbody = document.getElementById('cacheRows');
+        const totalBox = document.getElementById('totalBox');
+        const items = [...cacheItems].sort((a, b) => {
+          const k = sortState.key;
+          let v1 = a[k];
+          let v2 = b[k];
+          if (v1 === undefined) v1 = -Infinity;
+          if (v2 === undefined) v2 = -Infinity;
+          if (v1 < v2) return sortState.asc ? -1 : 1;
+          if (v1 > v2) return sortState.asc ? 1 : -1;
+          return 0;
+        });
+        let total = 0;
+        tbody.innerHTML = items
+          .map((it) => {
+            if (typeof it.size === 'number') total += it.size;
+            const cTime = it.cached ? new Date(it.cached).toLocaleString() : '未知';
+            const eTime = it.expire ? new Date(it.expire).toLocaleString() : '未知';
+            const sizeText = typeof it.size === 'number' ? formatBytes(it.size) : '未知';
+            return `<tr><td class="p-2 break-all">${it.url}</td><td class="p-2">${cTime}</td><td class="p-2">${eTime}</td><td class="p-2 text-right">${sizeText}</td></tr>`;
+          })
+          .join('');
+        totalBox.textContent = `总大小: ${formatBytes(total)}`;
+      }
+
       async function loadCache() {
-        const box = document.getElementById('cacheInfo');
+        const infoBox = document.getElementById('cacheRows');
         if (!('caches' in window)) {
-          box.textContent = '此浏览器不支持 CacheStorage';
+          infoBox.innerHTML = '<tr><td class="p-2" colspan="4">此浏览器不支持 CacheStorage</td></tr>';
           return;
         }
         try {
           const cache = await caches.open(CACHE_NAME);
           const keys = await cache.keys();
           if (keys.length === 0) {
-            box.textContent = '无缓存数据';
+            infoBox.innerHTML = '<tr><td class="p-2" colspan="4">无缓存数据</td></tr>';
+            document.getElementById('totalBox').textContent = '';
             return;
           }
-          const items = [];
-          let totalSize = 0;
+          cacheItems = [];
           for (const req of keys) {
             const cachedRes = await cache.match(req);
-            let cachedTime = '未知';
-            let expireTime = '未知';
-            let size = 0;
+            let ts = NaN;
+            let size = undefined;
             if (cachedRes) {
-              const ts = parseInt(cachedRes.headers.get(TS_HEADER));
-              if (!Number.isNaN(ts)) {
-                cachedTime = new Date(ts).toLocaleString();
-                expireTime = new Date(ts + CACHE_AGE).toLocaleString();
-              }
-              const buf = await cachedRes.clone().arrayBuffer();
-              size = buf.byteLength;
-              totalSize += size;
+              ts = parseInt(cachedRes.headers.get(TS_HEADER));
+              try {
+                const buf = await cachedRes.clone().arrayBuffer();
+                size = buf.byteLength;
+              } catch {}
             }
-            items.push(
-              `<li><div class="break-all">${req.url}</div><div class="text-gray-500">缓存时间: ${cachedTime}，到期时间: ${expireTime}，大小: ${formatBytes(size)}</div></li>`
-            );
+            cacheItems.push({
+              url: req.url,
+              cached: Number.isNaN(ts) ? undefined : ts,
+              expire: Number.isNaN(ts) ? undefined : ts + CACHE_AGE,
+              size,
+            });
           }
-          box.innerHTML = `<ul class="list-disc pl-5 space-y-2">${items.join('')}</ul><div class="mt-2 font-semibold">总大小: ${formatBytes(totalSize)}</div>`;
+          render();
         } catch (e) {
-          box.textContent = '读取缓存失败';
+          infoBox.innerHTML = '<tr><td class="p-2" colspan="4">读取缓存失败</td></tr>';
           console.error(e);
         }
       }
+
+      document.querySelectorAll('th[data-key]').forEach((th) => {
+        th.addEventListener('click', () => {
+          const key = th.dataset.key;
+          if (sortState.key === key) {
+            sortState.asc = !sortState.asc;
+          } else {
+            sortState.key = key;
+            sortState.asc = true;
+          }
+          render();
+        });
+      });
 
       window.addEventListener('load', loadCache);
     </script>
