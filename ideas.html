@@ -189,6 +189,19 @@
       }
       
       /* 文字卡片适配深色模式 */
+      .masonry-item .card-content {
+        background-color: rgb(var(--card));
+        color: rgb(var(--on-surface));
+      }
+      
+      .masonry-item .card-content h2 {
+        color: rgb(var(--on-surface));
+      }
+
+      .masonry-item .card-content p {
+        color: rgb(var(--on-surface)/0.8);
+      }
+
       .masonry-item {
         background-color: rgb(var(--card));
         color: rgb(var(--on-surface));
@@ -609,7 +622,7 @@
         function createCard(item) {
           const wrapper = document.createElement("div");
           wrapper.className =
-            "masonry-item bg-white rounded-2xl shadow hover:shadow-lg transition overflow-hidden flex flex-col cursor-pointer";
+            "masonry-item rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer";
           wrapper.dataset.url = item.url;
 
           if (item.imgSrc) {
@@ -618,7 +631,7 @@
           }
 
           const text = document.createElement("div");
-          text.className = "p-5 flex flex-col gap-2";
+          text.className = "card-content p-5 flex flex-col gap-2";
 
           const h2 = document.createElement("h2");
           h2.className = "text-xl font-semibold text-slate-900 tracking-tight mb-1";
@@ -670,7 +683,7 @@
 
         function createDailyCard(item) {
           const wrapper = document.createElement("div");
-          wrapper.className = "masonry-item bg-white rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer";
+          wrapper.className = "masonry-item rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer";
           if (item.mov_pic) {
             const img = document.createElement("img");
             img.className = "w-full object-cover";
@@ -678,7 +691,7 @@
             wrapper.appendChild(img);
           }
           const text = document.createElement("div");
-          text.className = "p-5 flex flex-col gap-2";
+          text.className = "card-content p-5 flex flex-col gap-2";
           const h2 = document.createElement("h2");
           h2.className = "text-xl font-semibold text-slate-900";
           h2.textContent = item.mov_title;

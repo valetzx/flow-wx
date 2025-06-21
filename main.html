@@ -43,6 +43,20 @@
           column-count: 1;
         }
       }
+
+      .masonry-item .card-content {
+        background-color: rgb(var(--card));
+        color: rgb(var(--on-surface));
+      }
+      
+      .masonry-item .card-content h2 {
+        color: rgb(var(--on-surface));
+      }
+
+      .masonry-item .card-content p {
+        color: rgb(var(--on-surface)/0.8);
+      }
+
       .masonry-item {
         break-inside: avoid;
         margin-bottom: 1rem;
@@ -238,7 +252,7 @@
     </script>
   </head>
   <body class="bg-surface text-on-surface min-h-screen font-sans">
-     <nav class="fixed top-0 left-0 h-screen w-[72px] bg-white border-r shadow flex flex-col items-center py-4">
+     <nav class="fixed top-0 left-0 h-screen w-[72px] border-r shadow flex flex-col items-center py-4"">
       <div class="sidebar-items flex flex-col items-center gap-y-6 h-full w-full">
         <a href="#" aria-label="主页" class="sidebar-link">
         <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
@@ -518,7 +532,12 @@
           items.push({
             type: 'title',
             html:
-              `<div class="masonry-item p-5 bg-white rounded-2xl shadow hover:shadow-lg transition flex flex-col gap-2">\n  <h2 class="text-xl font-semibold text-slate-900">${title}</h2>\n  <p class="text-sm text-gray-600 leading-relaxed">${description}</p>\n</div>`
+              `<div class="masonry-item">
+                <div class="card-content p-5 flex flex-col gap-2">
+                  <h2 class="text-xl font-semibold">${title}</h2>
+                  <p class="text-sm leading-relaxed">${description}</p>
+                </div>
+              </div>`
           });
           images.forEach((src) => {
             items.push({ type: 'image', src, alt: title });
