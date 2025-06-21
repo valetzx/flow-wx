@@ -257,8 +257,18 @@
       const modalImg = document.getElementById('modalImg');
       let imgScale = 1;
 
-      const apiStored = localStorage.getItem('apiDomains') || localStorage.getItem('apiDomain') || '';
-      const imgStored = localStorage.getItem('imgDomains') || '';
+        function lsGet(key) {
+          try { return localStorage.getItem(key); } catch { return null; }
+        }
+        function lsSet(key, val) {
+          try { localStorage.setItem(key, val); } catch {}
+        }
+        function lsRemove(key) {
+          try { localStorage.removeItem(key); } catch {}
+        }
+
+        const apiStored = lsGet('apiDomains') || lsGet('apiDomain') || '';
+        const imgStored = lsGet('imgDomains') || '';
       let apiDomains = apiStored
         ? apiStored.split(/\r?\n|,/).map((s) => s.trim()).filter(Boolean)
         : [];
@@ -271,15 +281,15 @@
       if (imgDomains.length === 0 && Array.isArray(window.IMG_DOMAINS)) {
         imgDomains = window.IMG_DOMAINS;
       }
-      const themeStored = localStorage.getItem('theme');
+        const themeStored = lsGet('theme');
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       let isDark = themeStored ? themeStored === 'dark' : prefersDark;
       document.documentElement.classList[isDark ? 'add' : 'remove']('dark');
       darkModeToggle.checked = isDark;
       darkModeToggle.addEventListener('change', () => {
         isDark = darkModeToggle.checked;
-        document.documentElement.classList[isDark ? 'add' : 'remove']('dark');
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+          document.documentElement.classList[isDark ? 'add' : 'remove']('dark');
+          lsSet('theme', isDark ? 'dark' : 'light');
       });
       function buildUrl(path, domain) {
         return domain ? domain.replace(/\/$/, '') + path : path;
@@ -344,8 +354,8 @@
         modalImg.src = '';
       }
 
-      const savedCols = parseInt(localStorage.getItem('columnCount')) || 4;
-      const savedPerPage = parseInt(localStorage.getItem('perPage')) || 30;
+        const savedCols = parseInt(lsGet('columnCount')) || 4;
+        const savedPerPage = parseInt(lsGet('perPage')) || 30;
 
       const navEl = document.querySelector('nav');
       const contentEl = document.getElementById('content');
@@ -452,8 +462,8 @@
         return await res.json();
       }
 
-      async function initGallery() {
-        const cachedStr = localStorage.getItem('wxData');
+        async function initGallery() {
+          const cachedStr = lsGet('wxData');
         let cached;
         if (cachedStr) {
           try { cached = JSON.parse(cachedStr); } catch {}
@@ -466,10 +476,10 @@
           const latest = await fetchLatest();
           const latestStr = JSON.stringify(latest);
           if (!cachedStr) {
-            localStorage.setItem('wxData', latestStr);
+              lsSet('wxData', latestStr);
             applyData(latest);
           } else if (latestStr !== cachedStr) {
-            localStorage.setItem('wxDataNew', latestStr);
+              lsSet('wxDataNew', latestStr);
             showDot();
           }
         } catch (err) {
@@ -496,9 +506,9 @@
       applySettings.addEventListener('click', () => {
         const cols = Math.max(1, parseInt(columnCountInput.value) || 1);
         perPage = Math.max(1, parseInt(perPageInput.value) || 1);
-        gallery.style.columnCount = String(cols);
-        localStorage.setItem('columnCount', String(cols));
-        localStorage.setItem('perPage', String(perPage));
+          gallery.style.columnCount = String(cols);
+          lsSet('columnCount', String(cols));
+          lsSet('perPage', String(perPage));
         currentPage = 0;
         renderPage();
         settingsPanel.classList.add('hidden');
@@ -506,7 +516,7 @@
       });
 
       clearCacheBtn.addEventListener('click', async () => {
-        ['wxData', 'wxDataNew', 'columnCount', 'perPage'].forEach((k) => localStorage.removeItem(k));
+          ['wxData', 'wxDataNew', 'columnCount', 'perPage'].forEach((k) => lsRemove(k));
         if ('caches' in window) {
           const names = await caches.keys();
           await Promise.all(names.map((n) => caches.delete(n)));
@@ -530,11 +540,11 @@
       });
 
       document.addEventListener('DOMContentLoaded', initGallery);
-      homeLink.addEventListener('click', () => {
-        const newStr = localStorage.getItem('wxDataNew');
-        if (newStr) {
-          localStorage.setItem('wxData', newStr);
-          localStorage.removeItem('wxDataNew');
+        homeLink.addEventListener('click', () => {
+          const newStr = lsGet('wxDataNew');
+          if (newStr) {
+            lsSet('wxData', newStr);
+            lsRemove('wxDataNew');
           hideDot();
           try {
             applyData(JSON.parse(newStr));
