@@ -90,6 +90,16 @@
                 size = buf.byteLength;
                 totalSize += size;
               } catch {}
+
+              if (ts === 0) {
+                try {
+                  const headRes = await fetch(req.url, { method: 'HEAD' });
+                  if (headRes.ok) {
+                    const len = headRes.headers.get('Content-Length');
+                    if (len) size = parseInt(len, 10);
+                  }
+                } catch {}
+              }
             }
             items.push({ url: req.url, cachedTime, expireTime, ts, size, type });
           }
