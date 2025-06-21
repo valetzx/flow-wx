@@ -219,10 +219,13 @@
               class="mt-1 w-full border rounded p-1"
             />
           </label>
-          <label class="flex items-center justify-between text-sm">
+          <div class="flex items-center justify-between text-sm">
             <span>暗色模式</span>
-            <input id="darkModeToggle" type="checkbox" class="ml-2" />
-          </label>
+            <label class="relative inline-flex items-center ml-2 cursor-pointer">
+              <input id="darkModeToggle" type="checkbox" class="sr-only peer" />
+              <div class="w-11 h-6 bg-gray-200 rounded-full peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full peer-checked:after:border-white dark:border-gray-600"></div>
+            </label>
+          </div>
           <button id="applySettings" class="w-full bg-blue-500 text-white py-1 rounded">应用</button>
           <button id="clearCache" class="w-full bg-red-500 text-white py-1 rounded">清理缓存</button>
            <footer class="text-xs text-center text-gray-400 my-4">
