@@ -3,24 +3,59 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>我的作品集</title>
-    <!-- ✨ Tailwind CDN 配置：开启 darkMode + 自定义色卡 -->
+    <title>图片列表</title>
+    <!-- Tailwind Config and CDN -->
+    <script>
+      if (
+        localStorage.getItem('darkMode') === 'on' ||
+        (!('darkMode' in localStorage) &&
+          window.matchMedia('(prefers-color-scheme: dark)').matches)
+      ) {
+        document.documentElement.classList.add('dark');
+      }
+    </script>
     <script>
       tailwind.config = {
         darkMode: 'class',
         theme: {
           extend: {
             colors: {
-              pumpkin:{50:'#FFF8F1',100:'#FEECDC',200:'#FDD5B5',300:'#FCBE8D',400:'#FBAE6E',500:'#F9974E',600:'#F27F2B',700:'#D6691A',800:'#B05515',900:'#8A410F'},
-              jade:{50:'#ECFDF5',100:'#D1FAE5',200:'#A7F3D0',300:'#6EE7B7',400:'#34D399',500:'#10B981',600:'#059669',700:'#047857',800:'#065F46',900:'#064E3B'},
-              sky:{50:'#F0F9FF',100:'#E0F2FE',200:'#BAE6FD',300:'#7DD3FC',400:'#38BDF8',500:'#0EA5E9',600:'#0284C7',700:'#0369A1',800:'#075985',900:'#0C4A6E'},
-              fuchsia:{50:'#FDF4FF',100:'#FAE8FF',200:'#F5D0FE',300:'#F0ABFC',400:'#E879F9',500:'#D946EF',600:'#C026D3',700:'#A21CAF',800:'#86198F',900:'#701A75'},
-              sunset:{50:'#FFF7ED',100:'#FFEAD5',200:'#FED7AA',300:'#FDBA74',400:'#FB923C',500:'#F97316',600:'#EA580C',700:'#C2410C',800:'#9A3412',900:'#7C2D12'},
-              ocean:{50:'#F0FDFA',100:'#CCFBF1',200:'#99F6E4',300:'#5EEAD4',400:'#2DD4BF',500:'#14B8A6',600:'#0D9488',700:'#0F766E',800:'#115E59',900:'#134E4A'},
-              berry:{50:'#FDF2F8',100:'#FCE7F3',200:'#FBCFE8',300:'#F9A8D4',400:'#F472B6',500:'#EC4899',600:'#DB2777',700:'#BE185D',800:'#9D174D',900:'#831843'},
-              lime:{50:'#F7FEE7',100:'#ECFCCB',200:'#D9F99D',300:'#BEF264',400:'#A3E635',500:'#84CC16',600:'#65A30D',700:'#4D7C0F',800:'#3F6212',900:'#365314'},
-              steel:{50:'#F1F5F9',100:'#E2E8F0',200:'#CBD5E1',300:'#94A3B8',400:'#64748B',500:'#475569',600:'#334155',700:'#1E293B',800:'#0F172A',900:'#0A1121'},
-              blush:{50:'#FFFAF5',100:'#FFF1E6',200:'#FFE0CC',300:'#FFC299',400:'#FFA366',500:'#FF8533',600:'#FF6600',700:'#CC5200',800:'#994000',900:'#663000'}
+              sunset: {
+                50: '#FFF1F2',
+                100: '#FFE4E6',
+                200: '#FECDD3',
+                300: '#FDA4AF',
+                400: '#FB7185',
+                500: '#F43F5E',
+                600: '#E11D48',
+                700: '#BE123C',
+                800: '#9F1239',
+                900: '#881337'
+              },
+              jade: {
+                50: '#ECFDF5',
+                100: '#D1FAE5',
+                200: '#A7F3D0',
+                300: '#6EE7B7',
+                400: '#34D399',
+                500: '#10B981',
+                600: '#059669',
+                700: '#047857',
+                800: '#065F46',
+                900: '#064E3B'
+              },
+              pumpkin: {
+                50: '#FFF7ED',
+                100: '#FFEDD5',
+                200: '#FED7AA',
+                300: '#FDBA74',
+                400: '#FB923C',
+                500: '#F97316',
+                600: '#EA580C',
+                700: '#C2410C',
+                800: '#9A3412',
+                900: '#7C2D12'
+              }
             }
           }
         }
@@ -110,443 +145,483 @@
       nav.mobile .notify-dot {
         right: 2rem;
       }
-
-      /* 图片放大查看弹窗 */
-      #imageModal {
-        background-color: rgba(0, 0, 0, 0.8);
-      }
+      /* 图片预览弹窗样式 */
       #imageModal img {
-        max-width: 90vw;
-        max-height: 90vh;
-        transform: scale(0.9);
-        opacity: 0;
-        transition: transform 0.2s, opacity 0.2s;
+        max-width: 90%;
+        max-height: 90%;
       }
-
-      #imageModal.show img {
-        animation: modalZoom 0.2s forwards;
-      }
-
-      #settingsPanel > div {
-        transform: scale(0.9);
-        opacity: 0;
-        transition: transform 0.2s, opacity 0.2s;
-      }
-
-      #settingsPanel.show > div {
-        animation: modalZoom 0.2s forwards;
-      }
-
-      @keyframes modalZoom {
-        from {
-          transform: scale(0.9);
-          opacity: 0;
-        }
-        to {
-          transform: scale(1);
-          opacity: 1;
-        }
-      }
-
     </style>
   </head>
   <body class="bg-gradient-to-br from-slate-50 to-slate-200 dark:from-slate-900 dark:to-slate-800 min-h-screen font-sans">
     <nav class="fixed top-0 left-0 h-screen w-[72px] bg-white dark:bg-slate-800 border-r dark:border-slate-700 shadow flex flex-col items-center py-4">
       <div class="sidebar-items flex flex-col items-center gap-y-6 h-full w-full">
-        <a href="#" aria-label="主页" class="sidebar-link">
-        <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
-          <path d="M7.54 23.15q-.2-2.05.26-3.93L9 14.04a7 7 0 0 1-.35-2.07c0-1.68.81-2.88 2.09-2.88.88 0 1.53.62 1.53 1.8q0 .57-.23 1.28l-.52 1.72q-.15.5-.15.92c0 1.2.91 1.87 2.08 1.87 2.09 0 3.57-2.16 3.57-4.96 0-3.12-2.04-5.12-5.05-5.12-3.36 0-5.49 2.19-5.49 5.24 0 1.22.38 2.36 1.11 3.14-.24.41-.5.48-.88.48-1.2 0-2.34-1.69-2.34-4 0-4 3.2-7.17 7.68-7.17 4.7 0 7.66 3.29 7.66 7.33s-2.88 7.15-5.98 7.15a3.8 3.8 0 0 1-3.06-1.48l-.62 2.5a11 11 0 0 1-1.62 3.67A11.98 11.98 0 0 0 24 12a11.99 11.99 0 1 0-24 0 12 12 0 0 0 7.54 11.15"/>
-        </svg>
+        <a href="#" aria-label="主页" class="sidebar-link dark:text-gray-400">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+            <path d="M7.54 23.15q-.2-2.05.26-3.93L9 14.04a7 7 0 0 1-.35-2.07c0-1.68.81-2.88 2.09-2.88.88 0 1.53.62 1.53 1.8q0 .57-.23 1.28l-.52 1.72q-.15.5-.15.92c0 1.2.91 1.87 2.08 1.87 2.09 0 3.57-2.16 3.57-4.96 0-3.12-2.04-5.12-5.05-5.12-3.36 0-5.49 2.19-5.49 5.24 0 1.22.38 2.36 1.11 3.14-.24.41-.5.48-.88.48-1.2 0-2.34-1.69-2.34-4 0-4 3.2-7.17 7.68-7.17 4.7 0 7.66 3.29 7.66 7.33s-2.88 7.15-5.98 7.15a3.8 3.8 0 0 1-3.06-1.48l-.62 2.5a11 11 0 0 1-1.62 3.67A11.98 11.98 0 0 0 24 12a11.99 11.99 0 1 0-24 0 12 12 0 0 0 7.54 11.15" />
+          </svg>
         </a>
-        <a href="/" aria-label="首页" class="sidebar-link" id="homeBtn">
-        <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
-          <path d="M4.6 22.73A107 107 0 0 0 11 23h2.22c2.43-.04 4.6-.16 6.18-.27A3.9 3.9 0 0 0 23 18.8v-8.46a4 4 0 0 0-1.34-3L14.4.93a3.63 3.63 0 0 0-4.82 0L2.34 7.36A4 4 0 0 0 1 10.35v8.46a3.9 3.9 0 0 0 3.6 3.92M13.08 2.4l7.25 6.44a2 2 0 0 1 .67 1.5v8.46a1.9 1.9 0 0 1-1.74 1.92q-1.39.11-3.26.19V16a4 4 0 0 0-8 0v4.92q-1.87-.08-3.26-.19A1.9 1.9 0 0 1 3 18.81v-8.46a2 2 0 0 1 .67-1.5l7.25-6.44a1.63 1.63 0 0 1 2.16 0M13.12 21h-2.24a1 1 0 0 1-.88-1v-4a2 2 0 1 1 4 0v4a1 1 0 0 1-.88 1" />
-        </svg>
+        <a href="/" aria-label="首页" class="sidebar-link dark:text-gray-400" id="homeBtn">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+            <path d="M4.6 22.73A107 107 0 0 0 11 23h2.22c2.43-.04 4.6-.16 6.18-.27A3.9 3.9 0 0 0 23 18.8v-8.46a4 4 0 0 0-1.34-3L14.4.93a3.63 3.63 0 0 0-4.82 0L2.34 7.36A4 4 0 0 0 1 10.35v8.46a3.9 3.9 0 0 0 3.6 3.92M13.08 2.4l7.25 6.44a2 2 0 0 1 .67 1.5v8.46a1.9 1.9 0 0 1-1.74 1.92q-1.39.11-3.26.19V16a4 4 0 0 0-8 0v4.92q-1.87-.08-3.26-.19A1.9 1.9 0 0 1 3 18.81v-8.46a2 2 0 0 1 .67-1.5l7.25-6.44a1.63 1.63 0 0 1 2.16 0M13.12 21h-2.24a1 1 0 0 1-.88-1v-4a2 2 0 1 1 4 0v4a1 1 0 0 1-.88 1" />
+          </svg>
         </a>
-        <a href="/ideas" aria-label="探索" id="idealBtn" class="sidebar-link">
-        <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
-          <path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4M9.42 7.24a3 3 0 0 0-2.18 2.18L5.7 15.57a2.25 2.25 0 0 0 2.73 2.73l6.15-1.54a3 3 0 0 0 2.18-2.18l1.54-6.15a2.25 2.25 0 0 0-2.73-2.73zm6.94.7-1.54 6.15a1 1 0 0 1-.73.73l-6.15 1.54a.25.25 0 0 1-.3-.3L9.18 9.9a1 1 0 0 1 .73-.73l6.15-1.54a.25.25 0 0 1 .3.3M12 24a12 12 0 1 0 0-24 12 12 0 0 0 0 24M2 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0" />
-        </svg>
+        <a href="/ideas" aria-label="探索" id="idealBtn" class="sidebar-link dark:text-gray-400">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+            <path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4M9.42 7.24a3 3 0 0 0-2.18 2.18L5.7 15.57a2.25 2.25 0 0 0 2.73 2.73l6.15-1.54a3 3 0 0 0 2.18-2.18l1.54-6.15a2.25 2.25 0 0 0-2.73-2.73zm6.94.7-1.54 6.15a1 1 0 0 1-.73.73l-6.15 1.54a.25.25 0 0 1-.3-.3L9.18 9.9a1 1 0 0 1 .73-.73l6.15-1.54a.25.25 0 0 1 .3.3M12 24a12 12 0 1 0 0-24 12 12 0 0 0 0 24M2 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0" />
+          </svg>
         </a>
-        <a href="/add/" aria-label="创建" id="addBtn" class="sidebar-link">
-        <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
-          <path d="M11 11H6v2h5v5h2v-5h5v-2h-5V6h-2zM5 1a4 4 0 0 0-4 4v14a4 4 0 0 0 4 4h14a4 4 0 0 0 4-4V5a4 4 0 0 0-4-4zm16 4v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h14a2 2 0 0 1 2 2"/>
-        </svg>
+        <a href="/add/" aria-label="创建" id="addBtn" class="sidebar-link dark:text-gray-400">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+            <path d="M11 11H6v2h5v5h2v-5h5v-2h-5V6h-2zM5 1a4 4 0 0 0-4 4v14a4 4 0 0 0 4 4h14a4 4 0 0 0 4-4V5a4 4 0 0 0-4-4zm16 4v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h14a2 2 0 0 1 2 2" />
+          </svg>
         </a>
-      <a href="#" aria-label="更多" id="moreBtn" class="sidebar-link mt-auto">
-        <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
-          <path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10m3 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
-          <path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10m3 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0m1.13-10.29A2 2 0 0 0 14.7.31a12 12 0 0 0-5.4 0c-.73.17-1.26.74-1.43 1.4l-.58 2.14-2.14-.57a2 2 0 0 0-1.93.54 12 12 0 0 0-2.7 4.67c-.22.72.01 1.46.5 1.95L2.59 12l-1.57 1.56a2 2 0 0 0-.5 1.95 12 12 0 0 0 2.7 4.68c.51.54 1.27.72 1.93.54l2.14-.58.58 2.14c.17.67.7 1.24 1.43 1.4a12 12 0 0 0 5.4 0 2 2 0 0 0 1.43-1.4l.58-2.14 2.13.58c.67.18 1.43 0 1.94-.55a12 12 0 0 0 2.7-4.67 2 2 0 0 0-.5-1.94L21.4 12l1.57-1.56c.49-.5.71-1.23.5-1.95a12 12 0 0 0-2.7-4.67 2 2 0 0 0-1.93-.54l-2.14.57zm-6.34.54a10 10 0 0 1 4.42 0l.56 2.12a2 2 0 0 0 2.45 1.41l2.13-.57a10 10 0 0 1 2.2 3.83L20 10.59a2 2 0 0 0 0 2.83l1.55 1.55a10 10 0 0 1-2.2 3.82l-2.13-.57a2 2 0 0 0-2.44 1.42l-.57 2.12a10 10 0 0 1-4.42 0l-.57-2.12a2 2 0 0 0-2.45-1.42l-2.12.57a10 10 0 0 1-2.2-3.82L4 13.42a2 2 0 0 0 0-2.83L2.45 9.03a10 10 0 0 1 2.2-3.82l2.13.57a2 2 0 0 0 2.44-1.41z"/>
-        </svg>
-      </a>
+        <a href="#" aria-label="更多" id="moreBtn" class="sidebar-link mt-auto dark:text-gray-400">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+            <path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10m3 5a3 3 0 1 1-6 0 3 3 0 0 1-6 0" />
+            <path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10m3 5a3 3 0 1 1-6 0 3 3 0 0 1-6 0m1.13-10.29A2 2 0 0 0 14.7.31a12 12 0 0 0-5.4 0c-.73.17-1.26.74-1.43 1.4l-.58 2.14-2.14-.57a2 2 0 0 0-1.93.54 12 12 0 0 0-2.7 4.67c-.22.72.01 1.46.5 1.95L2.59 12l-1.57 1.56a2 2 0 0 0-.5 1.95 12 12 0 0 0 2.7 4.68c.51.54 1.27.72 1.93.54l2.14-.58.58 2.14c.17.67.7 1.24 1.43 1.4a12 12 0 0 0 5.4 0 2 2 0 0 0 1.43-1.4l.58-2.14 2.13.58c.67.18 1.43 0 1.94-.55a12 12 0 0 0 2.7-4.67 2 2 0 0 0-.5-1.94L21.4 12l1.57-1.56c.49-.5.71-1.23.5-1.95a12 12 0 0 0-2.7-4.67 2 2 0 0 0-1.93-.54l-2.14.57zm-6.34.54a10 10 0 0 1 4.42 0l.56 2.12a2 2 0 0 0 2.45 1.41l2.13-.57a10 10 0 0 1 2.2 3.83L20 10.59a2 2 0 0 0 0 2.83l1.55 1.55a10 10 0 0 1-2.2 3.82l-2.13-.57a2 2 0 0 0-2.44 1.42l-.57 2.12a10 10 0 0 1-4.42 0l-.57-2.12a2 2 0 0 0-2.45-1.42l-2.12.57a10 10 0 0 1-2.2-3.82L4 13.42a2 2 0 0 0 0-2.83L2.45 9.03a10 10 0 0 1 2.2-3.82l2.13.57a2 2 0 0 0 2.44-1.41z" />
+          </svg>
+        </a>
       </div>
     </nav>
     <div id="content" class="ml-[72px]">
       <header class="py-6 text-center">
-        <h1 class="text-3xl font-bold tracking-tight text-slate-800 dark:text-slate-100">
-          图集
-        </h1>
+        <h1 class="text-3xl font-bold tracking-tight text-slate-800 dark:text-slate-100">图片列表</h1>
       </header>
-
       <main class="px-4 max-w-screen-xl mx-auto">
+        <!-- Masonry 容器 -->
         <div class="masonry" id="gallery"></div>
-        <button id="loadMore" class="mt-4 mx-auto block px-4 py-2 rounded bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-100 hidden">加载更多</button>
+        <button
+          id="loadMore"
+          class="mt-4 mx-auto block px-4 py-2 rounded bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200 hidden"
+        >
+          加载更多
+        </button>
       </main>
 
-    <!-- 设置面板 -->
-      <div id="settingsPanel" class="fixed inset-0 bg-black/50 hidden items-center justify-center">
-        <div class="bg-white dark:bg-slate-800 rounded-xl p-4 w-72 space-y-3">
+      <!-- 设置面板 -->
+      <div
+        id="settingsPanel"
+        class="fixed inset-0 bg-black/50 hidden items-center justify-center"
+      >
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-4 w-72 space-y-3 text-slate-900 dark:text-gray-200">
           <div class="flex justify-between items-center">
             <h2 class="font-semibold">设置</h2>
-            <button id="closeSettings" class="text-xl leading-none">&times;</button>
+            <button id="closeSettings" class="text-xl leading-none">
+              &times;
+            </button>
           </div>
-
-          <label class="block text-sm">列数
-            <input id="columnCountInput" type="number" min="1" max="6" value="4" class="mt-1 w-full border rounded p-1 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"/>
+          <label class="block text-sm"
+            >列数
+            <input
+              id="columnCountInput"
+              type="number"
+              min="1"
+              max="6"
+              value="4"
+              class="mt-1 w-full border rounded p-1"
+            />
           </label>
-
-          <label class="block text-sm">加载卡片数量
-            <input id="perPageInput" type="number" min="1" value="30" class="mt-1 w-full border rounded p-1 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"/>
+          <label class="block text-sm"
+            >加载卡片数量
+            <input
+              id="perPageInput"
+              type="number"
+              min="1"
+              value="30"
+              class="mt-1 w-full border rounded p-1"
+            />
           </label>
-
-          <!-- ✨ 新增亮 / 暗模式开关 -->
-          <label class="flex justify-between items-center text-sm select-none">
-            <span>深色模式</span>
-            <input id="themeToggle" type="checkbox"
-              class="peer h-6 w-11 appearance-none rounded-full bg-gray-300 transition-colors
-                     after:absolute after:ml-0.5 after:mt-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white
-                     after:transition-transform checked:bg-blue-600
-                     checked:after:translate-x-5 relative cursor-pointer"/>
-          </label>
-
-          <button id="applySettings" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-1 rounded">应用</button>
-          <button id="clearCache" class="w-full bg-red-500 hover:bg-red-600 text-white py-1 rounded">清理缓存</button>
+          <!-- 新增主题和模式设置 -->
+          <div class="flex items-center justify-between">
+            <span class="text-sm">深色模式</span>
+            <input id="darkModeToggle" type="checkbox" class="w-4 h-4" />
+          </div>
+          <div class="text-sm font-semibold mt-2">主题色</div>
+          <div class="flex gap-2 mb-2">
+            <button
+              class="w-6 h-6 rounded-full bg-sky-500"
+              data-theme="sky"
+              aria-label="切换主题色为天空蓝"
+            ></button>
+            <button
+              class="w-6 h-6 rounded-full bg-rose-500"
+              data-theme="sunset"
+              aria-label="切换主题色为日落橙"
+            ></button>
+            <button
+              class="w-6 h-6 rounded-full bg-emerald-500"
+              data-theme="jade"
+              aria-label="切换主题色为翡翠绿"
+            ></button>
+            <button
+              class="w-6 h-6 rounded-full bg-orange-500"
+              data-theme="pumpkin"
+              aria-label="切换主题色为南瓜橙"
+            ></button>
+          </div>
+          <button id="applySettings" class="w-full bg-blue-500 text-white py-1 rounded">应用</button>
+          <button id="clearCache" class="w-full bg-red-500 text-white py-1 rounded">清理缓存</button>
           <footer class="text-xs text-center text-gray-400 my-4">
-            <a href="https://github.com/valetzx/flow-wx" class="hover:underline">查看项目源码</a> · <a href="#">联系我吧</a>
+            <a href="https://github.com/valetzx/flow-wx" class="hover:underline"
+              >查看项目源码</a
+            >
+            ·
+            <a href="#">联系我吧</a>
           </footer>
         </div>
       </div>
 
-    <!-- 图片查看弹窗 -->
-      <div id="imageModal" class="fixed inset-0 hidden items-center justify-center">
-        <img id="modalImg" src="" alt="preview" class="rounded" />
+      <!-- 图片查看弹窗 -->
+      <div id="imageModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center">
+        <img id="modalImg" src="" alt="预览" class="rounded" />
       </div>
 
-    <script>
-              /* ---------- 亮 / 暗主题切换 ---------- */
-        const themeToggle  = document.getElementById('themeToggle');
-        const root         = document.documentElement;
-        const storedTheme  = localStorage.getItem('theme');
-        const prefersDark  = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      <script>
+        const gallery = document.getElementById("gallery");
+        const loadMoreBtn = document.getElementById("loadMore");
+        const settingsPanel = document.getElementById("settingsPanel");
+        const moreBtn = document.getElementById("moreBtn");
+        const closeSettings = document.getElementById("closeSettings");
+        const applySettings = document.getElementById("applySettings");
+        const columnCountInput = document.getElementById("columnCountInput");
+        const perPageInput = document.getElementById("perPageInput");
+        const clearCacheBtn = document.getElementById("clearCache");
+        const imageModal = document.getElementById("imageModal");
+        const modalImg = document.getElementById("modalImg");
+        let imgScale = 1;
+        let themeColor = localStorage.getItem("themeColor") || "sky";
 
-        if (storedTheme === 'dark' || (!storedTheme && prefersDark)) {
-          root.classList.add('dark');
-          if (themeToggle) themeToggle.checked = true;
+        const apiStored = localStorage.getItem("apiDomains") || localStorage.getItem("apiDomain") || "";
+        const imgStored = localStorage.getItem("imgDomains") || "";
+        let apiDomains = apiStored
+          ? apiStored.split(/\r?\n|,/).map((s) => s.trim()).filter(Boolean)
+          : [];
+        let imgDomains = imgStored
+          ? imgStored.split(/\r?\n|,/).map((s) => s.trim()).filter(Boolean)
+          : [];
+        if (apiDomains.length === 0 && Array.isArray(window.API_DOMAINS)) {
+          apiDomains = window.API_DOMAINS;
+        }
+        if (imgDomains.length === 0 && Array.isArray(window.IMG_DOMAINS)) {
+          imgDomains = window.IMG_DOMAINS;
+        }
+        function buildUrl(path, domain) {
+          return domain ? domain.replace(/\/$/, "") + path : path;
+        }
+        function withDomain(path) {
+          return buildUrl(path, imgDomains[0]);
+        }
+        function loadImgWithFallback(img) {
+          const path = img.dataset.path;
+          if (!path) return;
+          let index = 0;
+          function attempt() {
+            img.src = buildUrl(path, imgDomains[index] || "");
+          }
+          img.onerror = () => {
+            index++;
+            if (index < imgDomains.length) attempt();
+          };
+          attempt();
+        }
+        async function fetchWithFallback(path, options = {}) {
+          const isApi =
+            path.startsWith("/api/wx") ||
+            path.startsWith("/api/article") ||
+            path.startsWith("/api/daily");
+          const domains = isApi ? apiDomains : imgDomains;
+          for (const d of domains) {
+            try {
+              const res = await fetch(buildUrl(path, d), options);
+              if (res.ok) return res;
+            } catch {}
+          }
+          return fetch(path, options);
         }
 
-        themeToggle?.addEventListener('change', (e) => {
-          if (e.target.checked) {
-            root.classList.add('dark');
-            localStorage.setItem('theme', 'dark');
+        const homeLink = document.querySelector('a[aria-label="\u4e3b\u9875"]');
+        let notifyDot = null;
+
+        function showDot() {
+          if (!notifyDot) {
+            notifyDot = document.createElement("span");
+            notifyDot.className = "notify-dot";
+            homeLink.classList.add("relative");
+            homeLink.appendChild(notifyDot);
+          }
+        }
+
+        function hideDot() {
+          if (notifyDot) {
+            notifyDot.remove();
+            notifyDot = null;
+          }
+        }
+
+        function openImage(src) {
+          imgScale = 1;
+          modalImg.src = src;
+          imageModal.classList.remove("hidden");
+          imageModal.classList.add("flex", "show");
+        }
+
+        function closeImage() {
+          imageModal.classList.add("hidden");
+          imageModal.classList.remove("flex", "show");
+          modalImg.src = "";
+        }
+
+        const savedCols = parseInt(localStorage.getItem("columnCount")) || 4;
+        const savedPerPage = parseInt(localStorage.getItem("perPage")) || 30;
+
+        const navEl = document.querySelector("nav");
+        const contentEl = document.getElementById("content");
+        const isMobile = /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
+
+        const initialCols = isMobile ? 2 : savedCols;
+
+        columnCountInput.value = String(initialCols);
+        perPageInput.value = String(savedPerPage);
+        gallery.style.columnCount = String(initialCols);
+
+        if (isMobile) {
+          document.body.classList.add("mobile");
+          navEl.classList.add("mobile");
+          contentEl.classList.remove("ml-[72px]");
+          contentEl.classList.add("mb-[72px]");
+        }
+
+        let allItems = [];
+        let currentPage = 0;
+        let perPage = savedPerPage;
+
+        const observer = new IntersectionObserver(
+          (entries, obs) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                const img = entry.target;
+                loadImgWithFallback(img);
+                obs.unobserve(img);
+              }
+            });
+          },
+          { rootMargin: "100px" }
+        );
+
+        function getRandomColor() {
+          return "#" + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, "0");
+        }
+
+        function createImage(src, alt) {
+          const img = document.createElement("img");
+          img.className = `masonry-item w-full rounded-2xl shadow object-cover hover:opacity-90 transition-opacity bg-${themeColor}-100 dark:bg-${themeColor}-800`;
+          img.dataset.path = `?url=${src}`;
+          img.alt = alt;
+          img.loading = "lazy";
+          // 随机高度以增强瀑布流效果
+          const randomHeight = 180 + Math.random() * 120; // 180 - 300px
+          img.style.height = `${randomHeight}px`;
+          // Remove background color style (using class instead)
+          img.style.minHeight = "120px";
+          img.style.opacity = "0";
+          img.style.transition = "opacity 0.5s";
+          img.addEventListener("load", () => {
+            img.style.opacity = "1";
+            img.style.backgroundColor = "";
+            img.style.minHeight = "";
+          });
+          observer.observe(img);
+          img.addEventListener("click", () =>
+            openImage(img.src || buildUrl(img.dataset.path, imgDomains[0]))
+          );
+          return img;
+        }
+
+        function buildItems(data) {
+          const items = [];
+          for (const [title, { description, images }] of Object.entries(data)) {
+            items.push({
+              type: "title",
+              html: `<div class="masonry-item p-5 rounded-2xl shadow hover:shadow-lg transition flex flex-col gap-2 bg-${themeColor}-100 dark:bg-${themeColor}-800">\n  <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-100">${title}</h2>\n  <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">${description}</p>\n</div>`
+            });
+            if (Array.isArray(images)) {
+              images.forEach((src) => {
+                items.push({ type: "image", src, alt: title });
+              });
+            }
+          }
+          return items;
+        }
+
+        function renderPage() {
+          gallery.innerHTML = "";
+          const end = (currentPage + 1) * perPage;
+          const items = allItems.slice(0, end);
+          items.forEach((item) => {
+            if (item.type === "title") {
+              gallery.insertAdjacentHTML("beforeend", item.html);
+            } else if (item.type === "image") {
+              gallery.appendChild(createImage(item.src, item.alt));
+            }
+          });
+          if (end >= allItems.length) {
+            loadMoreBtn.classList.add("hidden");
           } else {
-            root.classList.remove('dark');
-            localStorage.setItem('theme', 'light');
+            loadMoreBtn.classList.remove("hidden");
           }
-        });
-        
-      const gallery = document.getElementById('gallery');
-      const loadMoreBtn = document.getElementById('loadMore');
-      const settingsPanel = document.getElementById('settingsPanel');
-      const moreBtn = document.getElementById('moreBtn');
-      const closeSettings = document.getElementById('closeSettings');
-      const applySettings = document.getElementById('applySettings');
-      const columnCountInput = document.getElementById('columnCountInput');
-      const perPageInput = document.getElementById('perPageInput');
-      const clearCacheBtn = document.getElementById('clearCache');
-      const imageModal = document.getElementById('imageModal');
-      const modalImg = document.getElementById('modalImg');
-      let imgScale = 1;
-
-      const apiStored = localStorage.getItem('apiDomains') || localStorage.getItem('apiDomain') || '';
-      const imgStored = localStorage.getItem('imgDomains') || '';
-      let apiDomains = apiStored
-        ? apiStored.split(/\r?\n|,/).map((s) => s.trim()).filter(Boolean)
-        : [];
-      let imgDomains = imgStored
-        ? imgStored.split(/\r?\n|,/).map((s) => s.trim()).filter(Boolean)
-        : [];
-      if (apiDomains.length === 0 && Array.isArray(window.API_DOMAINS)) {
-        apiDomains = window.API_DOMAINS;
-      }
-      if (imgDomains.length === 0 && Array.isArray(window.IMG_DOMAINS)) {
-        imgDomains = window.IMG_DOMAINS;
-      }
-      function buildUrl(path, domain) {
-        return domain ? domain.replace(/\/$/, '') + path : path;
-      }
-      function withDomain(path) {
-        return buildUrl(path, imgDomains[0]);
-      }
-      function loadImgWithFallback(img) {
-        const path = img.dataset.path;
-        if (!path) return;
-        let index = 0;
-        function attempt() {
-          img.src = buildUrl(path, imgDomains[index] || '');
         }
-        img.onerror = () => {
-          index++;
-          if (index < imgDomains.length) attempt();
-        };
-        attempt();
-      }
-      async function fetchWithFallback(path, options = {}) {
-        const isApi = path.startsWith('/api/wx') || path.startsWith('/api/article') || path.startsWith('/api/daily');
-        const domains = isApi ? apiDomains : imgDomains;
-        for (const d of domains) {
-          try {
-            const res = await fetch(buildUrl(path, d), options);
-            if (res.ok) return res;
-          } catch {}
+
+        function applyData(data) {
+          allItems = buildItems(data);
+          currentPage = 0;
+          renderPage();
         }
-        return fetch(path, options);
-      }
 
-      const homeLink = document.querySelector('a[aria-label="\u4e3b\u9875"]');
-      let notifyDot = null;
-
-      function showDot() {
-        if (!notifyDot) {
-          notifyDot = document.createElement('span');
-          notifyDot.className = 'notify-dot';
-          homeLink.classList.add('relative');
-          homeLink.appendChild(notifyDot);
-        }
-      }
-
-      function hideDot() {
-        if (notifyDot) {
-          notifyDot.remove();
-          notifyDot = null;
-        }
-      }
-
-      function openImage(src) {
-        imgScale = 1;
-        modalImg.src = src;
-        imageModal.classList.remove('hidden');
-        imageModal.classList.add('flex', 'show');
-      }
-
-      function closeImage() {
-        imageModal.classList.add('hidden');
-        imageModal.classList.remove('flex', 'show');
-        modalImg.src = '';
-      }
-
-      const savedCols = parseInt(localStorage.getItem('columnCount')) || 4;
-      const savedPerPage = parseInt(localStorage.getItem('perPage')) || 30;
-
-      const navEl = document.querySelector('nav');
-      const contentEl = document.getElementById('content');
-      const isMobile = /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
-
-      const initialCols = isMobile ? 2 : savedCols;
-
-      columnCountInput.value = String(initialCols);
-      perPageInput.value = String(savedPerPage);
-      gallery.style.columnCount = String(initialCols);
-
-      if (isMobile) {
-        document.body.classList.add('mobile');
-        navEl.classList.add('mobile');
-        contentEl.classList.remove('ml-[72px]');
-        contentEl.classList.add('mb-[72px]');
-      }
-
-      let allItems = [];
-      let currentPage = 0;
-      let perPage = savedPerPage;
-
-      const observer = new IntersectionObserver((entries, obs) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const img = entry.target;
-            loadImgWithFallback(img);
-            obs.unobserve(img);
-          }
-        });
-      }, { rootMargin: '100px' });
-
-      function getRandomColor() {
-        return '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0');
-      }
-
-      function createImage(src, alt) {
-        const img = document.createElement('img');
-        img.className = 'masonry-item w-full rounded-2xl shadow object-cover hover:opacity-90 transition-opacity';
-        img.dataset.path = `?url=${src}`;
-        img.alt = alt;
-        img.loading = 'lazy';
-        // 随机高度以增强瀑布流效果
-        const randomHeight = 180 + Math.random() * 120; // 180 - 300px
-        img.style.height = `${randomHeight}px`;
-        img.style.backgroundColor = getRandomColor();
-        img.style.minHeight = '120px';
-        img.style.opacity = '0';
-        img.style.transition = 'opacity 0.5s';
-        img.addEventListener('load', () => {
-          img.style.opacity = '1';
-          img.style.backgroundColor = '';
-          img.style.minHeight = '';
-        });
-        observer.observe(img);
-        img.addEventListener('click', () => openImage(img.src || buildUrl(img.dataset.path, imgDomains[0])));
-        return img;
-      }
-
-      function buildItems(data) {
-        const items = [];
-        for (const [title, { description, images }] of Object.entries(data)) {
-          items.push({
-            type: 'title',
-            html:
-              `<div class="masonry-item p-5 bg-white rounded-2xl shadow hover:shadow-lg transition flex flex-col gap-2">\n  <h2 class="text-xl font-semibold text-slate-900">${title}</h2>\n  <p class="text-sm text-gray-600 leading-relaxed">${description}</p>\n</div>`
+        async function fetchLatest() {
+          const res = await fetchWithFallback("/api/wx", {
+            headers: { "x-skip-cache": "1" }
           });
-          images.forEach((src) => {
-            items.push({ type: 'image', src, alt: title });
+          if (!res.ok) throw new Error("Network response was not ok");
+          return await res.json();
+        }
+
+        async function initGallery() {
+          const cachedStr = localStorage.getItem("wxData");
+          let cached;
+          if (cachedStr) {
+            try {
+              cached = JSON.parse(cachedStr);
+            } catch {}
+          }
+          if (cached) {
+            applyData(cached);
+          }
+
+          try {
+            const latest = await fetchLatest();
+            const latestStr = JSON.stringify(latest);
+            if (!cachedStr) {
+              localStorage.setItem("wxData", latestStr);
+              applyData(latest);
+            } else if (latestStr !== cachedStr) {
+              localStorage.setItem("wxDataNew", latestStr);
+              showDot();
+            }
+          } catch (err) {
+            console.error("加载画廊失败:", err);
+          }
+        }
+
+        loadMoreBtn.addEventListener("click", () => {
+          currentPage++;
+          renderPage();
+        });
+
+        moreBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          settingsPanel.classList.remove("hidden");
+          settingsPanel.classList.add("flex", "show");
+        });
+
+        closeSettings.addEventListener("click", () => {
+          settingsPanel.classList.add("hidden");
+          settingsPanel.classList.remove("flex", "show");
+        });
+
+        applySettings.addEventListener("click", () => {
+          const cols = Math.max(1, parseInt(columnCountInput.value) || 1);
+          perPage = Math.max(1, parseInt(perPageInput.value) || 1);
+          gallery.style.columnCount = String(cols);
+          localStorage.setItem("columnCount", String(cols));
+          localStorage.setItem("perPage", String(perPage));
+          currentPage = 0;
+          renderPage();
+          settingsPanel.classList.add("hidden");
+          settingsPanel.classList.remove("flex", "show");
+        });
+
+        clearCacheBtn.addEventListener("click", async () => {
+          ["wxData", "wxDataNew", "columnCount", "perPage"].forEach((k) =>
+            localStorage.removeItem(k)
+          );
+          if ("caches" in window) {
+            const names = await caches.keys();
+            await Promise.all(names.map((n) => caches.delete(n)));
+          }
+          location.reload();
+        });
+
+        imageModal.addEventListener("click", (e) => {
+          if (e.target === imageModal) closeImage();
+        });
+
+        imageModal.addEventListener("wheel", (e) => {
+          e.preventDefault();
+          const factor = e.deltaY < 0 ? 1.1 : 0.9;
+          imgScale = Math.min(5, Math.max(1, imgScale * factor));
+          modalImg.style.transform = `scale(${imgScale})`;
+        });
+
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") closeImage();
+        });
+
+        document.addEventListener("DOMContentLoaded", initGallery);
+        homeLink.addEventListener("click", () => {
+          const newStr = localStorage.getItem("wxDataNew");
+          if (newStr) {
+            localStorage.setItem("wxData", newStr);
+            localStorage.removeItem("wxDataNew");
+            hideDot();
+            try {
+              applyData(JSON.parse(newStr));
+            } catch (e) {}
+          }
+        });
+        if ("serviceWorker" in navigator) {
+          window.addEventListener("load", () => {
+            navigator.serviceWorker.register("/sw.js").catch(console.error);
           });
         }
-        return items;
-      }
 
-      function renderPage() {
-        gallery.innerHTML = '';
-        const end = (currentPage + 1) * perPage;
-        const items = allItems.slice(0, end);
-        items.forEach((item) => {
-          if (item.type === 'title') {
-            gallery.insertAdjacentHTML('beforeend', item.html);
-          } else if (item.type === 'image') {
-            gallery.appendChild(createImage(item.src, item.alt));
+        // 新增：深色模式和主题色切换
+        const darkToggle = document.getElementById("darkModeToggle");
+        if (localStorage.getItem("darkMode") === "on") {
+          darkToggle.checked = true;
+        }
+        darkToggle.addEventListener("change", () => {
+          if (darkToggle.checked) {
+            document.documentElement.classList.add("dark");
+            localStorage.setItem("darkMode", "on");
+          } else {
+            document.documentElement.classList.remove("dark");
+            localStorage.setItem("darkMode", "off");
           }
         });
-        if (end >= allItems.length) {
-          loadMoreBtn.classList.add('hidden');
-        } else {
-          loadMoreBtn.classList.remove('hidden');
-        }
-      }
-
-      function applyData(data) {
-        allItems = buildItems(data);
-        currentPage = 0;
-        renderPage();
-      }
-
-      async function fetchLatest() {
-        const res = await fetchWithFallback('/api/wx', {
-          headers: { 'x-skip-cache': '1' },
+        document.querySelectorAll("[data-theme]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            themeColor = btn.dataset.theme;
+            localStorage.setItem("themeColor", themeColor);
+            // 重新生成内容列表并保持当前分页
+            const dataStr = localStorage.getItem("wxData");
+            if (dataStr) {
+              try {
+                const data = JSON.parse(dataStr);
+                const savedPage = currentPage;
+                applyData(data);
+                currentPage = savedPage;
+                renderPage();
+              } catch {
+                renderPage();
+              }
+            } else {
+              renderPage();
+            }
+          });
         });
-        if (!res.ok) throw new Error('Network response was not ok');
-        return await res.json();
-      }
-
-      async function initGallery() {
-        const cachedStr = localStorage.getItem('wxData');
-        let cached;
-        if (cachedStr) {
-          try { cached = JSON.parse(cachedStr); } catch {}
-        }
-        if (cached) {
-          applyData(cached);
-        }
-
-        try {
-          const latest = await fetchLatest();
-          const latestStr = JSON.stringify(latest);
-          if (!cachedStr) {
-            localStorage.setItem('wxData', latestStr);
-            applyData(latest);
-          } else if (latestStr !== cachedStr) {
-            localStorage.setItem('wxDataNew', latestStr);
-            showDot();
-          }
-        } catch (err) {
-          console.error('加载画廊失败:', err);
-        }
-      }
-
-      loadMoreBtn.addEventListener('click', () => {
-        currentPage++;
-        renderPage();
-      });
-
-      moreBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        settingsPanel.classList.remove('hidden');
-        settingsPanel.classList.add('flex', 'show');
-      });
-
-      closeSettings.addEventListener('click', () => {
-        settingsPanel.classList.add('hidden');
-        settingsPanel.classList.remove('flex', 'show');
-      });
-
-      applySettings.addEventListener('click', () => {
-        const cols = Math.max(1, parseInt(columnCountInput.value) || 1);
-        perPage = Math.max(1, parseInt(perPageInput.value) || 1);
-        gallery.style.columnCount = String(cols);
-        localStorage.setItem('columnCount', String(cols));
-        localStorage.setItem('perPage', String(perPage));
-        currentPage = 0;
-        renderPage();
-        settingsPanel.classList.add('hidden');
-        settingsPanel.classList.remove('flex', 'show');
-      });
-
-      clearCacheBtn.addEventListener('click', async () => {
-        ['wxData', 'wxDataNew', 'columnCount', 'perPage'].forEach((k) => localStorage.removeItem(k));
-        if ('caches' in window) {
-          const names = await caches.keys();
-          await Promise.all(names.map((n) => caches.delete(n)));
-        }
-        location.reload();
-      });
-
-      imageModal.addEventListener('click', (e) => {
-        if (e.target === imageModal) closeImage();
-      });
-
-      imageModal.addEventListener('wheel', (e) => {
-        e.preventDefault();
-        const factor = e.deltaY < 0 ? 1.1 : 0.9;
-        imgScale = Math.min(5, Math.max(1, imgScale * factor));
-        modalImg.style.transform = `scale(${imgScale})`;
-      });
-
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeImage();
-      });
-
-      document.addEventListener('DOMContentLoaded', initGallery);
-      homeLink.addEventListener('click', () => {
-        const newStr = localStorage.getItem('wxDataNew');
-        if (newStr) {
-          localStorage.setItem('wxData', newStr);
-          localStorage.removeItem('wxDataNew');
-          hideDot();
-          try {
-            applyData(JSON.parse(newStr));
-          } catch (e) {}
-        }
-      });
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(console.error);
-        });
-      }
-    </script>
+      </script>
     </div>
+    <!-- Hidden element to include all needed classes for Tailwind JIT -->
+    <span class="hidden">bg-sky-100 dark:bg-sky-800 bg-rose-100 dark:bg-rose-800 bg-emerald-100 dark:bg-emerald-800 bg-orange-100 dark:bg-orange-800 text-slate-900 dark:text-slate-100 text-gray-600 dark:text-gray-300 text-gray-400 dark:text-gray-500</span>
   </body>
 </html>
