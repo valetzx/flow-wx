@@ -336,10 +336,12 @@
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         let isDark = themeStored ? themeStored === 'dark' : prefersDark;
         document.documentElement.classList[isDark ? 'add' : 'remove']('dark');
+        document.body.classList[isDark ? 'add' : 'remove']('dark');
         darkModeToggle.checked = isDark;
         darkModeToggle.addEventListener('change', () => {
           isDark = darkModeToggle.checked;
           document.documentElement.classList[isDark ? 'add' : 'remove']('dark');
+          document.body.classList[isDark ? 'add' : 'remove']('dark');
           localStorage.setItem('theme', isDark ? 'dark' : 'light');
         });
        function buildUrl(path, domain) {
