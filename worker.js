@@ -171,11 +171,11 @@ export default {
       .split(/[,\s]+/)
       .map((d) => d.trim())
       .filter(Boolean);
-    const imgDomains = (env.IMG_DOMAINS || "")
+    const imgDomains = (env.IMG_DOMAINS || "/img")
       .split(/[,\s]+/)
       .map((d) => d.trim())
       .filter(Boolean);
-    const cacheImgDomain = env.IMG_CACHE || "";
+    const cacheImgDomain = env.IMG_CACHE || "mmbiz.qpic.cn";
 
     const indexHtml = injectConfig(mainHtml, apiDomains, imgDomains);
     const ideasPage = injectConfig(ideasHtml, apiDomains, imgDomains);
