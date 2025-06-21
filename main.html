@@ -60,6 +60,8 @@
       .masonry-item {
         break-inside: avoid;
         margin-bottom: 1rem;
+        border-radius: 1rem;
+        overflow: hidden; 
       }
       .sidebar-link {
         display: flex;
@@ -532,12 +534,12 @@
           items.push({
             type: 'title',
             html:
-              `<div class="masonry-item">
-                <div class="card-content p-5 flex flex-col gap-2">
-                  <h2 class="text-xl font-semibold">${title}</h2>
-                  <p class="text-sm leading-relaxed">${description}</p>
-                </div>
-              </div>`
+            `<div class="masonry-item">
+              <div class="card-content p-5 flex flex-col gap-2">
+                <h2 class="text-xl font-semibold">${title}</h2>
+                <p class="text-sm leading-relaxed">${description}</p>
+              </div>
+            </div>`
           });
           images.forEach((src) => {
             items.push({ type: 'image', src, alt: title });
