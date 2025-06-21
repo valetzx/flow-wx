@@ -30,7 +30,7 @@ const imgDomains = imgDomainsEnv
   .split(/[,\s]+/)
   .map((d) => d.trim())
   .filter(Boolean);
-const cacheImgDomain = Deno.env.get("CACHE_IMG_DOMAIN") || "";
+const cacheImgDomain = Deno.env.get("IMG_CACHE") || "";
 
 function injectConfig(html: string): string {
   if (apiDomains.length === 0 && imgDomains.length === 0) return html;
@@ -45,7 +45,7 @@ const ideasHtml = injectConfig(
   await Deno.readTextFile(join(__dirname, "ideas.html")),
 );
 const swRaw = await Deno.readTextFile(join(__dirname, "sw.js"));
-const swHtml = `const CACHE_IMG_DOMAIN = ${JSON.stringify(cacheImgDomain)};\n${swRaw}`;
+const swHtml = `const IMG_CACHE = ${JSON.stringify(cacheImgDomain)};\n${swRaw}`;
 const adminHtml = injectConfig(
   await Deno.readTextFile(join(__dirname, "admin.html")),
 );
