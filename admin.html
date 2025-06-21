@@ -37,6 +37,13 @@
       const CACHE_AGE = 6 * 24 * 60 * 60 * 1000;
       const TS_HEADER = 'X-Cache-Timestamp';
 
+      function formatBytes(bytes) {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 ** 2) return `${(bytes / 1024).toFixed(1)} KB`;
+        if (bytes < 1024 ** 3) return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
+        return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
+      }
+
       async function loadCache() {
         const box = document.getElementById('cacheInfo');
         if (!('caches' in window)) {
@@ -51,22 +58,27 @@
             return;
           }
           const items = [];
+          let totalSize = 0;
           for (const req of keys) {
-            const cachedRes = await cache.match(req.url);
+            const cachedRes = await cache.match(req);
             let cachedTime = '未知';
             let expireTime = '未知';
+            let size = 0;
             if (cachedRes) {
               const ts = parseInt(cachedRes.headers.get(TS_HEADER));
               if (!Number.isNaN(ts)) {
                 cachedTime = new Date(ts).toLocaleString();
                 expireTime = new Date(ts + CACHE_AGE).toLocaleString();
               }
+              const buf = await cachedRes.clone().arrayBuffer();
+              size = buf.byteLength;
+              totalSize += size;
             }
             items.push(
-              `<li><div class="break-all">${req.url}</div><div class="text-gray-500">缓存时间: ${cachedTime}，到期时间: ${expireTime}</div></li>`
+              `<li><div class="break-all">${req.url}</div><div class="text-gray-500">缓存时间: ${cachedTime}，到期时间: ${expireTime}，大小: ${formatBytes(size)}</div></li>`
             );
           }
-          box.innerHTML = `<ul class="list-disc pl-5 space-y-2">${items.join('')}</ul>`;
+          box.innerHTML = `<ul class="list-disc pl-5 space-y-2">${items.join('')}</ul><div class="mt-2 font-semibold">总大小: ${formatBytes(totalSize)}</div>`;
         } catch (e) {
           box.textContent = '读取缓存失败';
           console.error(e);
