@@ -75,6 +75,7 @@
             let expireTime = '未知';
             let ts = 0;
             let size = 0;
+            let type = '未知';
             if (cachedRes) {
               const tsRaw = parseInt(cachedRes.headers.get(TS_HEADER));
               if (!Number.isNaN(tsRaw)) {
@@ -82,13 +83,15 @@
                 cachedTime = new Date(ts).toLocaleString();
                 expireTime = new Date(ts + CACHE_AGE).toLocaleString();
               }
+              const t = cachedRes.headers.get('Content-Type');
+              if (t) type = t;
               try {
                 const buf = await cachedRes.clone().arrayBuffer();
                 size = buf.byteLength;
                 totalSize += size;
               } catch {}
             }
-            items.push({ url: req.url, cachedTime, expireTime, ts, size });
+            items.push({ url: req.url, cachedTime, expireTime, ts, size, type });
           }
 
           if (sortSelect.value === 'time') {
@@ -102,10 +105,10 @@
           const rows = items
             .map(
               (it) =>
-                `<tr class="border-b last:border-0"><td class="pr-2 break-all">${it.url}</td><td class="px-2 whitespace-nowrap">${it.cachedTime}</td><td class="px-2 whitespace-nowrap">${it.expireTime}</td><td class="px-2 text-right whitespace-nowrap">${it.size ? formatBytes(it.size) : '未知'}</td></tr>`
+                `<tr class="border-b last:border-0"><td class="pr-2 break-all">${it.url}</td><td class="px-2 whitespace-nowrap">${it.cachedTime}</td><td class="px-2 whitespace-nowrap">${it.expireTime}</td><td class="px-2 whitespace-nowrap">${it.type}</td><td class="px-2 text-right whitespace-nowrap">${it.size ? formatBytes(it.size) : '未知'}</td></tr>`
             )
             .join('');
-          box.innerHTML = `<table class="min-w-full text-xs"><thead class="border-b font-medium"><tr><th class="text-left">URL</th><th class="px-2">缓存时间</th><th class="px-2">到期时间</th><th class="px-2 text-right">大小</th></tr></thead><tbody>${rows}</tbody></table><div class="mt-2 font-semibold">总大小: ${formatBytes(totalSize)}</div>`;
+          box.innerHTML = `<table class="min-w-full text-xs"><thead class="border-b font-medium"><tr><th class="text-left">URL</th><th class="px-2">缓存时间</th><th class="px-2">到期时间</th><th class="px-2">类型</th><th class="px-2 text-right">大小</th></tr></thead><tbody>${rows}</tbody></table><div class="mt-2 font-semibold">总大小: ${formatBytes(totalSize)}</div>`;
         } catch (e) {
           box.textContent = '读取缓存失败';
           console.error(e);

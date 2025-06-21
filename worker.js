@@ -316,28 +316,15 @@ async function fetchAndCache(request) {
   const cache = await caches.open(CACHE_NAME);
   const res = await fetch(request);
   if (res.ok || res.type === "opaque") {
-    if (res.type === "opaque") {
-      const headers = new Headers();
-      headers.set(TS_HEADER, Date.now().toString());
-      const ct = res.headers.get("Content-Type");
-      if (ct) headers.set("Content-Type", ct);
-      const cachedRes = new Response(res.body, {
-        status: res.status,
-        statusText: res.statusText,
-        headers,
-      });
-      await cache.put(request, cachedRes);
-    } else {
-      const resForCache = res.clone();
-      const headers = new Headers(resForCache.headers);
-      headers.set(TS_HEADER, Date.now().toString());
-      const cachedRes = new Response(resForCache.body, {
-        status: resForCache.status,
-        statusText: resForCache.statusText,
-        headers,
-      });
-      await cache.put(request, cachedRes);
-    }
+    const resForCache = res.clone();
+    const headers = new Headers(resForCache.headers);
+    headers.set(TS_HEADER, Date.now().toString());
+    const cachedRes = new Response(resForCache.body, {
+      status: resForCache.status,
+      statusText: resForCache.statusText,
+      headers,
+    });
+    await cache.put(request, cachedRes);
   }
   return res;
 }
@@ -353,28 +340,15 @@ async function cacheThenNetwork(request) {
     fetch(request)
       .then(async (res) => {
         if (res.ok || res.type === "opaque") {
-          if (res.type === "opaque") {
-            const headers = new Headers();
-            headers.set(TS_HEADER, Date.now().toString());
-            const ct = res.headers.get("Content-Type");
-            if (ct) headers.set("Content-Type", ct);
-            const cachedRes = new Response(res.body, {
-              status: res.status,
-              statusText: res.statusText,
-              headers,
-            });
-            await cache.put(request, cachedRes);
-          } else {
-            const resForCache = res.clone();
-            const headers = new Headers(resForCache.headers);
-            headers.set(TS_HEADER, Date.now().toString());
-            const cachedRes = new Response(resForCache.body, {
-              status: resForCache.status,
-              statusText: resForCache.statusText,
-              headers,
-            });
-            await cache.put(request, cachedRes);
-          }
+          const resForCache = res.clone();
+          const headers = new Headers(resForCache.headers);
+          headers.set(TS_HEADER, Date.now().toString());
+          const cachedRes = new Response(resForCache.body, {
+            status: resForCache.status,
+            statusText: resForCache.statusText,
+            headers,
+          });
+          await cache.put(request, cachedRes);
         }
       })
       .catch(() => {});
@@ -383,28 +357,15 @@ async function cacheThenNetwork(request) {
   try {
     const res = await fetch(request);
     if (res.ok || res.type === "opaque") {
-      if (res.type === "opaque") {
-        const headers = new Headers();
-        headers.set(TS_HEADER, Date.now().toString());
-        const ct = res.headers.get("Content-Type");
-        if (ct) headers.set("Content-Type", ct);
-        const cachedRes = new Response(res.body, {
-          status: res.status,
-          statusText: res.statusText,
-          headers,
-        });
-        await cache.put(request, cachedRes);
-      } else {
-        const resForCache = res.clone();
-        const headers = new Headers(resForCache.headers);
-        headers.set(TS_HEADER, Date.now().toString());
-        const cachedRes = new Response(resForCache.body, {
-          status: resForCache.status,
-          statusText: resForCache.statusText,
-          headers,
-        });
-        await cache.put(request, cachedRes);
-      }
+      const resForCache = res.clone();
+      const headers = new Headers(resForCache.headers);
+      headers.set(TS_HEADER, Date.now().toString());
+      const cachedRes = new Response(resForCache.body, {
+        status: resForCache.status,
+        statusText: resForCache.statusText,
+        headers,
+      });
+      await cache.put(request, cachedRes);
     }
     return res;
   } catch (err) {
