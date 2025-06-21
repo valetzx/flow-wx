@@ -5,8 +5,12 @@
 | 变量 | 默认值 | 说明 |
 | --- | --- | --- |
 | `WX_URL` | `必填` | 获取的微信公众号文章列表，如果不填会从本地 `article.txt` 读取 |
-| `API_DOMAINS` | `(可选)` | 提供 `/api/wx`、`/api/article` 和 `/api/daily` 的备用域名，多个域名用逗号或空格分隔 |
-| `IMG_DOMAINS` | `(可选)` | 图片代理 `/img` 的备用域名，多个域名用逗号或空格分隔 |
+| `API_DOMAINS` | `可选` | 提供 `/api/wx`、`/api/article` 和 `/api/daily` 的备用域名，多个域名用逗号或空格分隔 |
+| `IMG_DOMAINS` | `可选` | 图片代理 `/img` 的备用域名，多个域名用逗号或空格分隔 |
+
+## 部署到 Deno  (推荐)
+
+直接fork+star本项目，更改本地 `article.txt` 文件中你想获取文章的链接（一行一篇）然后在Deno面板中选择你fork的仓库导入，选择 `server.ts` 进行部署
 
 ## 部署到 Cloudflare Workers
 
@@ -17,3 +21,5 @@
 项目中的 HTML 与文本文件会在构建时作为字符串引入，规则已在 `wrangler.toml` 中配置。
 
 Workers 会读取 `WX_URL`、`API_DOMAINS` 和 `IMG_DOMAINS` 这几个环境变量。
+
+
