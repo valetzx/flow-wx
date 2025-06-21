@@ -316,10 +316,18 @@
         const closeArticle = document.getElementById("closeArticle");
         const articleContent = document.getElementById("articleContent");
         const clearCacheBtn = document.getElementById('clearCache');
+
+        function safeGet(key) {
+          try { return localStorage.getItem(key); } catch { return null; }
+        }
+
+        function safeSet(key, val) {
+          try { localStorage.setItem(key, val); } catch {}
+        }
         let dailyData = null;
 
-        const apiStored = localStorage.getItem('apiDomains') || localStorage.getItem('apiDomain') || '';
-        const imgStored = localStorage.getItem('imgDomains') || '';
+        const apiStored = safeGet('apiDomains') || safeGet('apiDomain') || '';
+        const imgStored = safeGet('imgDomains') || '';
         let apiDomains = apiStored
           ? apiStored.split(/\r?\n|,/).map((s) => s.trim()).filter(Boolean)
           : [];
@@ -332,7 +340,7 @@
         if (imgDomains.length === 0 && Array.isArray(window.IMG_DOMAINS)) {
           imgDomains = window.IMG_DOMAINS;
         }
-        const themeStored = localStorage.getItem('theme');
+        const themeStored = safeGet('theme');
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         let isDark = themeStored ? themeStored === 'dark' : prefersDark;
         document.documentElement.classList[isDark ? 'add' : 'remove']('dark');
@@ -340,7 +348,7 @@
         darkModeToggle.addEventListener('change', () => {
           isDark = darkModeToggle.checked;
           document.documentElement.classList[isDark ? 'add' : 'remove']('dark');
-          localStorage.setItem('theme', isDark ? 'dark' : 'light');
+          safeSet('theme', isDark ? 'dark' : 'light');
         });
        function buildUrl(path, domain) {
          return domain ? domain.replace(/\/$/, '') + path : path;
@@ -421,8 +429,8 @@
           articleContent.innerHTML = "";
         }
 
-        const savedCols = parseInt(localStorage.getItem("columnCount")) || 4;
-        const savedPerPage = parseInt(localStorage.getItem("perPage")) || 30;
+        const savedCols = parseInt(safeGet("columnCount")) || 4;
+        const savedPerPage = parseInt(safeGet("perPage")) || 30;
 
         const navEl = document.querySelector("nav");
         const contentEl = document.getElementById("content");
@@ -531,7 +539,7 @@
             const url = wrapper.dataset.url;
             if (!url) return;
             const key = "article:" + url;
-            let html = localStorage.getItem(key);
+            let html = safeGet(key);
             if (!html) {
               showLoading();
               try {
@@ -540,7 +548,7 @@
                 );
                 html = await res.text();
                 if (res.ok) {
-                  localStorage.setItem(key, html);
+                  safeSet(key, html);
                 }
               } catch (err) {
                 html = "<p>加载失败</p>";
@@ -639,7 +647,7 @@
         }
 
         async function initGallery() {
-          const cachedStr = localStorage.getItem("wxData");
+          const cachedStr = safeGet("wxData");
           let cached;
           if (cachedStr) {
             try {
@@ -654,10 +662,10 @@
             const latest = await fetchLatest();
             const latestStr = JSON.stringify(latest);
             if (!cachedStr) {
-              localStorage.setItem("wxData", latestStr);
+              safeSet("wxData", latestStr);
               applyData(latest);
             } else if (latestStr !== cachedStr) {
-              localStorage.setItem("wxDataNew", latestStr);
+              safeSet("wxDataNew", latestStr);
               showDot();
             }
           } catch (err) {
@@ -666,7 +674,7 @@
         }
 
         async function loadDaily() {
-          const cachedStr = localStorage.getItem("dailyData");
+          const cachedStr = safeGet("dailyData");
           let cached;
           if (cachedStr) {
             try {
@@ -682,7 +690,7 @@
             const latest = await fetchDaily();
             const latestStr = JSON.stringify(latest);
             if (!cachedStr || latestStr !== cachedStr) {
-              localStorage.setItem("dailyData", latestStr);
+              safeSet("dailyData", latestStr);
               dailyData = latest;
               renderPage();
             }
@@ -716,8 +724,8 @@
           const cols = Math.max(1, parseInt(columnCountInput.value) || 1);
           perPage = Math.max(1, parseInt(perPageInput.value) || 1);
           gallery.style.columnCount = String(cols);
-          localStorage.setItem('columnCount', String(cols));
-          localStorage.setItem('perPage', String(perPage));
+          safeSet('columnCount', String(cols));
+          safeSet('perPage', String(perPage));
           currentPage = 0;
           renderPage();
           settingsPanel.classList.add('hidden');
@@ -725,7 +733,9 @@
         });
 
         clearCacheBtn.addEventListener('click', async () => {
-          ['wxData', 'wxDataNew', 'columnCount', 'perPage'].forEach((k) => localStorage.removeItem(k));
+          ['wxData', 'wxDataNew', 'columnCount', 'perPage'].forEach((k) => {
+            try { localStorage.removeItem(k); } catch {}
+          });
           if ('caches' in window) {
             const names = await caches.keys();
             await Promise.all(names.map((n) => caches.delete(n)));
@@ -738,10 +748,10 @@
           loadDaily();
         });
         homeLink.addEventListener("click", () => {
-          const newStr = localStorage.getItem("wxDataNew");
+          const newStr = safeGet("wxDataNew");
           if (newStr) {
-            localStorage.setItem("wxData", newStr);
-            localStorage.removeItem("wxDataNew");
+            safeSet("wxData", newStr);
+            try { localStorage.removeItem("wxDataNew"); } catch {}
             hideDot();
             try {
               applyData(JSON.parse(newStr));
