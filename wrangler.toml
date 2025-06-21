@@ -2,6 +2,7 @@ name = "flow-wx"
 main = "worker.js"
 compatibility_date = "2024-05-01"
 compatibility_flags = ["nodejs_compat"]
+keep_vars = true
 
 [[rules]]
 globs = ["**/*.html", "article.txt", "sw.js"]
