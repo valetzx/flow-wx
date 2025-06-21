@@ -313,7 +313,7 @@ function matchImgCache(url) {
 async function fetchAndCache(request) {
   const cache = await caches.open(CACHE_NAME);
   const res = await fetch(request);
-  if (res.ok) await cache.put(request, res.clone());
+  if (res.ok || res.type === "opaque") await cache.put(request, res.clone());
   return res;
 }
 
@@ -323,14 +323,14 @@ async function cacheThenNetwork(request) {
   if (cached) {
     fetch(request)
       .then((res) => {
-        if (res.ok) cache.put(request, res.clone());
+        if (res.ok || res.type === "opaque") cache.put(request, res.clone());
       })
       .catch(() => {});
     return cached;
   }
   try {
     const res = await fetch(request);
-    if (res.ok) await cache.put(request, res.clone());
+    if (res.ok || res.type === "opaque") await cache.put(request, res.clone());
     return res;
   } catch (err) {
     if (cached) return cached;
