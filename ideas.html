@@ -15,6 +15,7 @@
         --surface: 241, 245, 249;
         --on-surface: 15, 23, 42;
         --card: 255, 255, 255;
+        --border: 229, 231, 235;
       }
 
       .dark {
@@ -24,6 +25,7 @@
         --surface: 15, 23, 42;
         --on-surface: 241, 245, 249;
         --card: 30, 41, 59;
+        --border: 55, 65, 81;
       }
       /* Masonry 布局 */
       .masonry {
@@ -171,7 +173,84 @@
           opacity: 1;
         }
       }
+      /* 侧边栏适配深色模式 */
+      nav {
+        background-color: rgb(var(--card));
+        border-color: rgb(var(--border));
+      }
       
+      .sidebar-link {
+        color: rgb(var(--on-surface)/0.7);
+      }
+      
+      .sidebar-link:hover {
+        background-color: rgb(var(--primary)/0.1);
+        color: rgb(var(--primary));
+      }
+      
+      /* 文字卡片适配深色模式 */
+      .masonry-item {
+        background-color: rgb(var(--card));
+        color: rgb(var(--on-surface));
+      }
+      
+      .masonry-item h2 {
+        color: rgb(var(--on-surface));
+      }
+      
+      .masonry-item p {
+        color: rgb(var(--on-surface)/0.8);
+      }
+      
+      .masonry-item a {
+        color: rgb(var(--on-surface)/0.6);
+      }
+      
+      .masonry-item a:hover {
+        color: rgb(var(--primary));
+      }
+      
+      /* 文章弹窗适配深色模式 */
+      #articleContent {
+        color: rgb(var(--on-surface));
+      }
+      
+      #articleContent h1,
+      #articleContent h2,
+      #articleContent h3 {
+        color: rgb(var(--on-surface));
+      }
+      
+      #articleContent p {
+        color: rgb(var(--on-surface)/0.9);
+      }
+      
+      /* 设置面板适配深色模式 */
+      #settingsPanel > div {
+        background-color: rgb(var(--card));
+        color: rgb(var(--on-surface));
+      }
+      
+      #settingsPanel label {
+        color: rgb(var(--on-surface)/0.9);
+      }
+      
+      #settingsPanel input {
+        background-color: rgb(var(--surface));
+        color: rgb(var(--on-surface));
+        border-color: rgb(var(--border));
+      }
+      
+      /* 加载按钮适配深色模式 */
+      #loadMore {
+        background-color: rgb(var(--surface));
+        color: rgb(var(--on-surface));
+      }
+      
+      #loadMore:hover {
+        background-color: rgb(var(--primary));
+        color: white;
+      }
     </style>
     <script>
       // 在tailwind配置前设置darkMode
@@ -186,6 +265,7 @@
               surface: 'rgb(var(--surface))',
               'on-surface': 'rgb(var(--on-surface))',
               card: 'rgb(var(--card))',
+              border: 'rgb(var(--border))'
             }
           }
         }
@@ -196,7 +276,7 @@
     class="bg-surface text-on-surface min-h-screen font-sans"
   >
     <nav
-      class="fixed top-0 left-0 h-screen w-[72px] bg-white border-r shadow flex flex-col items-center py-4"
+      class="fixed top-0 left-0 h-screen w-[72px] border-r shadow flex flex-col items-center py-4"
     >
       <div
         class="sidebar-items flex flex-col items-center gap-y-6 h-full w-full"
@@ -326,6 +406,7 @@
       </div>
 
       <script>
+      // 在DOMContentLoaded中添加深色模式初始化
       document.addEventListener("DOMContentLoaded", () => {
         // 初始化深色模式
         const darkModeToggle = document.getElementById('darkModeToggle');
@@ -346,7 +427,7 @@
             document.documentElement.classList.remove('dark');
             localStorage.setItem('darkMode', 'false');
           }
-        });        });
+        });      });
 
         const gallery = document.getElementById("gallery");
         const loadMoreBtn = document.getElementById("loadMore");
