@@ -317,53 +317,48 @@ async function fetchAndCache(request) {
   const res = await fetch(request);
   if (res.ok || res.type === "opaque") {
     await cache.put(request, res.clone());
-    if (request.destination === "image") {
-      const meta = await caches.open(META_CACHE);
-      await meta.put(request.url, new Response(Date.now().toString()));
-    }
+    const meta = await caches.open(META_CACHE);
+    await meta.put(request.url, new Response(Date.now().toString()));
   }
   return res;
 }
 
 async function cacheThenNetwork(request) {
   const cache = await caches.open(CACHE_NAME);
+  const meta = await caches.open(META_CACHE);
   const cached = await cache.match(request);
   const isImg = request.destination === "image";
   if (cached) {
-    if (isImg) {
-      const meta = await caches.open(META_CACHE);
-      const metaRes = await meta.match(request.url);
-      if (metaRes) {
-        const ts = parseInt(await metaRes.text());
-        if (!Number.isNaN(ts) && Date.now() - ts < CACHE_AGE) {
-          fetch(request)
-            .then(async (res) => {
-              if (res.ok || res.type === "opaque") {
-                await cache.put(request, res.clone());
-                await meta.put(request.url, new Response(Date.now().toString()));
-              }
-            })
-            .catch(() => {});
-          return cached;
-        }
+    const metaRes = await meta.match(request.url);
+    if (isImg && metaRes) {
+      const ts = parseInt(await metaRes.text());
+      if (!Number.isNaN(ts) && Date.now() - ts < CACHE_AGE) {
+        fetch(request)
+          .then(async (res) => {
+            if (res.ok || res.type === "opaque") {
+              await cache.put(request, res.clone());
+              await meta.put(request.url, new Response(Date.now().toString()));
+            }
+          })
+          .catch(() => {});
+        return cached;
       }
-    } else {
-      fetch(request)
-        .then((res) => {
-          if (res.ok || res.type === "opaque") cache.put(request, res.clone());
-        })
-        .catch(() => {});
-      return cached;
     }
+    fetch(request)
+      .then(async (res) => {
+        if (res.ok || res.type === "opaque") {
+          await cache.put(request, res.clone());
+          await meta.put(request.url, new Response(Date.now().toString()));
+        }
+      })
+      .catch(() => {});
+    return cached;
   }
   try {
     const res = await fetch(request);
     if (res.ok || res.type === "opaque") {
       await cache.put(request, res.clone());
-      if (isImg) {
-        const meta = await caches.open(META_CACHE);
-        await meta.put(request.url, new Response(Date.now().toString()));
-      }
+      await meta.put(request.url, new Response(Date.now().toString()));
     }
     return res;
   } catch (err) {
