@@ -60,7 +60,16 @@ async function fetchAndCache(request) {
   const res = await fetch(request);
   if (res.ok || res.type === "opaque") {
     if (res.type === "opaque") {
-      await cache.put(request, res.clone());
+      const headers = new Headers();
+      headers.set(TS_HEADER, Date.now().toString());
+      const ct = res.headers.get("Content-Type");
+      if (ct) headers.set("Content-Type", ct);
+      const cachedRes = new Response(res.body, {
+        status: res.status,
+        statusText: res.statusText,
+        headers,
+      });
+      await cache.put(request, cachedRes);
     } else {
       const resForCache = res.clone();
       const headers = new Headers(resForCache.headers);
@@ -88,7 +97,16 @@ async function cacheThenNetwork(request) {
       .then(async (res) => {
         if (res.ok || res.type === "opaque") {
           if (res.type === "opaque") {
-            await cache.put(request, res.clone());
+            const headers = new Headers();
+            headers.set(TS_HEADER, Date.now().toString());
+            const ct = res.headers.get("Content-Type");
+            if (ct) headers.set("Content-Type", ct);
+            const cachedRes = new Response(res.body, {
+              status: res.status,
+              statusText: res.statusText,
+              headers,
+            });
+            await cache.put(request, cachedRes);
           } else {
             const resForCache = res.clone();
             const headers = new Headers(resForCache.headers);
@@ -109,7 +127,16 @@ async function cacheThenNetwork(request) {
     const res = await fetch(request);
     if (res.ok || res.type === "opaque") {
       if (res.type === "opaque") {
-        await cache.put(request, res.clone());
+        const headers = new Headers();
+        headers.set(TS_HEADER, Date.now().toString());
+        const ct = res.headers.get("Content-Type");
+        if (ct) headers.set("Content-Type", ct);
+        const cachedRes = new Response(res.body, {
+          status: res.status,
+          statusText: res.statusText,
+          headers,
+        });
+        await cache.put(request, cachedRes);
       } else {
         const resForCache = res.clone();
         const headers = new Headers(resForCache.headers);
