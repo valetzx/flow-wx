@@ -175,6 +175,7 @@ export default {
       .split(/[,\s]+/)
       .map((d) => d.trim())
       .filter(Boolean);
+    const cacheImgDomain = env.IMG_CACHE || "";
 
     const indexHtml = injectConfig(mainHtml, apiDomains, imgDomains);
     const ideasPage = injectConfig(ideasHtml, apiDomains, imgDomains);
@@ -253,6 +254,7 @@ export default {
 
     if (pathname === "/sw.js") {
         const swHtml = `
+const IMG_CACHE = ${JSON.stringify(cacheImgDomain)};
 const CACHE_NAME = "wx-cache-v2";
 
 self.addEventListener("install", (event) => {
@@ -281,7 +283,7 @@ self.addEventListener("fetch", (event) => {
     } else {
       event.respondWith(cacheThenNetwork(event.request));
     }
-  } else if (url.pathname.startsWith("/img")) {
+  } else if (url.pathname.startsWith("/img") && url.hostname === IMG_CACHE) {
     event.respondWith(cacheThenNetwork(event.request));
   } else if (url.pathname === "/api/article") {
     event.respondWith(cacheThenNetwork(event.request));

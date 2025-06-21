@@ -1,4 +1,5 @@
 const CACHE_NAME = "wx-cache-v2";
+const IMG_CACHE = "";
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
@@ -26,7 +27,7 @@ self.addEventListener("fetch", (event) => {
     } else {
       event.respondWith(cacheThenNetwork(event.request));
     }
-  } else if (url.pathname.startsWith("/img")) {
+  } else if (url.pathname.startsWith("/img") && url.hostname === IMG_CACHE) {
     event.respondWith(cacheThenNetwork(event.request));
   } else if (url.pathname === "/api/article") {
     event.respondWith(cacheThenNetwork(event.request));
