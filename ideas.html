@@ -37,9 +37,16 @@
           background-color 0.2s,
           color 0.2s;
       }
+      .dark .sidebar-link {
+        color: #d1d5db;
+      }
       .sidebar-link:hover {
         background-color: #f1f5f9;
         color: #111827;
+      }
+      .dark .sidebar-link:hover {
+        background-color: #374151;
+        color: #f9fafb;
       }
       nav.mobile #homeBtn {
         display: none;
@@ -53,6 +60,9 @@
         flex-direction: row;
         border-right: none;
         border-top: 1px solid #e5e7eb;
+      }
+      .dark nav.mobile {
+        border-top-color: #374151;
       }
       nav.mobile .sidebar-link {
         flex: 1;
@@ -137,6 +147,9 @@
         opacity: 0;
         transition: transform 0.2s, opacity 0.2s;
       }
+      .dark #settingsPanel > div {
+        color: #d1d5db;
+      }
 
       #articleModal.show > div,
       #settingsPanel.show > div {
@@ -157,10 +170,10 @@
     </style>
   </head>
   <body
-    class="bg-gradient-to-br from-slate-50 to-slate-200 min-h-screen font-sans"
+    class="bg-gradient-to-br from-slate-50 to-slate-200 dark:from-slate-900 dark:to-gray-800 min-h-screen font-sans"
   >
     <nav
-      class="fixed top-0 left-0 h-screen w-[72px] bg-white border-r shadow flex flex-col items-center py-4"
+      class="fixed top-0 left-0 h-screen w-[72px] bg-white dark:bg-gray-900 border-r dark:border-gray-700 shadow flex flex-col items-center py-4"
     >
       <div
         class="sidebar-items flex flex-col items-center gap-y-6 h-full w-full"
@@ -207,7 +220,7 @@
     </nav>
     <div id="content" class="ml-[72px]">
       <header class="py-6 text-center">
-        <h1 class="text-3xl font-bold tracking-tight text-slate-800">
+        <h1 class="text-3xl font-bold tracking-tight text-slate-800 dark:text-slate-100">
           文章列表
         </h1>
       </header>
@@ -217,7 +230,7 @@
         <div class="masonry" id="gallery"></div>
         <button
           id="loadMore"
-          class="mt-4 mx-auto block px-4 py-2 rounded bg-gray-200 text-gray-700 hidden"
+          class="mt-4 mx-auto block px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hidden"
         >
           加载更多
         </button>
@@ -228,7 +241,7 @@
         id="settingsPanel"
         class="fixed inset-0 bg-black/50 hidden items-center justify-center"
       >
-        <div class="bg-white rounded-xl p-4 w-72 space-y-3">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 w-72 space-y-3">
           <div class="flex justify-between items-center">
             <h2 class="font-semibold">设置</h2>
             <button id="closeSettings" class="text-xl leading-none">
@@ -256,8 +269,12 @@
               class="mt-1 w-full border rounded p-1"
             />
           </label>
+          <label class="flex items-center justify-between text-sm">
+            <span>暗色模式</span>
+            <input id="darkModeToggle" type="checkbox" class="ml-2" />
+          </label>
           <button id="applySettings" class="w-full bg-blue-500 text-white py-1 rounded">应用</button>
-          <button id="clearCache" class="w-full bg-red-500 text-white py-1 rounded">清理缓存</button> 
+          <button id="clearCache" class="w-full bg-red-500 text-white py-1 rounded">清理缓存</button>
            <footer class="text-xs text-center text-gray-400 my-4">
               <a href="https://github.com/valetzx/flow-wx" class="hover:underline">查看项目源码 </a> · <a href="#">联系我吧</a>
           </footer>
@@ -288,6 +305,7 @@
         const applySettings = document.getElementById("applySettings");
         const columnCountInput = document.getElementById("columnCountInput");
         const perPageInput = document.getElementById("perPageInput");
+        const darkModeToggle = document.getElementById("darkModeToggle");
         const articleModal = document.getElementById("articleModal");
         const closeArticle = document.getElementById("closeArticle");
         const articleContent = document.getElementById("articleContent");
@@ -308,6 +326,16 @@
         if (imgDomains.length === 0 && Array.isArray(window.IMG_DOMAINS)) {
           imgDomains = window.IMG_DOMAINS;
         }
+        const themeStored = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        let isDark = themeStored ? themeStored === 'dark' : prefersDark;
+        document.documentElement.classList.toggle('dark', isDark);
+        darkModeToggle.checked = isDark;
+        darkModeToggle.addEventListener('change', () => {
+          isDark = darkModeToggle.checked;
+          document.documentElement.classList.toggle('dark', isDark);
+          localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
        function buildUrl(path, domain) {
          return domain ? domain.replace(/\/$/, '') + path : path;
        }
