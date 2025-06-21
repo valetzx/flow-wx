@@ -17,7 +17,6 @@ function withCors(headers = {}) {
 }
 
 
-
 const DAILY_URL = "https://www.cikeee.com/api?app_key=pub_23020990025";
 const DAILY_TTL = 60 * 60 * 8000;
 const CACHE_TTL = 60 * 60 * 1000;
