@@ -19,11 +19,21 @@
     <button id="saveBtn" class="bg-blue-500 text-white px-4 py-2 rounded">保存</button>
     <div class="mt-8">
       <h2 class="text-lg font-semibold mb-2">缓存信息</h2>
-      <div id="cacheInfo" class="space-y-2 text-sm text-gray-700">加载中...</div>
+      <div class="mb-2">
+        <label for="sortSelect" class="mr-2 font-semibold">排序</label>
+        <select id="sortSelect" class="border rounded p-1 text-sm">
+          <option value="default">默认</option>
+          <option value="time">缓存时间</option>
+          <option value="size">大小</option>
+          <option value="url">URL</option>
+        </select>
+      </div>
+      <div id="cacheInfo" class="overflow-x-auto text-sm text-gray-700">加载中...</div>
     </div>
     <script>
       const apiInput = document.getElementById('apiInput');
       const imgInput = document.getElementById('imgInput');
+      const sortSelect = document.getElementById('sortSelect');
       apiInput.value = localStorage.getItem('apiDomains') || localStorage.getItem('apiDomain') || '';
       imgInput.value = localStorage.getItem('imgDomains') || '';
       document.getElementById('saveBtn').addEventListener('click', () => {
@@ -63,22 +73,39 @@
             const cachedRes = await cache.match(req);
             let cachedTime = '未知';
             let expireTime = '未知';
+            let ts = 0;
             let size = 0;
             if (cachedRes) {
-              const ts = parseInt(cachedRes.headers.get(TS_HEADER));
-              if (!Number.isNaN(ts)) {
+              const tsRaw = parseInt(cachedRes.headers.get(TS_HEADER));
+              if (!Number.isNaN(tsRaw)) {
+                ts = tsRaw;
                 cachedTime = new Date(ts).toLocaleString();
                 expireTime = new Date(ts + CACHE_AGE).toLocaleString();
               }
-              const buf = await cachedRes.clone().arrayBuffer();
-              size = buf.byteLength;
-              totalSize += size;
+              try {
+                const buf = await cachedRes.clone().arrayBuffer();
+                size = buf.byteLength;
+                totalSize += size;
+              } catch {}
             }
-            items.push(
-              `<li><div class="break-all">${req.url}</div><div class="text-gray-500">缓存时间: ${cachedTime}，到期时间: ${expireTime}，大小: ${formatBytes(size)}</div></li>`
-            );
+            items.push({ url: req.url, cachedTime, expireTime, ts, size });
           }
-          box.innerHTML = `<ul class="list-disc pl-5 space-y-2">${items.join('')}</ul><div class="mt-2 font-semibold">总大小: ${formatBytes(totalSize)}</div>`;
+
+          if (sortSelect.value === 'time') {
+            items.sort((a, b) => b.ts - a.ts);
+          } else if (sortSelect.value === 'size') {
+            items.sort((a, b) => (b.size || 0) - (a.size || 0));
+          } else if (sortSelect.value === 'url') {
+            items.sort((a, b) => a.url.localeCompare(b.url));
+          }
+
+          const rows = items
+            .map(
+              (it) =>
+                `<tr class="border-b last:border-0"><td class="pr-2 break-all">${it.url}</td><td class="px-2 whitespace-nowrap">${it.cachedTime}</td><td class="px-2 whitespace-nowrap">${it.expireTime}</td><td class="px-2 text-right whitespace-nowrap">${it.size ? formatBytes(it.size) : '未知'}</td></tr>`
+            )
+            .join('');
+          box.innerHTML = `<table class="min-w-full text-xs"><thead class="border-b font-medium"><tr><th class="text-left">URL</th><th class="px-2">缓存时间</th><th class="px-2">到期时间</th><th class="px-2 text-right">大小</th></tr></thead><tbody>${rows}</tbody></table><div class="mt-2 font-semibold">总大小: ${formatBytes(totalSize)}</div>`;
         } catch (e) {
           box.textContent = '读取缓存失败';
           console.error(e);
@@ -86,6 +113,7 @@
       }
 
       window.addEventListener('load', loadCache);
+      sortSelect.addEventListener('change', loadCache);
     </script>
   </body>
 </html>
