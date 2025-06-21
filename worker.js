@@ -283,13 +283,29 @@ self.addEventListener("fetch", (event) => {
     } else {
       event.respondWith(cacheThenNetwork(event.request));
     }
-  } else if (url.pathname.startsWith("/img") && url.hostname === IMG_CACHE) {
+  } else if (
+    matchImgCache(url) &&
+    event.request.destination === "image"
+  ) {
+    event.respondWith(cacheThenNetwork(event.request));
+  } else if (url.pathname.startsWith("/img")) {
     event.respondWith(cacheThenNetwork(event.request));
   } else if (url.pathname === "/api/article") {
     event.respondWith(cacheThenNetwork(event.request));
   }
 });
 
+function matchImgCache(url) {
+  if (url.hostname === IMG_CACHE) return true;
+  const inner = url.searchParams.get("url");
+  if (inner) {
+    try {
+      return new URL(inner).hostname === IMG_CACHE;
+    } catch {}
+  }
+  return false;
+}
+  
 async function fetchAndCache(request) {
   const cache = await caches.open(CACHE_NAME);
   const res = await fetch(request);

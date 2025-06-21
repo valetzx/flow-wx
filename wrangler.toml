@@ -11,3 +11,8 @@ fallthrough = true
 [observability]
 enabled = true
 head_sampling_rate = 1
+
+[vars]
+API_DOMAINS = "mmbiz.qpic.cn" || env.API_DOMAINS
+IMG_DOMAINS = "/img" || env.IMG_DOMAINS
+IMG_CACHE = "mmbiz.qpic.cn" || env.IMG_CACHE
