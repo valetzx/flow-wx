@@ -1,5 +1,4 @@
 const CACHE_NAME = "wx-cache-v2";
-const IMG_CACHE = "";
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
