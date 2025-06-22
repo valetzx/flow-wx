@@ -111,6 +111,34 @@
       nav.mobile .notify-dot {
         right: 2rem;
       }
+
+      #toastContainer {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        z-index: 100;
+        pointer-events: none;
+      }
+
+      .toast {
+        background-color: rgb(var(--on-surface));
+        color: rgb(var(--card));
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        box-shadow: 0 2px 4px rgb(0 0 0 / 0.1);
+        opacity: 0;
+        transform: translateY(-0.5rem);
+        transition: opacity 0.3s, transform 0.3s;
+        pointer-events: auto;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
       /* 弹窗文章样式美化 */
       #articleModal > div {
         box-shadow: 0 10px 25px rgb(0 0 0 / 0.2);
@@ -496,6 +524,8 @@
         </div>
       </div>
 
+      <div id="toastContainer"></div>
+
       <script>
       // 在DOMContentLoaded中添加深色模式初始化
       document.addEventListener("DOMContentLoaded", () => {
@@ -519,6 +549,21 @@
             localStorage.setItem('darkMode', 'false');
           }
         });      });
+
+function showToast(message) {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = message;
+  container.appendChild(toast);
+  // trigger enter
+  requestAnimationFrame(() => toast.classList.add('show'));
+  setTimeout(() => {
+    toast.classList.remove('show');
+    toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+  }, 3000);
+}
 
 // 创建空白卡片函数
 function createBannerCard() {
@@ -615,7 +660,7 @@ function createBannerCard() {
 
   // 添加点击事件
   wrapper.addEventListener("click", () => {
-    alert("空白卡片被点击了！您可以在这里添加自定义行为");
+    showToast("空白卡片被点击了！您可以在这里添加自定义行为");
   });
 
   return wrapper;
