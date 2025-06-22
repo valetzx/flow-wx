@@ -489,10 +489,6 @@ function createBannerCard() {
   const p = document.createElement("p");
   p.className = "text-sm text-gray-600 leading-relaxed";
   p.textContent = "这是一个自定义空白卡片，您可以在这里添加任何内容";
-
-  const p2 = document.createElement("p");
-  p.className = "text-sm text-gray-600 leading-relaxed";
-  p.textContent = "3";
   
   const button = document.createElement("button");
   button.className = "mt-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition";
@@ -500,7 +496,6 @@ function createBannerCard() {
   
   content.appendChild(h2);
   content.appendChild(p);
-  content.appendChild(p2);
   wrapper.appendChild(content);
   
   // 添加点击事件
