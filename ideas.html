@@ -1,434 +1,459 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>文章列表</title>
-    <!-- Tailwind CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      /* 自定义主题色卡 */
-      :root {
-        --primary: 79, 70, 229;
-        --secondary: 139, 92, 246;
-        --accent: 236, 72, 153;
-        --surface: 241, 245, 249;
-        --on-surface: 15, 23, 42;
-        --card: 255, 255, 255;
-        --border: 229, 231, 235;
-      }
 
-      .dark {
-        --primary: 129, 140, 248;
-        --secondary: 167, 139, 250;
-        --accent: 244, 114, 182;
-        --surface: 15, 23, 42;
-        --on-surface: 241, 245, 249;
-        --card: 30, 41, 59;
-        --border: 55, 65, 81;
-      }
-      /* Masonry 布局 */
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>文章列表</title>
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* 自定义主题色卡 */
+
+    :root {
+      --primary: 79, 70, 229;
+      --secondary: 139, 92, 246;
+      --accent: 236, 72, 153;
+      --surface: 241, 245, 249;
+      --on-surface: 15, 23, 42;
+      --card: 255, 255, 255;
+      --border: 229, 231, 235;
+    }
+
+    .dark {
+      --primary: 129, 140, 248;
+      --secondary: 167, 139, 250;
+      --accent: 244, 114, 182;
+      --surface: 15, 23, 42;
+      --on-surface: 241, 245, 249;
+      --card: 30, 41, 59;
+      --border: 55, 65, 81;
+    }
+
+    /* Masonry 布局 */
+
+    .masonry {
+      column-count: 4;
+      column-gap: 1rem;
+    }
+
+    @media (max-width: 1024px) {
       .masonry {
-        column-count: 4;
-        column-gap: 1rem;
+        column-count: 2;
       }
-      @media (max-width: 1024px) {
-        .masonry {
-          column-count: 2;
-        }
-      }
-      @media (max-width: 640px) {
-        .masonry {
-          column-count: 1;
-        }
-      }
-      .masonry-item {
-        break-inside: avoid;
-        margin-bottom: 1rem;
-      }
-      .sidebar-link {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.5rem;
-        border-radius: 0.375rem;
-        color: #6b7280;
-        transition:
-          background-color 0.2s,
-          color 0.2s;
-      }
-      .sidebar-link:hover {
-        background-color: #f1f5f9;
-        color: #111827;
-      }
-      nav.mobile #homeBtn {
-        display: none;
-      }
-      nav.mobile {
-        top: auto;
-        bottom: 0;
-        left: 0;
-        height: 72px;
-        width: 100%;
-        flex-direction: row;
-        border-right: none;
-        border-top: 1px solid #e5e7eb;
-      }
-      nav.mobile .sidebar-link {
-        flex: 1;
-        margin-top: 5px;
-      }
-      nav.mobile .sidebar-items {
-        flex-direction: row;
-        width: 100%;
-      }
-      nav.mobile .sidebar-items > * {
-        margin: 0;
-        flex: 1;
-        --tw-space-y-reverse: 0;
-        margin-top: 0;
-        margin-bottom: calc(1.5rem * var(--tw-space-y-reverse));
-      }
-      nav.mobile #moreBtn #addBtn #idealBtn {
-        margin-top: 0;
-      }
-      nav.mobile .space-y-6 > :not([hidden]) ~ :not([hidden]) {
-        margin-top: 0;
-      }
-      body.mobile #content {
-        margin-left: 0;
-        margin-bottom: 72px;
-      }
-      .notify-dot {
-        position: absolute;
-        top: 4px;
-        right: 4px;
-        width: 0.5rem;
-        height: 0.5rem;
-        background-color: #ef4444;
-        border-radius: 9999px;
-      }
-      nav.mobile .notify-dot {
-        right: 2rem;
-      }
+    }
 
-      #toastContainer {
-        position: fixed;
-        top: 1rem;
-        right: 1rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        z-index: 100;
-        pointer-events: none;
+    @media (max-width: 640px) {
+      .masonry {
+        column-count: 1;
       }
+    }
 
-      .toast {
-        background-color: rgb(var(--on-surface));
-        color: rgb(var(--card));
-        padding: 0.5rem 1rem;
-        border-radius: 0.375rem;
-        box-shadow: 0 2px 4px rgb(0 0 0 / 0.1);
-        opacity: 0;
-        transform: translateY(-0.5rem);
-        transition: opacity 0.3s, transform 0.3s;
-        pointer-events: auto;
-      }
+    .masonry-item {
+      break-inside: avoid;
+      margin-bottom: 1rem;
+    }
 
-      .toast.show {
-        opacity: 1;
-        transform: translateY(0);
-      }
-      /* 弹窗文章样式美化 */
-      #articleModal > div {
-        box-shadow: 0 10px 25px rgb(0 0 0 / 0.2);
-        background-color: rgb(var(--card)); 
-        color: rgb(var(--on-surface)); 
-      }
-      #articleContent img {
-        width: 100%;
-        object-fit: cover;
-        aspect-ratio: 16/9;
-        border-radius: 0.5rem;
-        margin-top: 1rem;
-        margin-bottom: 1rem;
-        color: rgb(var(--on-surface)); 
-      }
-      #articleContent h1,
-      #articleContent h2,
-      #articleContent h3 {
-        margin-top: 1.25rem;
-        font-weight: 600;
-        color: rgb(var(--on-surface)); 
-      }
-      #articleContent p {
-        line-height: 1.7;
-        margin-bottom: 1rem;
-        color: rgb(var(--on-surface)/0.9);
-      }
-      #closeArticle {
-        color: rgb(var(--on-surface)/0.7); 
-      }
-      
-      #closeArticle:hover {
-        color: rgb(var(--primary)); 
-      }
-      p {
-        text-align: justify;
-        text-justify: inter-ideograph;
-      }
-      .spinner {
-        border: 4px solid #e5e7eb;
-        border-top-color: #3b82f6;
-        border-radius: 50%;
-        width: 2rem;
-        height: 2rem;
-        animation: spin 1s linear infinite;
-      }
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.5rem;
+      border-radius: 0.375rem;
+      color: #6b7280;
+      transition: background-color 0.2s, color 0.2s;
+    }
 
-      #articleModal > div,
-      #settingsPanel > div {
+    .sidebar-link:hover {
+      background-color: #f1f5f9;
+      color: #111827;
+    }
+
+    nav.mobile #homeBtn {
+      display: none;
+    }
+
+    nav.mobile {
+      top: auto;
+      bottom: 0;
+      left: 0;
+      height: 72px;
+      width: 100%;
+      flex-direction: row;
+      border-right: none;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    nav.mobile .sidebar-link {
+      flex: 1;
+      margin-top: 5px;
+    }
+
+    nav.mobile .sidebar-items {
+      flex-direction: row;
+      width: 100%;
+    }
+
+    nav.mobile .sidebar-items>* {
+      margin: 0;
+      flex: 1;
+      --tw-space-y-reverse: 0;
+      margin-top: 0;
+      margin-bottom: calc(1.5rem * var(--tw-space-y-reverse));
+    }
+
+    nav.mobile #moreBtn #addBtn #idealBtn {
+      margin-top: 0;
+    }
+
+    nav.mobile .space-y-6> :not([hidden])~ :not([hidden]) {
+      margin-top: 0;
+    }
+
+    body.mobile #content {
+      margin-left: 0;
+      margin-bottom: 72px;
+    }
+
+    .notify-dot {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 0.5rem;
+      height: 0.5rem;
+      background-color: #ef4444;
+      border-radius: 9999px;
+    }
+
+    nav.mobile .notify-dot {
+      right: 2rem;
+    }
+
+    #toastContainer {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    .toast {
+      background-color: rgb(var(--on-surface));
+      color: rgb(var(--card));
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      box-shadow: 0 2px 4px rgb(0 0 0 / 0.1);
+      opacity: 0;
+      transform: translateY(-0.5rem);
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: auto;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* 弹窗文章样式美化 */
+
+    #articleModal>div {
+      box-shadow: 0 10px 25px rgb(0 0 0 / 0.2);
+      background-color: rgb(var(--card));
+      color: rgb(var(--on-surface));
+    }
+
+    #articleContent img {
+      width: 100%;
+      object-fit: cover;
+      aspect-ratio: 16/9;
+      border-radius: 0.5rem;
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+      color: rgb(var(--on-surface));
+    }
+
+    #articleContent h1,
+    #articleContent h2,
+    #articleContent h3 {
+      margin-top: 1.25rem;
+      font-weight: 600;
+      color: rgb(var(--on-surface));
+    }
+
+    #articleContent p {
+      line-height: 1.7;
+      margin-bottom: 1rem;
+      color: rgb(var(--on-surface)/0.9);
+    }
+
+    #closeArticle {
+      color: rgb(var(--on-surface)/0.7);
+    }
+
+    #closeArticle:hover {
+      color: rgb(var(--primary));
+    }
+
+    p {
+      text-align: justify;
+      text-justify: inter-ideograph;
+    }
+
+    .spinner {
+      border: 4px solid #e5e7eb;
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      width: 2rem;
+      height: 2rem;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    #articleModal>div,
+    #settingsPanel>div {
+      transform: scale(0.9);
+      opacity: 0;
+      transition: transform 0.2s, opacity 0.2s;
+    }
+
+    #articleModal.show>div,
+    #settingsPanel.show>div {
+      animation: modalZoom 0.2s forwards;
+    }
+
+    @keyframes modalZoom {
+      from {
         transform: scale(0.9);
         opacity: 0;
-        transition: transform 0.2s, opacity 0.2s;
       }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
 
-      #articleModal.show > div,
-      #settingsPanel.show > div {
-        animation: modalZoom 0.2s forwards;
-      }
+    /* 侧边栏适配深色模式 */
 
-      @keyframes modalZoom {
-        from {
-          transform: scale(0.9);
-          opacity: 0;
-        }
-        to {
-          transform: scale(1);
-          opacity: 1;
-        }
-      }
-      /* 侧边栏适配深色模式 */
-      nav {
-        background-color: rgb(var(--card));
-        border-color: rgb(var(--border));
-      }
-      
-      .sidebar-link {
-        color: rgb(var(--on-surface)/0.7);
-      }
-      
-      .sidebar-link:hover {
-        background-color: rgb(var(--primary)/0.1);
-        color: rgb(var(--primary));
-      }
-      
-      /* 文字卡片适配深色模式 */
-      .masonry-item .card-content {
-        background-color: rgb(var(--card));
-        color: rgb(var(--on-surface));
-      }
-      
-      .masonry-item .card-content h2 {
-        color: rgb(var(--on-surface));
-      }
+    nav {
+      background-color: rgb(var(--card));
+      border-color: rgb(var(--border));
+    }
 
-      .masonry-item .card-content p {
-        color: rgb(var(--on-surface)/0.8);
-      }
+    .sidebar-link {
+      color: rgb(var(--on-surface)/0.7);
+    }
 
-      .masonry-item {
-        background-color: rgb(var(--card));
-        color: rgb(var(--on-surface));
-      }
-      
-      .masonry-item h2 {
-        color: rgb(var(--on-surface));
-      }
-      
-      .masonry-item p {
-        color: rgb(var(--on-surface)/0.8);
-      }
-      
-      .masonry-item a {
-        color: rgb(var(--on-surface)/0.6);
-      }
-      
-      .masonry-item a:hover {
-        color: rgb(var(--primary));
-      }
-      
-      /* 文章弹窗适配深色模式 */
-      #articleContent {
-        color: rgb(var(--on-surface));
-      }
-      
-      #articleContent h1,
-      #articleContent h2,
-      #articleContent h3 {
-        color: rgb(var(--on-surface));
-      }
-      
-      #articleContent p {
-        color: rgb(var(--on-surface)/0.9);
-      }
-      
-      /* 设置面板适配深色模式 */
-      #settingsPanel > div {
-        background-color: rgb(var(--card));
-        color: rgb(var(--on-surface));
-      }
-      
-      #settingsPanel label {
-        color: rgb(var(--on-surface)/0.9);
-      }
-      
-      #settingsPanel input {
-        background-color: rgb(var(--surface));
-        color: rgb(var(--on-surface));
-        border-color: rgb(var(--border));
-      }
-      
-      /* 加载按钮适配深色模式 */
-      #loadMore {
-        background-color: rgb(var(--surface));
-        color: rgb(var(--on-surface));
-      }
-      
-      #loadMore:hover {
-        background-color: rgb(var(--primary));
-        color: white;
-      }
+    .sidebar-link:hover {
+      background-color: rgb(var(--primary)/0.1);
+      color: rgb(var(--primary));
+    }
 
-/* Banner 卡片及遮罩效果 */
-.banner-card {
-  position: relative;
-  height: 280px;
-  width: 100%;
-  aspect-ratio: 16/9;
-}
+    /* 文字卡片适配深色模式 */
 
-@media (max-width: 640px) {
-  .banner-card {
-    aspect-ratio: 4/3;
-  }
-}
+    .masonry-item .card-content {
+      background-color: rgb(var(--card));
+      color: rgb(var(--on-surface));
+    }
 
-.banner-card .banner-mask {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(249, 115, 22, 0.95); /* orange */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 1.125rem; /* text-lg */
-  font-weight: 600;
-  opacity: 0;
-  transform: translateX(0);
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  pointer-events: none;
-  border-radius: 0.75rem;
-  z-index: 10;
-}
+    .masonry-item .card-content h2 {
+      color: rgb(var(--on-surface));
+    }
 
-.banner-card:hover .banner-mask {
-  opacity: 1;
-  transform: translateX(0);
-}
+    .masonry-item .card-content p {
+      color: rgb(var(--on-surface)/0.8);
+    }
 
-/* Banner 图片轮播容器 */
-.banner-card .banner-carousel {
-  position: absolute;
-  inset: 0;
-  padding: 8px;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 0;
-}
+    .masonry-item {
+      background-color: rgb(var(--card));
+      color: rgb(var(--on-surface));
+    }
 
-.banner-card .carousel-slot {
-  position: absolute;
-  top: 75%;
-  width: 65px;
-  height: 95px;
-  background-position: center;
-  border-radius: 0.5rem;
-  transform: translateY(-50%);
-  transition: background-image 1s ease, background-color 1s ease;
-}
+    .masonry-item h2 {
+      color: rgb(var(--on-surface));
+    }
 
-.banner-card .card-content {
-  position: relative;
-  z-index: 5;
-}
+    .masonry-item p {
+      color: rgb(var(--on-surface)/0.8);
+    }
 
-    </style>
-    <script>
-      // 在tailwind配置前设置darkMode
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            colors: {
-              primary: 'rgb(var(--primary))',
-              secondary: 'rgb(var(--secondary))',
-              accent: 'rgb(var(--accent))',
-              surface: 'rgb(var(--surface))',
-              'on-surface': 'rgb(var(--on-surface))',
-              card: 'rgb(var(--card))',
-              border: 'rgb(var(--border))'
-            }
+    .masonry-item a {
+      color: rgb(var(--on-surface)/0.6);
+    }
+
+    .masonry-item a:hover {
+      color: rgb(var(--primary));
+    }
+
+    /* 文章弹窗适配深色模式 */
+
+    #articleContent {
+      color: rgb(var(--on-surface));
+    }
+
+    #articleContent h1,
+    #articleContent h2,
+    #articleContent h3 {
+      color: rgb(var(--on-surface));
+    }
+
+    #articleContent p {
+      color: rgb(var(--on-surface)/0.9);
+    }
+
+    /* 设置面板适配深色模式 */
+
+    #settingsPanel>div {
+      background-color: rgb(var(--card));
+      color: rgb(var(--on-surface));
+    }
+
+    #settingsPanel label {
+      color: rgb(var(--on-surface)/0.9);
+    }
+
+    #settingsPanel input {
+      background-color: rgb(var(--surface));
+      color: rgb(var(--on-surface));
+      border-color: rgb(var(--border));
+    }
+
+    /* 加载按钮适配深色模式 */
+
+    #loadMore {
+      background-color: rgb(var(--surface));
+      color: rgb(var(--on-surface));
+    }
+
+    #loadMore:hover {
+      background-color: rgb(var(--primary));
+      color: white;
+    }
+
+    /* Banner 卡片及遮罩效果 */
+
+    .banner-card {
+      position: relative;
+      height: 280px;
+      width: 100%;
+      aspect-ratio: 16/9;
+    }
+
+    @media (max-width: 640px) {
+      .banner-card {
+        aspect-ratio: 4/3;
+      }
+    }
+
+    .banner-card .banner-mask {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(249, 115, 22, 0.95);
+      /* orange */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 1.125rem;
+      /* text-lg */
+      font-weight: 600;
+      opacity: 0;
+      transform: translateX(0);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      pointer-events: none;
+      border-radius: 0.75rem;
+      z-index: 10;
+    }
+
+    .banner-card:hover .banner-mask {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    /* Banner 图片轮播容器 */
+
+    .banner-card .banner-carousel {
+      position: absolute;
+      inset: 0;
+      padding: 8px;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .banner-card .carousel-slot {
+      position: absolute;
+      top: 75%;
+      width: 65px;
+      height: 95px;
+      background-position: center;
+      border-radius: 0.5rem;
+      transform: translateY(-50%);
+      transition: background-image 1s ease, background-color 1s ease;
+    }
+
+    .banner-card .card-content {
+      position: relative;
+      z-index: 5;
+    }
+  </style>
+  <script>
+    // 在tailwind配置前设置darkMode
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: 'rgb(var(--primary))',
+            secondary: 'rgb(var(--secondary))',
+            accent: 'rgb(var(--accent))',
+            surface: 'rgb(var(--surface))',
+            'on-surface': 'rgb(var(--on-surface))',
+            card: 'rgb(var(--card))',
+            border: 'rgb(var(--border))'
           }
         }
       }
-    </script>
-  </head>
-  <body
-    class="bg-surface text-on-surface min-h-screen font-sans"
-  >
-    <nav
-      class="fixed top-0 left-0 h-screen w-[72px] border-r shadow flex flex-col items-center py-4 z-49"
-    >
-      <div
-        class="sidebar-items flex flex-col items-center gap-y-6 h-full w-full"
-      >
-        <a href="/#" aria-label="主页" class="sidebar-link">
+    }
+  </script>
+</head>
+
+<body class="bg-surface text-on-surface min-h-screen font-sans">
+  <nav class="fixed top-0 left-0 h-screen w-[72px] border-r shadow flex flex-col items-center py-4 z-49">
+    <div class="sidebar-items flex flex-col items-center gap-y-6 h-full w-full"> <a href="/#" aria-label="主页" class="sidebar-link">
           <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
             <path
               d="M7.54 23.15q-.2-2.05.26-3.93L9 14.04a7 7 0 0 1-.35-2.07c0-1.68.81-2.88 2.09-2.88.88 0 1.53.62 1.53 1.8q0 .57-.23 1.28l-.52 1.72q-.15.5-.15.92c0 1.2.91 1.87 2.08 1.87 2.09 0 3.57-2.16 3.57-4.96 0-3.12-2.04-5.12-5.05-5.12-3.36 0-5.49 2.19-5.49 5.24 0 1.22.38 2.36 1.11 3.14-.24.41-.5.48-.88.48-1.2 0-2.34-1.69-2.34-4 0-4 3.2-7.17 7.68-7.17 4.7 0 7.66 3.29 7.66 7.33s-2.88 7.15-5.98 7.15a3.8 3.8 0 0 1-3.06-1.48l-.62 2.5a11 11 0 0 1-1.62 3.67A11.98 11.98 0 0 0 24 12a11.99 11.99 0 1 0-24 0 12 12 0 0 0 7.54 11.15"
             />
           </svg>
-        </a>
-        <a href="/" aria-label="首页" class="sidebar-link" id="homeBtn">
+        </a> <a href="/" aria-label="首页" class="sidebar-link" id="homeBtn">
           <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
             <path
               d="M4.6 22.73A107 107 0 0 0 11 23h2.22c2.43-.04 4.6-.16 6.18-.27A3.9 3.9 0 0 0 23 18.8v-8.46a4 4 0 0 0-1.34-3L14.4.93a3.63 3.63 0 0 0-4.82 0L2.34 7.36A4 4 0 0 0 1 10.35v8.46a3.9 3.9 0 0 0 3.6 3.92M13.08 2.4l7.25 6.44a2 2 0 0 1 .67 1.5v8.46a1.9 1.9 0 0 1-1.74 1.92q-1.39.11-3.26.19V16a4 4 0 0 0-8 0v4.92q-1.87-.08-3.26-.19A1.9 1.9 0 0 1 3 18.81v-8.46a2 2 0 0 1 .67-1.5l7.25-6.44a1.63 1.63 0 0 1 2.16 0M13.12 21h-2.24a1 1 0 0 1-.88-1v-4a2 2 0 1 1 4 0v4a1 1 0 0 1-.88 1"
             />
           </svg>
-        </a>
-        <a href="/ideas" aria-label="探索" id="idealBtn" class="sidebar-link">
+        </a> <a href="/ideas" aria-label="探索" id="idealBtn" class="sidebar-link">
           <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
             <path
               d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4M9.42 7.24a3 3 0 0 0-2.18 2.18L5.7 15.57a2.25 2.25 0 0 0 2.73 2.73l6.15-1.54a3 3 0 0 0 2.18-2.18l1.54-6.15a2.25 2.25 0 0 0-2.73-2.73zm6.94.7-1.54 6.15a1 1 0 0 1-.73.73l-6.15 1.54a.25.25 0 0 1-.3-.3L9.18 9.9a1 1 0 0 1 .73-.73l6.15-1.54a.25.25 0 0 1 .3.3M12 24a12 12 0 1 0 0-24 12 12 0 0 0 0 24M2 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0"
             />
           </svg>
-        </a>
-        <a href="/add/" aria-label="创建" id="addBtn" class="sidebar-link">
+        </a> <a href="/add" aria-label="创建" id="addBtn" class="sidebar-link">
           <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
             <path
               d="M11 11H6v2h5v5h2v-5h5v-2h-5V6h-2zM5 1a4 4 0 0 0-4 4v14a4 4 0 0 0 4 4h14a4 4 0 0 0 4-4V5a4 4 0 0 0-4-4zm16 4v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h14a2 2 0 0 1 2 2"
             />
           </svg>
-        </a>
-        <a href="#" aria-label="更多" id="moreBtn" class="sidebar-link mt-auto">
+        </a> <a href="#" aria-label="更多" id="moreBtn" class="sidebar-link mt-auto">
           <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
             <path
               d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10m3 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0"
@@ -437,48 +462,27 @@
               d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10m3 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0m1.13-10.29A2 2 0 0 0 14.7.31a12 12 0 0 0-5.4 0c-.73.17-1.26.74-1.43 1.4l-.58 2.14-2.14-.57a2 2 0 0 0-1.93.54 12 12 0 0 0-2.7 4.67c-.22.72.01 1.46.5 1.95L2.59 12l-1.57 1.56a2 2 0 0 0-.5 1.95 12 12 0 0 0 2.7 4.68c.51.54 1.27.72 1.93.54l2.14-.58.58 2.14c.17.67.7 1.24 1.43 1.4a12 12 0 0 0 5.4 0 2 2 0 0 0 1.43-1.4l.58-2.14 2.13.58c.67.18 1.43 0 1.94-.55a12 12 0 0 0 2.7-4.67 2 2 0 0 0-.5-1.94L21.4 12l1.57-1.56c.49-.5.71-1.23.5-1.95a12 12 0 0 0-2.7-4.67 2 2 0 0 0-1.93-.54l-2.14.57zm-6.34.54a10 10 0 0 1 4.42 0l.56 2.12a2 2 0 0 0 2.45 1.41l2.13-.57a10 10 0 0 1 2.2 3.83L20 10.59a2 2 0 0 0 0 2.83l1.55 1.55a10 10 0 0 1-2.2 3.82l-2.13-.57a2 2 0 0 0-2.44 1.42l-.57 2.12a10 10 0 0 1-4.42 0l-.57-2.12a2 2 0 0 0-2.45-1.42l-2.12.57a10 10 0 0 1-2.2-3.82L4 13.42a2 2 0 0 0 0-2.83L2.45 9.03a10 10 0 0 1 2.2-3.82l2.13.57a2 2 0 0 0 2.44-1.41z"
             />
           </svg>
-        </a>
-      </div>
-    </nav>
-    <div id="content" class="ml-[72px]">
-      <header class="py-2 text-center">
-      </header>
-
-      <main class="px-4 max-w-screen-xl mx-auto">
-        <!-- Masonry 容器 -->
-        <div class="masonry" id="gallery"></div>
-        <button
-          id="loadMore"
-          class="mt-4 mx-auto block px-4 py-2 rounded bg-gray-200 text-gray-700 hidden"
-        >
+        </a> </div>
+  </nav>
+  <div id="content" class="ml-[72px]">
+    <header class="py-2 text-center"> </header>
+    <main class="px-4 max-w-screen-xl mx-auto">
+      <!-- Masonry 容器 -->
+      <div class="masonry" id="gallery"></div> <button id="loadMore" class="mt-4 mx-auto block px-4 py-2 rounded bg-gray-200 text-gray-700 hidden">
           加载更多
-        </button>
-      </main>
-
-      <!-- 设置面板 -->
-    <div
-      id="settingsPanel"
-      class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50"
-    >
+        </button> </main>
+    <!-- 设置面板 -->
+    <div id="settingsPanel" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
       <div class="bg-card rounded-xl p-4 w-72 space-y-3">
         <div class="flex justify-between items-center">
-          <h2 class="font-semibold">设置</h2>
-          <button id="closeSettings" class="text-xl leading-none">
+          <h2 class="font-semibold">设置</h2> <button id="closeSettings" class="text-xl leading-none">
             &times;
-          </button>
-        </div>
-        
+          </button> </div>
         <!-- 深色模式切换器 -->
-        <div class="flex items-center justify-between py-1">
-          <label class="text-sm">深色模式</label>
-          <label class="relative inline-flex items-center cursor-pointer">
+        <div class="flex items-center justify-between py-1"> <label class="text-sm">深色模式</label> <label class="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" id="darkModeToggle" class="sr-only peer">
             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-          </label>
-        </div>
-        
-        <label class="block text-sm"
-          >列数
+          </label> </div> <label class="block text-sm">列数
           <input
             id="columnCountInput"
             type="number"
@@ -487,9 +491,7 @@
             value="4"
             class="mt-1 w-full border rounded p-1 bg-surface text-on-surface"
           />
-        </label>
-        <label class="block text-sm"
-          >加载卡片数量
+        </label> <label class="block text-sm">加载卡片数量
           <input
             id="perPageInput"
             type="number"
@@ -497,46 +499,29 @@
             value="30"
             class="mt-1 w-full border rounded p-1 bg-surface text-on-surface"
           />
-        </label>
-        <button id="applySettings" class="w-full bg-primary text-white py-1 rounded">应用</button>
-        <button id="clearCache" class="w-full bg-red-500 text-white py-1 rounded">清理缓存</button> 
-         <footer class="text-xs text-center text-gray-400 my-4">
-            <a href="https://github.com/valetzx/flow-wx" class="hover:underline">查看项目源码 </a> · <a href="#">联系我吧</a>
-        </footer>
+        </label> <button id="applySettings" class="w-full bg-primary text-white py-1 rounded">应用</button> <button id="clearCache" class="w-full bg-red-500 text-white py-1 rounded">清理缓存</button>
+        <footer class="text-xs text-center text-gray-400 my-4"> <a href="https://github.com/valetzx/flow-wx" class="hover:underline">查看项目源码 </a> · <a href="#">联系我吧</a> </footer>
       </div>
     </div>
-
-      <!-- 文章弹窗 -->
-      <div
-        id="articleModal"
-        class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50"
-      >
-        <div
-          class="rounded-xl w-11/12 max-w-3xl h-[80vh] overflow-auto relative p-4"
-        >
-          <button id="closeArticle" class="absolute top-2 right-4 text-2xl">
+    <!-- 文章弹窗 -->
+    <div id="articleModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+      <div class="rounded-xl w-11/12 max-w-3xl h-[80vh] overflow-auto relative p-4"> <button id="closeArticle" class="absolute top-2 right-4 text-2xl">
             &times;
           </button>
-          <div id="articleContent" class="prose max-w-none"></div>
-        </div>
+        <div id="articleContent" class="prose max-w-none"></div>
       </div>
-
-      <div id="toastContainer"></div>
-
-      <script>
+    </div>
+    <div id="toastContainer"></div>
+    <script>
       // 在DOMContentLoaded中添加深色模式初始化
       document.addEventListener("DOMContentLoaded", () => {
         // 初始化深色模式
         const darkModeToggle = document.getElementById('darkModeToggle');
-        const isDarkMode = localStorage.getItem('darkMode') === 'true' || 
-                          (window.matchMedia('(prefers-color-scheme: dark)').matches && 
-                          localStorage.getItem('darkMode') !== 'false');
-        
+        const isDarkMode = localStorage.getItem('darkMode') === 'true' || (window.matchMedia('(prefers-color-scheme: dark)').matches && localStorage.getItem('darkMode') !== 'false');
         if (isDarkMode) {
           document.documentElement.classList.add('dark');
           darkModeToggle.checked = true;
         }
-        
         darkModeToggle.addEventListener('change', () => {
           if (darkModeToggle.checked) {
             document.documentElement.classList.add('dark');
@@ -545,575 +530,527 @@
             document.documentElement.classList.remove('dark');
             localStorage.setItem('darkMode', 'false');
           }
-        });      });
-
-function showToast(message) {
-  const container = document.getElementById('toastContainer');
-  if (!container) return;
-  const toast = document.createElement('div');
-  toast.className = 'toast';
-  toast.textContent = message;
-  container.appendChild(toast);
-  // trigger enter
-  requestAnimationFrame(() => toast.classList.add('show'));
-  setTimeout(() => {
-    toast.classList.remove('show');
-    toast.addEventListener('transitionend', () => toast.remove(), { once: true });
-  }, 3000);
-}
-
-// 创建空白卡片函数
-function createBannerCard() {
-  const wrapper = document.createElement("div");
-  wrapper.className = "masonry-item rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer banner-card";
-  wrapper.style.height = "280px";
-  const carousel = document.createElement("div");
-  carousel.className = "banner-carousel";
-  const slotWidth = 60;
-  const slotGap = 12; // spacing between images
-  const count = 7;
-  const slots = [];
-  const loopDistance = (slotWidth + slotGap) * count;
-  for (let i = 0; i < count; i++) {
-    const slot = document.createElement("div");
-    slot.className = "carousel-slot";
-    carousel.appendChild(slot);
-    slots.push({ el: slot, x: -(loopDistance - i * (slotWidth + slotGap)) });
-  }
-
-  const mask = document.createElement("div");
-  mask.className = "banner-mask";
-  mask.textContent = "随机文章 ➡︎";
-
-  const content = document.createElement("div");
-  content.className = "card-content p-5 flex flex-col gap-2";
-  
-  const h2 = document.createElement("h2");
-  h2.className = "text-xl font-semibold text-slate-900";
-  h2.textContent = "设计与科技";
-  
-  const p = document.createElement("p");
-  p.className = "text-sm text-gray-600 leading-relaxed";
-  p.textContent = "这里是我的设计合集📘以及部分网络中的设计内容";
-
-//  const source = document.createElement("a");
-//  source.className = "text-xs text-gray-400 hover:underline self-end";
-//  source.textContent = "可以点击查看原文详情哦";
-  
-  const button = document.createElement("button");
-  button.className = "mt-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition";
-  button.textContent = "点击添加内容";
-
-  content.appendChild(h2);
-  content.appendChild(p);
-//  content.appendChild(source);
-  wrapper.appendChild(carousel);
-  wrapper.appendChild(content);
-  wrapper.appendChild(mask);
-
-  function getCachedImageUrls() {
-    try {
-      const data = JSON.parse(localStorage.getItem("wxData") || "null");
-      if (!data) return [];
-      const urls = [];
-      Object.values(data).forEach((item) => {
-        if (Array.isArray(item.images)) urls.push(...item.images);
+        });
       });
-      return urls;
-    } catch {
-      return [];
-    }
-  }
 
-  function assignImage(slot) {
-    const urls = getCachedImageUrls();
-    if (urls.length > 0) {
-      const src = urls[Math.floor(Math.random() * urls.length)];
-      const path = `?url=${encodeURIComponent(src)}`;
-      slot.style.backgroundImage = `url(${buildUrl(path, imgDomains[0])})`;
-      slot.style.backgroundColor = "";
-    } else {
-      slot.style.backgroundImage = "";
-      slot.style.backgroundColor = getRandomColor();
-    }
-  }
-
-  slots.forEach((s) => assignImage(s.el));
-
-  function animate() {
-    const width = carousel.clientWidth;
-    slots.forEach((s) => {
-      s.x += 0.5; // speed
-      if (s.x > width) {
-        s.x -= loopDistance;
-        assignImage(s.el);
+      function showToast(message) {
+        const container = document.getElementById('toastContainer');
+        if (!container) return;
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = message;
+        container.appendChild(toast);
+        // trigger enter
+        requestAnimationFrame(() => toast.classList.add('show'));
+        setTimeout(() => {
+          toast.classList.remove('show');
+          toast.addEventListener('transitionend', () => toast.remove(), {
+            once: true
+          });
+        }, 3000);
       }
-      s.el.style.transform = `translate(${s.x}px, -50%)`;
-    });
-    requestAnimationFrame(animate);
-  }
-
-  requestAnimationFrame(animate);
-
-  // 添加点击事件
-  wrapper.addEventListener("click", () => {
-    showToast("这个还没做好捏嘻嘻");
-  });
-
-  return wrapper;
-}
-
-        const gallery = document.getElementById("gallery");
-        const loadMoreBtn = document.getElementById("loadMore");
-        const settingsPanel = document.getElementById("settingsPanel");
-        const moreBtn = document.getElementById("moreBtn");
-        const closeSettings = document.getElementById("closeSettings");
-        const applySettings = document.getElementById("applySettings");
-        const columnCountInput = document.getElementById("columnCountInput");
-        const perPageInput = document.getElementById("perPageInput");
-        const articleModal = document.getElementById("articleModal");
-        const closeArticle = document.getElementById("closeArticle");
-        const articleContent = document.getElementById("articleContent");
-        const clearCacheBtn = document.getElementById('clearCache');
-        let dailyData = null;
-
-        const apiStored = localStorage.getItem('apiDomains') || localStorage.getItem('apiDomain') || '';
-        const imgStored = localStorage.getItem('imgDomains') || '';
-        let apiDomains = apiStored
-          ? apiStored.split(/\r?\n|,/).map((s) => s.trim()).filter(Boolean)
-          : [];
-        let imgDomains = imgStored
-          ? imgStored.split(/\r?\n|,/).map((s) => s.trim()).filter(Boolean)
-          : [];
-        if (apiDomains.length === 0 && Array.isArray(window.API_DOMAINS)) {
-          apiDomains = window.API_DOMAINS;
+      // 创建空白卡片函数
+      function createBannerCard() {
+        const wrapper = document.createElement("div");
+        wrapper.className = "masonry-item rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer banner-card";
+        wrapper.style.height = "280px";
+        const carousel = document.createElement("div");
+        carousel.className = "banner-carousel";
+        const slotWidth = 60;
+        const slotGap = 12; // spacing between images
+        const count = 7;
+        const slots = [];
+        const loopDistance = (slotWidth + slotGap) * count;
+        for (let i = 0; i < count; i++) {
+          const slot = document.createElement("div");
+          slot.className = "carousel-slot";
+          carousel.appendChild(slot);
+          slots.push({
+            el: slot,
+            x: -(loopDistance - i * (slotWidth + slotGap))
+          });
         }
-        if (imgDomains.length === 0 && Array.isArray(window.IMG_DOMAINS)) {
-          imgDomains = window.IMG_DOMAINS;
-        }
-       function buildUrl(path, domain) {
-         return domain ? domain.replace(/\/$/, '') + path : path;
-       }
-       function withDomain(path) {
-         return buildUrl(path, imgDomains[0]);
-       }
-        function loadImgWithFallback(img) {
-          const path = img.dataset.path;
-          if (!path) return;
-          let index = 0;
-          function attempt() {
-            img.src = buildUrl(path, imgDomains[index] || '');
-          }
-          img.onerror = () => {
-            index++;
-            if (index < imgDomains.length) attempt();
-          };
-          attempt();
-        }
-        async function fetchWithFallback(path, options = {}) {
-          const isApi = path.startsWith('/api/wx') || path.startsWith('/api/article') || path.startsWith('/api/daily');
-          const domains = isApi ? apiDomains : imgDomains;
-          for (const d of domains) {
-            try {
-              const res = await fetch(buildUrl(path, d), options);
-              if (res.ok) return res;
-            } catch {}
-          }
-          return fetch(path, options);
-        }
+        const mask = document.createElement("div");
+        mask.className = "banner-mask";
+        mask.textContent = "随机文章 ➡︎";
+        const content = document.createElement("div");
+        content.className = "card-content p-5 flex flex-col gap-2";
+        const h2 = document.createElement("h2");
+        h2.className = "text-xl font-semibold text-slate-900";
+        h2.textContent = "设计与科技";
+        const p = document.createElement("p");
+        p.className = "text-sm text-gray-600 leading-relaxed";
+        p.textContent = "这里是我的设计合集📘以及部分网络中的设计内容";
+        //  const source = document.createElement("a");
+        //  source.className = "text-xs text-gray-400 hover:underline self-end";
+        //  source.textContent = "可以点击查看原文详情哦";
+        const button = document.createElement("button");
+        button.className = "mt-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition";
+        button.textContent = "点击添加内容";
+        content.appendChild(h2);
+        content.appendChild(p);
+        //  content.appendChild(source);
+        wrapper.appendChild(carousel);
+        wrapper.appendChild(content);
+        wrapper.appendChild(mask);
 
-        const homeLink = document.querySelector('a[aria-label="\u4e3b\u9875"]');
-        let notifyDot = null;
-
-        function showDot() {
-          if (!notifyDot) {
-            notifyDot = document.createElement("span");
-            notifyDot.className = "notify-dot";
-            homeLink.classList.add("relative");
-            homeLink.appendChild(notifyDot);
+        function getCachedImageUrls() {
+          try {
+            const data = JSON.parse(localStorage.getItem("wxData") || "null");
+            if (!data) return [];
+            const urls = [];
+            Object.values(data).forEach((item) => {
+              if (Array.isArray(item.images)) urls.push(...item.images);
+            });
+            return urls;
+          } catch {
+            return [];
           }
         }
 
-        function hideDot() {
-          if (notifyDot) {
-            notifyDot.remove();
-            notifyDot = null;
+        function assignImage(slot) {
+          const urls = getCachedImageUrls();
+          if (urls.length > 0) {
+            const src = urls[Math.floor(Math.random() * urls.length)];
+            const path = `?url=${encodeURIComponent(src)}`;
+            slot.style.backgroundImage = `url(${buildUrl(path, imgDomains[0])})`;
+            slot.style.backgroundColor = "";
+          } else {
+            slot.style.backgroundImage = "";
+            slot.style.backgroundColor = getRandomColor();
           }
         }
+        slots.forEach((s) => assignImage(s.el));
 
-        function showArticle(html) {
-          articleContent.innerHTML = html;
-          articleModal.classList.remove("hidden");
-          articleModal.classList.add("flex", "show");
+        function animate() {
+          const width = carousel.clientWidth;
+          slots.forEach((s) => {
+            s.x += 0.5; // speed
+            if (s.x > width) {
+              s.x -= loopDistance;
+              assignImage(s.el);
+            }
+            s.el.style.transform = `translate(${s.x}px, -50%)`;
+          });
+          requestAnimationFrame(animate);
+        }
+        requestAnimationFrame(animate);
+        // 添加点击事件
+        wrapper.addEventListener("click", () => {
+          showToast("这个还没做好捏嘻嘻");
+        });
+        return wrapper;
+      }
+      const gallery = document.getElementById("gallery");
+      const loadMoreBtn = document.getElementById("loadMore");
+      const settingsPanel = document.getElementById("settingsPanel");
+      const moreBtn = document.getElementById("moreBtn");
+      const closeSettings = document.getElementById("closeSettings");
+      const applySettings = document.getElementById("applySettings");
+      const columnCountInput = document.getElementById("columnCountInput");
+      const perPageInput = document.getElementById("perPageInput");
+      const articleModal = document.getElementById("articleModal");
+      const closeArticle = document.getElementById("closeArticle");
+      const articleContent = document.getElementById("articleContent");
+      const clearCacheBtn = document.getElementById('clearCache');
+      let dailyData = null;
+      const apiStored = localStorage.getItem('apiDomains') || localStorage.getItem('apiDomain') || '';
+      const imgStored = localStorage.getItem('imgDomains') || '';
+      let apiDomains = apiStored ? apiStored.split(/\r?\n|,/).map((s) => s.trim()).filter(Boolean) : [];
+      let imgDomains = imgStored ? imgStored.split(/\r?\n|,/).map((s) => s.trim()).filter(Boolean) : [];
+      if (apiDomains.length === 0 && Array.isArray(window.API_DOMAINS)) {
+        apiDomains = window.API_DOMAINS;
+      }
+      if (imgDomains.length === 0 && Array.isArray(window.IMG_DOMAINS)) {
+        imgDomains = window.IMG_DOMAINS;
+      }
 
+      function buildUrl(path, domain) {
+        return domain ? domain.replace(/\/$/, '') + path : path;
+      }
+
+      function withDomain(path) {
+        return buildUrl(path, imgDomains[0]);
+      }
+
+      function loadImgWithFallback(img) {
+        const path = img.dataset.path;
+        if (!path) return;
+        let index = 0;
+
+        function attempt() {
+          img.src = buildUrl(path, imgDomains[index] || '');
+        }
+        img.onerror = () => {
+          index++;
+          if (index < imgDomains.length) attempt();
+        };
+        attempt();
+      }
+      async function fetchWithFallback(path, options = {}) {
+        const isApi = path.startsWith('/api/wx') || path.startsWith('/api/article') || path.startsWith('/api/daily');
+        const domains = isApi ? apiDomains : imgDomains;
+        for (const d of domains) {
+          try {
+            const res = await fetch(buildUrl(path, d), options);
+            if (res.ok) return res;
+          } catch {}
+        }
+        return fetch(path, options);
+      }
+      const homeLink = document.querySelector('a[aria-label="\u4e3b\u9875"]');
+      let notifyDot = null;
+
+      function showDot() {
+        if (!notifyDot) {
+          notifyDot = document.createElement("span");
+          notifyDot.className = "notify-dot";
+          homeLink.classList.add("relative");
+          homeLink.appendChild(notifyDot);
+        }
+      }
+
+      function hideDot() {
+        if (notifyDot) {
+          notifyDot.remove();
+          notifyDot = null;
+        }
+      }
+
+      function showArticle(html) {
+        articleContent.innerHTML = html;
+        articleModal.classList.remove("hidden");
+        articleModal.classList.add("flex", "show");
         // 添加深色模式样式类到文章内容
         const content = document.getElementById('articleContent');
-        content.classList.add('dark:prose-invert'); 
-        }
+        content.classList.add('dark:prose-invert');
+      }
 
-        function showLoading() {
-          articleContent.innerHTML =
-            '<div class="h-40 flex items-center justify-center"><div class="spinner"></div></div>';
-          articleModal.classList.remove("hidden");
-          articleModal.classList.add("flex", "show");
-        }
+      function showLoading() {
+        articleContent.innerHTML = '<div class="h-40 flex items-center justify-center"><div class="spinner"></div></div>';
+        articleModal.classList.remove("hidden");
+        articleModal.classList.add("flex", "show");
+      }
 
-        function showMovie(data) {
-          articleContent.innerHTML = `
+      function showMovie(data) {
+        articleContent.innerHTML = `
             <h2 class="text-2xl font-semibold mb-2">${data.mov_title}</h2>
             <p class="text-sm text-gray-500 mb-4">${data.mov_rating}分 ${Array.isArray(data.mov_type) ? data.mov_type.join(" ") : data.mov_type} ${data.mov_year} ${data.mov_area}</p>
             <p>${data.mov_intro}</p>
           `;
-          articleModal.classList.remove("hidden");
-          articleModal.classList.add("flex", "show");
-        }
+        articleModal.classList.remove("hidden");
+        articleModal.classList.add("flex", "show");
+      }
 
-        function hideArticle() {
-          articleModal.classList.add("hidden");
-          articleModal.classList.remove("flex", "show");
-          articleContent.innerHTML = "";
-        }
-
-        const savedCols = parseInt(localStorage.getItem("columnCount")) || 4;
-        const savedPerPage = parseInt(localStorage.getItem("perPage")) || 30;
-
-        const navEl = document.querySelector("nav");
-        const contentEl = document.getElementById("content");
-        const isMobile = /Mobi|Android|iPhone|Windows Phone/i.test(
-          navigator.userAgent,
-        );
-
-        const initialCols = isMobile ? 2 : savedCols;
-
-        columnCountInput.value = String(initialCols);
-        perPageInput.value = String(savedPerPage);
-        gallery.style.columnCount = String(initialCols);
-
-        if (isMobile) {
-          document.body.classList.add("mobile");
-          navEl.classList.add("mobile");
-          contentEl.classList.remove("ml-[72px]");
-          contentEl.classList.add("mb-[72px]");
-        }
-
-        let allItems = [];
-        let currentPage = 0;
-        let perPage = savedPerPage;
-
-        const observer = new IntersectionObserver(
-          (entries, obs) => {
-            entries.forEach((entry) => {
-              if (entry.isIntersecting) {
-                const img = entry.target;
-                loadImgWithFallback(img);
-                obs.unobserve(img);
-              }
-            });
-          },
-          { rootMargin: "100px" },
-        );
-
-        function getRandomColor() {
-          return (
-            "#" +
-            Math.floor(Math.random() * 0xffffff)
-              .toString(16)
-              .padStart(6, "0")
-          );
-        }
-
-        function createImage(src, alt) {
-          const img = document.createElement("img");
-          img.className =
-            "w-full rounded-t-2xl object-cover hover:opacity-90 transition-opacity aspect-video";
-          img.dataset.path = `?url=${src}`;
-          img.alt = alt;
-          img.loading = "lazy";
-          const randomHeight = 180 + Math.random() * 120; // 180 - 300px
-          img.style.height = `${randomHeight}px`;
-          img.style.backgroundColor = getRandomColor();
-          img.style.minHeight = "120px";
-          img.style.opacity = "0";
-          img.style.transition = "opacity 0.5s";
-          img.addEventListener("load", () => {
-            img.style.opacity = "1";
-            img.style.backgroundColor = "";
-            img.style.minHeight = "";
-          });
-          observer.observe(img);
-          return img;
-        }
-
-        function createCard(item) {
-          const wrapper = document.createElement("div");
-          wrapper.className =
-            "masonry-item rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer";
-          wrapper.dataset.url = item.url;
-
-          if (item.imgSrc) {
-            const img = createImage(item.imgSrc, item.title);
-            wrapper.appendChild(img);
-          }
-
-          const text = document.createElement("div");
-          text.className = "card-content p-5 flex flex-col gap-2";
-
-          const h2 = document.createElement("h2");
-          h2.className = "text-xl font-semibold text-slate-900 tracking-tight mb-1";
-          h2.textContent = item.title;
-
-          const p = document.createElement("p");
-          p.className = "text-sm text-gray-600 leading-relaxed mb-2";
-          p.textContent = item.description;
-
-          const link = document.createElement("a");
-          link.className =
-            "text-xs text-gray-400 hover:underline self-end";
-          link.textContent = "查看原文";
-          link.href = item.url;
-          link.target = "_blank";
-          link.rel = "noopener noreferrer";
-          link.addEventListener("click", (e) => e.stopPropagation());
-
-          text.appendChild(h2);
-          text.appendChild(p);
-          text.appendChild(link);
-          wrapper.appendChild(text);
-
-          wrapper.addEventListener("click", async () => {
-            const url = wrapper.dataset.url;
-            if (!url) return;
-            const key = "article:" + url;
-            let html = localStorage.getItem(key);
-            if (!html) {
-              showLoading();
-              try {
-                const res = await fetchWithFallback(
-                  `/api/article?url=${encodeURIComponent(url)}`,
-                );
-                html = await res.text();
-                if (res.ok) {
-                  localStorage.setItem(key, html);
-                }
-              } catch (err) {
-                html = "<p>加载失败</p>";
-              }
-              await new Promise((r) => setTimeout(r, 300));
+      function hideArticle() {
+        articleModal.classList.add("hidden");
+        articleModal.classList.remove("flex", "show");
+        articleContent.innerHTML = "";
+      }
+      const savedCols = parseInt(localStorage.getItem("columnCount")) || 4;
+      const savedPerPage = parseInt(localStorage.getItem("perPage")) || 30;
+      const navEl = document.querySelector("nav");
+      const contentEl = document.getElementById("content");
+      const isMobile = /Mobi|Android|iPhone|Windows Phone/i.test(navigator.userAgent, );
+      const initialCols = isMobile ? 2 : savedCols;
+      columnCountInput.value = String(initialCols);
+      perPageInput.value = String(savedPerPage);
+      gallery.style.columnCount = String(initialCols);
+      if (isMobile) {
+        document.body.classList.add("mobile");
+        navEl.classList.add("mobile");
+        contentEl.classList.remove("ml-[72px]");
+        contentEl.classList.add("mb-[72px]");
+      }
+      let allItems = [];
+      let currentPage = 0;
+      let perPage = savedPerPage;
+      const observer = new IntersectionObserver(
+        (entries, obs) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const img = entry.target;
+              loadImgWithFallback(img);
+              obs.unobserve(img);
             }
-            showArticle(html);
           });
+        }, {
+          rootMargin: "100px"
+        }, );
 
-          return wrapper;
+      function getRandomColor() {
+        return ("#" + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, "0"));
+      }
+
+      function createImage(src, alt) {
+        const img = document.createElement("img");
+        img.className = "w-full rounded-t-2xl object-cover hover:opacity-90 transition-opacity aspect-video";
+        img.dataset.path = `?url=${src}`;
+        img.alt = alt;
+        img.loading = "lazy";
+        const randomHeight = 180 + Math.random() * 120; // 180 - 300px
+        img.style.height = `${randomHeight}px`;
+        img.style.backgroundColor = getRandomColor();
+        img.style.minHeight = "120px";
+        img.style.opacity = "0";
+        img.style.transition = "opacity 0.5s";
+        img.addEventListener("load", () => {
+          img.style.opacity = "1";
+          img.style.backgroundColor = "";
+          img.style.minHeight = "";
+        });
+        observer.observe(img);
+        return img;
+      }
+
+      function createCard(item) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "masonry-item rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer";
+        wrapper.dataset.url = item.url;
+        if (item.imgSrc) {
+          const img = createImage(item.imgSrc, item.title);
+          wrapper.appendChild(img);
         }
-
-        function createDailyCard(item) {
-          const wrapper = document.createElement("div");
-          wrapper.className = "masonry-item rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer";
-          if (item.mov_pic) {
-            const img = document.createElement("img");
-            img.className = "w-full object-cover";
-            img.src = item.mov_pic;
-            wrapper.appendChild(img);
+        const text = document.createElement("div");
+        text.className = "card-content p-5 flex flex-col gap-2";
+        const h2 = document.createElement("h2");
+        h2.className = "text-xl font-semibold text-slate-900 tracking-tight mb-1";
+        h2.textContent = item.title;
+        const p = document.createElement("p");
+        p.className = "text-sm text-gray-600 leading-relaxed mb-2";
+        p.textContent = item.description;
+        const link = document.createElement("a");
+        link.className = "text-xs text-gray-400 hover:underline self-end";
+        link.textContent = "查看原文";
+        link.href = item.url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.addEventListener("click", (e) => e.stopPropagation());
+        text.appendChild(h2);
+        text.appendChild(p);
+        text.appendChild(link);
+        wrapper.appendChild(text);
+        wrapper.addEventListener("click", async () => {
+          const url = wrapper.dataset.url;
+          if (!url) return;
+          const key = "article:" + url;
+          let html = localStorage.getItem(key);
+          if (!html) {
+            showLoading();
+            try {
+              const res = await fetchWithFallback(`/api/article?url=${encodeURIComponent(url)}`, );
+              html = await res.text();
+              if (res.ok) {
+                localStorage.setItem(key, html);
+              }
+            } catch (err) {
+              html = "<p>加载失败</p>";
+            }
+            await new Promise((r) => setTimeout(r, 300));
           }
-          const text = document.createElement("div");
-          text.className = "card-content p-5 flex flex-col gap-2";
-          const h2 = document.createElement("h2");
-          h2.className = "text-xl font-semibold text-slate-900";
-          h2.textContent = item.mov_title;
-          const p = document.createElement("p");
-          p.className = "text-sm text-gray-600 leading-relaxed";
-          p.textContent = item.mov_text;
-          const source = document.createElement("a");
-          source.className = "text-xs text-gray-400 hover:underline self-end";
-          source.textContent = "来自此刻电影";
-          source.href = "https://www.cikeee.cc/";
-          source.target = "_blank";
-          source.rel = "noopener noreferrer";
-          source.addEventListener("click", (e) => e.stopPropagation());
-          text.appendChild(h2);
-          text.appendChild(p);
-          text.appendChild(source);
-          wrapper.appendChild(text);
-          wrapper.addEventListener("click", () => showMovie(item));
-          return wrapper;
+          showArticle(html);
+        });
+        return wrapper;
+      }
+
+      function createDailyCard(item) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "masonry-item rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer";
+        if (item.mov_pic) {
+          const img = document.createElement("img");
+          img.className = "w-full object-cover";
+          img.src = item.mov_pic;
+          wrapper.appendChild(img);
         }
+        const text = document.createElement("div");
+        text.className = "card-content p-5 flex flex-col gap-2";
+        const h2 = document.createElement("h2");
+        h2.className = "text-xl font-semibold text-slate-900";
+        h2.textContent = item.mov_title;
+        const p = document.createElement("p");
+        p.className = "text-sm text-gray-600 leading-relaxed";
+        p.textContent = item.mov_text;
+        const source = document.createElement("a");
+        source.className = "text-xs text-gray-400 hover:underline self-end";
+        source.textContent = "来自此刻电影";
+        source.href = "https://www.cikeee.cc/";
+        source.target = "_blank";
+        source.rel = "noopener noreferrer";
+        source.addEventListener("click", (e) => e.stopPropagation());
+        text.appendChild(h2);
+        text.appendChild(p);
+        text.appendChild(source);
+        wrapper.appendChild(text);
+        wrapper.addEventListener("click", () => showMovie(item));
+        return wrapper;
+      }
 
-        function buildItems(data) {
-          const items = [];
-          for (const [title, { description, images, url }] of Object.entries(
-            data,
-          )) {
-            const imgSrc =
-              Array.isArray(images) && images.length > 0
-                ? images[Math.floor(Math.random() * images.length)]
-                : null;
-            items.push({ title, description, imgSrc, url });
-          }
-          return items;
-        }
-
-        function renderPage() {
-          gallery.innerHTML = "";
-
-          gallery.appendChild(createBannerCard());
-
-          if (dailyData) {
-            gallery.appendChild(createDailyCard(dailyData));
-          }
-          const end = (currentPage + 1) * perPage;
-          const items = allItems.slice(0, end);
-          items.forEach((item) => {
-            gallery.appendChild(createCard(item));
+      function buildItems(data) {
+        const items = [];
+        for (const [title, {
+            description,
+            images,
+            url
+          }] of Object.entries(data, )) {
+          const imgSrc = Array.isArray(images) && images.length > 0 ? images[Math.floor(Math.random() * images.length)] : null;
+          items.push({
+            title,
+            description,
+            imgSrc,
+            url
           });
-          if (end >= allItems.length) {
-            loadMoreBtn.classList.add("hidden");
-          } else {
-            loadMoreBtn.classList.remove("hidden");
-          }
         }
+        return items;
+      }
 
+      function renderPage() {
+        gallery.innerHTML = "";
+        gallery.appendChild(createBannerCard());
+        if (dailyData) {
+          gallery.appendChild(createDailyCard(dailyData));
+        }
+        const end = (currentPage + 1) * perPage;
+        const items = allItems.slice(0, end);
+        items.forEach((item) => {
+          gallery.appendChild(createCard(item));
+        });
+        if (end >= allItems.length) {
+          loadMoreBtn.classList.add("hidden");
+        } else {
+          loadMoreBtn.classList.remove("hidden");
+        }
+      }
 
-
-        function applyData(data) {
-          allItems = buildItems(data);
-          currentPage = 0;
+      function applyData(data) {
+        allItems = buildItems(data);
+        currentPage = 0;
+        renderPage();
+      }
+      async function fetchLatest() {
+        const res = await fetchWithFallback("/api/wx", {
+          headers: {
+            "x-skip-cache": "1"
+          },
+        });
+        if (!res.ok) throw new Error("Network response was not ok");
+        return await res.json();
+      }
+      async function fetchDaily() {
+        const res = await fetchWithFallback("/api/daily", {
+          headers: {
+            "x-skip-cache": "1"
+          },
+        });
+        if (!res.ok) throw new Error("Network response was not ok");
+        return await res.json();
+      }
+      async function initGallery() {
+        const cachedStr = localStorage.getItem("wxData");
+        let cached;
+        if (cachedStr) {
+          try {
+            cached = JSON.parse(cachedStr);
+          } catch {}
+        }
+        if (cached) {
+          applyData(cached);
+        }
+        try {
+          const latest = await fetchLatest();
+          const latestStr = JSON.stringify(latest);
+          if (!cachedStr) {
+            localStorage.setItem("wxData", latestStr);
+            applyData(latest);
+          } else if (latestStr !== cachedStr) {
+            localStorage.setItem("wxDataNew", latestStr);
+            showDot();
+          }
+        } catch (err) {
+          console.error("加载画廊失败:", err);
+        }
+      }
+      async function loadDaily() {
+        const cachedStr = localStorage.getItem("dailyData");
+        let cached;
+        if (cachedStr) {
+          try {
+            cached = JSON.parse(cachedStr);
+          } catch {}
+        }
+        if (cached) {
+          dailyData = cached;
           renderPage();
         }
-
-        async function fetchLatest() {
-          const res = await fetchWithFallback("/api/wx", {
-            headers: { "x-skip-cache": "1" },
-          });
-          if (!res.ok) throw new Error("Network response was not ok");
-          return await res.json();
-        }
-
-        async function fetchDaily() {
-          const res = await fetchWithFallback("/api/daily", {
-            headers: { "x-skip-cache": "1" },
-          });
-          if (!res.ok) throw new Error("Network response was not ok");
-          return await res.json();
-        }
-
-        async function initGallery() {
-          const cachedStr = localStorage.getItem("wxData");
-          let cached;
-          if (cachedStr) {
-            try {
-              cached = JSON.parse(cachedStr);
-            } catch {}
-          }
-          if (cached) {
-            applyData(cached);
-          }
-
-          try {
-            const latest = await fetchLatest();
-            const latestStr = JSON.stringify(latest);
-            if (!cachedStr) {
-              localStorage.setItem("wxData", latestStr);
-              applyData(latest);
-            } else if (latestStr !== cachedStr) {
-              localStorage.setItem("wxDataNew", latestStr);
-              showDot();
-            }
-          } catch (err) {
-            console.error("加载画廊失败:", err);
-          }
-        }
-
-        async function loadDaily() {
-          const cachedStr = localStorage.getItem("dailyData");
-          let cached;
-          if (cachedStr) {
-            try {
-              cached = JSON.parse(cachedStr);
-            } catch {}
-          }
-          if (cached) {
-            dailyData = cached;
+        try {
+          const latest = await fetchDaily();
+          const latestStr = JSON.stringify(latest);
+          if (!cachedStr || latestStr !== cachedStr) {
+            localStorage.setItem("dailyData", latestStr);
+            dailyData = latest;
             renderPage();
           }
-
+        } catch (err) {
+          console.error("加载每日电影失败:", err);
+        }
+      }
+      loadMoreBtn.addEventListener("click", () => {
+        currentPage++;
+        renderPage();
+      });
+      moreBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        settingsPanel.classList.remove("hidden");
+        settingsPanel.classList.add("flex", "show");
+      });
+      closeSettings.addEventListener("click", () => {
+        settingsPanel.classList.add("hidden");
+        settingsPanel.classList.remove("flex", "show");
+      });
+      closeArticle.addEventListener("click", hideArticle);
+      articleModal.addEventListener("click", (e) => {
+        if (e.target === articleModal) hideArticle();
+      });
+      applySettings.addEventListener('click', () => {
+        const cols = Math.max(1, parseInt(columnCountInput.value) || 1);
+        perPage = Math.max(1, parseInt(perPageInput.value) || 1);
+        gallery.style.columnCount = String(cols);
+        localStorage.setItem('columnCount', String(cols));
+        localStorage.setItem('perPage', String(perPage));
+        currentPage = 0;
+        renderPage();
+        settingsPanel.classList.add('hidden');
+        settingsPanel.classList.remove('flex', 'show');
+      });
+      clearCacheBtn.addEventListener('click', async () => {
+        ['wxData', 'wxDataNew', 'columnCount', 'perPage'].forEach((k) => localStorage.removeItem(k));
+        if ('caches' in window) {
+          const names = await caches.keys();
+          await Promise.all(names.map((n) => caches.delete(n)));
+        }
+        location.reload();
+      });
+      document.addEventListener("DOMContentLoaded", () => {
+        initGallery();
+        loadDaily();
+      });
+      homeLink.addEventListener("click", () => {
+        const newStr = localStorage.getItem("wxDataNew");
+        if (newStr) {
+          localStorage.setItem("wxData", newStr);
+          localStorage.removeItem("wxDataNew");
+          hideDot();
           try {
-            const latest = await fetchDaily();
-            const latestStr = JSON.stringify(latest);
-            if (!cachedStr || latestStr !== cachedStr) {
-              localStorage.setItem("dailyData", latestStr);
-              dailyData = latest;
-              renderPage();
-            }
-          } catch (err) {
-            console.error("加载每日电影失败:", err);
-          }
+            applyData(JSON.parse(newStr));
+          } catch (e) {}
         }
-
-        loadMoreBtn.addEventListener("click", () => {
-          currentPage++;
-          renderPage();
+      });
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("/sw.js").catch(console.error);
         });
+      }
+    </script>
+  </div>
+</body>
 
-        moreBtn.addEventListener("click", (e) => {
-          e.preventDefault();
-          settingsPanel.classList.remove("hidden");
-          settingsPanel.classList.add("flex", "show");
-        });
-
-        closeSettings.addEventListener("click", () => {
-          settingsPanel.classList.add("hidden");
-          settingsPanel.classList.remove("flex", "show");
-        });
-
-        closeArticle.addEventListener("click", hideArticle);
-        articleModal.addEventListener("click", (e) => {
-          if (e.target === articleModal) hideArticle();
-        });
-
-        applySettings.addEventListener('click', () => {
-          const cols = Math.max(1, parseInt(columnCountInput.value) || 1);
-          perPage = Math.max(1, parseInt(perPageInput.value) || 1);
-          gallery.style.columnCount = String(cols);
-          localStorage.setItem('columnCount', String(cols));
-          localStorage.setItem('perPage', String(perPage));
-          currentPage = 0;
-          renderPage();
-          settingsPanel.classList.add('hidden');
-          settingsPanel.classList.remove('flex', 'show');
-        });
-
-        clearCacheBtn.addEventListener('click', async () => {
-          ['wxData', 'wxDataNew', 'columnCount', 'perPage'].forEach((k) => localStorage.removeItem(k));
-          if ('caches' in window) {
-            const names = await caches.keys();
-            await Promise.all(names.map((n) => caches.delete(n)));
-          }
-          location.reload();
-        });
-
-        document.addEventListener("DOMContentLoaded", () => {
-          initGallery();
-          loadDaily();
-        });
-        homeLink.addEventListener("click", () => {
-          const newStr = localStorage.getItem("wxDataNew");
-          if (newStr) {
-            localStorage.setItem("wxData", newStr);
-            localStorage.removeItem("wxDataNew");
-            hideDot();
-            try {
-              applyData(JSON.parse(newStr));
-            } catch (e) {}
-          }
-        });
-        if ("serviceWorker" in navigator) {
-          window.addEventListener("load", () => {
-            navigator.serviceWorker.register("/sw.js").catch(console.error);
-          });
-        }
-
-
-      </script>
-    </div>
-  </body>
 </html>

@@ -1,25 +1,22 @@
 const CACHE_NAME = "wx-cache-v2";
 const CACHE_AGE = 6 * 24 * 60 * 60 * 1000;
 const TS_HEADER = "X-Cache-Timestamp";
-
 self.addEventListener("install", (event) => {
   self.skipWaiting();
   event.waitUntil(caches.open(CACHE_NAME));
 });
-
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((names) =>
       Promise.all(
         names
-          .filter((n) => n !== CACHE_NAME)
-          .map((n) => caches.delete(n)),
+        .filter((n) => n !== CACHE_NAME)
+        .map((n) => caches.delete(n)),
       ),
     ),
   );
   self.clients.claim();
 });
-
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (url.pathname === "/api/wx" || url.pathname === "/api/daily") {
@@ -54,7 +51,6 @@ function matchImgCache(url) {
   }
   return false;
 }
-
 async function fetchAndCache(request) {
   const cache = await caches.open(CACHE_NAME);
   const res = await fetch(request);
@@ -75,7 +71,6 @@ async function fetchAndCache(request) {
   }
   return res;
 }
-
 async function cacheThenNetwork(request) {
   const cache = await caches.open(CACHE_NAME);
   const cached = await cache.match(request);

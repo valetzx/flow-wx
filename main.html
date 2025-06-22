@@ -1,277 +1,302 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>我的作品集</title>
-    <!-- Tailwind CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      /* 自定义主题色卡 */
-      :root {
-        --primary: 79, 70, 229;
-        --secondary: 139, 92, 246;
-        --accent: 236, 72, 153;
-        --surface: 241, 245, 249;
-        --on-surface: 15, 23, 42;
-        --card: 255, 255, 255;
-        --border: 229, 231, 235;
-      }
 
-      .dark {
-        --primary: 129, 140, 248;
-        --secondary: 167, 139, 250;
-        --accent: 244, 114, 182;
-        --surface: 15, 23, 42;
-        --on-surface: 241, 245, 249;
-        --card: 30, 41, 59;
-        --border: 55, 65, 81;
-      }
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>我的作品集</title>
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* 自定义主题色卡 */
 
-      /* Masonry 布局 */
+    :root {
+      --primary: 79, 70, 229;
+      --secondary: 139, 92, 246;
+      --accent: 236, 72, 153;
+      --surface: 241, 245, 249;
+      --on-surface: 15, 23, 42;
+      --card: 255, 255, 255;
+      --border: 229, 231, 235;
+    }
+
+    .dark {
+      --primary: 129, 140, 248;
+      --secondary: 167, 139, 250;
+      --accent: 244, 114, 182;
+      --surface: 15, 23, 42;
+      --on-surface: 241, 245, 249;
+      --card: 30, 41, 59;
+      --border: 55, 65, 81;
+    }
+
+    /* Masonry 布局 */
+
+    .masonry {
+      column-count: 4;
+      column-gap: 1rem;
+    }
+
+    @media (max-width: 1024px) {
       .masonry {
-        column-count: 4;
-        column-gap: 1rem;
+        column-count: 2;
       }
-      @media (max-width: 1024px) {
-        .masonry {
-          column-count: 2;
-        }
-      }
-      @media (max-width: 640px) {
-        .masonry {
-          column-count: 1;
-        }
-      }
+    }
 
-      .masonry-item .card-content {
-        background-color: rgb(var(--card));
-        color: rgb(var(--on-surface));
+    @media (max-width: 640px) {
+      .masonry {
+        column-count: 1;
       }
-      
-      .masonry-item .card-content h2 {
-        color: rgb(var(--on-surface));
-      }
+    }
 
-      .masonry-item .card-content p {
-        color: rgb(var(--on-surface)/0.8);
-      }
+    .masonry-item .card-content {
+      background-color: rgb(var(--card));
+      color: rgb(var(--on-surface));
+    }
 
-      .masonry-item {
-        break-inside: avoid;
-        margin-bottom: 1rem;
-        border-radius: 1rem;
-        overflow: hidden; 
-      }
-      .sidebar-link {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.5rem;
-        border-radius: 0.375rem;
-        color: #6b7280;
-        transition: background-color 0.2s, color 0.2s;
-      }
-      .sidebar-link:hover {
-        background-color: #f1f5f9;
-        color: #111827;
-      }
-      nav.mobile #homeBtn {
-        display: none;
-      }
-      nav.mobile {
-        top: auto;
-        bottom: 0;
-        left: 0;
-        height: 72px;
-        width: 100%;
-        flex-direction: row;
-        border-right: none;
-        border-top: 1px solid #e5e7eb;
-      }
-      nav.mobile .sidebar-link {
-        flex: 1;
-        margin-top: 5px;
-      }
-      nav.mobile .sidebar-items {
-        flex-direction: row;
-        width: 100%;
-      }
-      nav.mobile .sidebar-items > * {
-        margin: 0;
-        flex: 1;
-        --tw-space-y-reverse: 0;
-        margin-top: 0;
-        margin-bottom: calc(1.5rem * var(--tw-space-y-reverse));
-      }
-      nav.mobile #moreBtn #addBtn #idealBtn {
-        margin-top: 0;
-      }
-      nav.mobile .space-y-6 > :not([hidden]) ~ :not([hidden]) {
-        margin-top: 0;
-      }
-      body.mobile #content {
-        margin-left: 0;
-        margin-bottom: 72px;
-      }
-      .notify-dot {
-        position: absolute;
-        top: 4px;
-        right: 4px;
-        width: 0.5rem;
-        height: 0.5rem;
-        background-color: #ef4444;
-        border-radius: 9999px;
-      }
-      nav.mobile .notify-dot {
-        right: 2rem;
-      }
+    .masonry-item .card-content h2 {
+      color: rgb(var(--on-surface));
+    }
 
-      /* 图片放大查看弹窗 */
-      #imageModal {
-        background-color: rgba(0, 0, 0, 0.8);
-      }
-      #imageModal img {
-        max-width: 90vw;
-        max-height: 90vh;
+    .masonry-item .card-content p {
+      color: rgb(var(--on-surface)/0.8);
+    }
+
+    .masonry-item {
+      break-inside: avoid;
+      margin-bottom: 1rem;
+      border-radius: 1rem;
+      overflow: hidden;
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.5rem;
+      border-radius: 0.375rem;
+      color: #6b7280;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    .sidebar-link:hover {
+      background-color: #f1f5f9;
+      color: #111827;
+    }
+
+    nav.mobile #homeBtn {
+      display: none;
+    }
+
+    nav.mobile {
+      top: auto;
+      bottom: 0;
+      left: 0;
+      height: 72px;
+      width: 100%;
+      flex-direction: row;
+      border-right: none;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    nav.mobile .sidebar-link {
+      flex: 1;
+      margin-top: 5px;
+    }
+
+    nav.mobile .sidebar-items {
+      flex-direction: row;
+      width: 100%;
+    }
+
+    nav.mobile .sidebar-items>* {
+      margin: 0;
+      flex: 1;
+      --tw-space-y-reverse: 0;
+      margin-top: 0;
+      margin-bottom: calc(1.5rem * var(--tw-space-y-reverse));
+    }
+
+    nav.mobile #moreBtn #addBtn #idealBtn {
+      margin-top: 0;
+    }
+
+    nav.mobile .space-y-6> :not([hidden])~ :not([hidden]) {
+      margin-top: 0;
+    }
+
+    body.mobile #content {
+      margin-left: 0;
+      margin-bottom: 72px;
+    }
+
+    .notify-dot {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 0.5rem;
+      height: 0.5rem;
+      background-color: #ef4444;
+      border-radius: 9999px;
+    }
+
+    nav.mobile .notify-dot {
+      right: 2rem;
+    }
+
+    /* 图片放大查看弹窗 */
+
+    #imageModal {
+      background-color: rgba(0, 0, 0, 0.8);
+    }
+
+    #imageModal img {
+      max-width: 90vw;
+      max-height: 90vh;
+      transform: scale(0.9);
+      opacity: 0;
+      transition: transform 0.2s, opacity 0.2s;
+    }
+
+    #imageModal.show img {
+      animation: modalZoom 0.2s forwards;
+    }
+
+    #settingsPanel>div {
+      transform: scale(0.9);
+      opacity: 0;
+      transition: transform 0.2s, opacity 0.2s;
+    }
+
+    #settingsPanel.show>div {
+      animation: modalZoom 0.2s forwards;
+    }
+
+    @keyframes modalZoom {
+      from {
         transform: scale(0.9);
         opacity: 0;
-        transition: transform 0.2s, opacity 0.2s;
       }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
 
-      #imageModal.show img {
-        animation: modalZoom 0.2s forwards;
-      }
+    /* 侧边栏适配深色模式 */
 
-      #settingsPanel > div {
-        transform: scale(0.9);
-        opacity: 0;
-        transition: transform 0.2s, opacity 0.2s;
-      }
+    nav {
+      background-color: rgb(var(--card));
+      border-color: rgb(var(--border));
+    }
 
-      #settingsPanel.show > div {
-        animation: modalZoom 0.2s forwards;
-      }
+    .sidebar-link {
+      color: rgb(var(--on-surface)/0.7);
+    }
 
-      @keyframes modalZoom {
-        from {
-          transform: scale(0.9);
-          opacity: 0;
-        }
-        to {
-          transform: scale(1);
-          opacity: 1;
-        }
-      }
+    .sidebar-link:hover {
+      background-color: rgb(var(--primary)/0.1);
+      color: rgb(var(--primary));
+    }
 
-      /* 侧边栏适配深色模式 */
-      nav {
-        background-color: rgb(var(--card));
-        border-color: rgb(var(--border));
-      }
-      
-      .sidebar-link {
-        color: rgb(var(--on-surface)/0.7);
-      }
-      
-      .sidebar-link:hover {
-        background-color: rgb(var(--primary)/0.1);
-        color: rgb(var(--primary));
-      }
-      
-      /* 文字卡片适配深色模式 */
-      .masonry-item {
-        background-color: rgb(var(--card));
-        color: rgb(var(--on-surface));
-      }
-      
-      .masonry-item h2 {
-        color: rgb(var(--on-surface));
-      }
-      
-      .masonry-item p {
-        color: rgb(var(--on-surface)/0.8);
-      }
-      
-      .masonry-item a {
-        color: rgb(var(--on-surface)/0.6);
-      }
-      
-      .masonry-item a:hover {
-        color: rgb(var(--primary));
-      }
-      
-      /* 图片弹窗适配深色模式 */
-      #imageModal {
-        background-color: rgba(0, 0, 0, 0.9);
-      }
-      
-      /* 设置面板适配深色模式 */
-      #settingsPanel > div {
-        background-color: rgb(var(--card));
-        color: rgb(var(--on-surface));
-      }
-      
-      #settingsPanel label {
-        color: rgb(var(--on-surface)/0.9);
-      }
-      
-      #settingsPanel input {
-        background-color: rgb(var(--surface));
-        color: rgb(var(--on-surface));
-        border-color: rgb(var(--border));
-      }
-      
-      /* 加载按钮适配深色模式 */
-      #loadMore {
-        background-color: rgb(var(--surface));
-        color: rgb(var(--on-surface));
-      }
-      
-      #loadMore:hover {
-        background-color: rgb(var(--primary));
-        color: white;
-      }
-    </style>
-    <script>
-      // 在tailwind配置前设置darkMode
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            colors: {
-              primary: 'rgb(var(--primary))',
-              secondary: 'rgb(var(--secondary))',
-              accent: 'rgb(var(--accent))',
-              surface: 'rgb(var(--surface))',
-              'on-surface': 'rgb(var(--on-surface))',
-              card: 'rgb(var(--card))',
-              border: 'rgb(var(--border))'
-            }
+    /* 文字卡片适配深色模式 */
+
+    .masonry-item {
+      background-color: rgb(var(--card));
+      color: rgb(var(--on-surface));
+    }
+
+    .masonry-item h2 {
+      color: rgb(var(--on-surface));
+    }
+
+    .masonry-item p {
+      color: rgb(var(--on-surface)/0.8);
+    }
+
+    .masonry-item a {
+      color: rgb(var(--on-surface)/0.6);
+    }
+
+    .masonry-item a:hover {
+      color: rgb(var(--primary));
+    }
+
+    /* 图片弹窗适配深色模式 */
+
+    #imageModal {
+      background-color: rgba(0, 0, 0, 0.9);
+    }
+
+    /* 设置面板适配深色模式 */
+
+    #settingsPanel>div {
+      background-color: rgb(var(--card));
+      color: rgb(var(--on-surface));
+    }
+
+    #settingsPanel label {
+      color: rgb(var(--on-surface)/0.9);
+    }
+
+    #settingsPanel input {
+      background-color: rgb(var(--surface));
+      color: rgb(var(--on-surface));
+      border-color: rgb(var(--border));
+    }
+
+    /* 加载按钮适配深色模式 */
+
+    #loadMore {
+      background-color: rgb(var(--surface));
+      color: rgb(var(--on-surface));
+    }
+
+    #loadMore:hover {
+      background-color: rgb(var(--primary));
+      color: white;
+    }
+  </style>
+  <script>
+    // 在tailwind配置前设置darkMode
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: 'rgb(var(--primary))',
+            secondary: 'rgb(var(--secondary))',
+            accent: 'rgb(var(--accent))',
+            surface: 'rgb(var(--surface))',
+            'on-surface': 'rgb(var(--on-surface))',
+            card: 'rgb(var(--card))',
+            border: 'rgb(var(--border))'
           }
         }
       }
-    </script>
-  </head>
-  <body class="bg-surface text-on-surface min-h-screen font-sans">
-     <nav class="fixed top-0 left-0 h-screen w-[72px] border-r shadow flex flex-col items-center py-4 z-49">
-      <div class="sidebar-items flex flex-col items-center gap-y-6 h-full w-full">
-        <a href="#" aria-label="主页" class="sidebar-link">
+    }
+  </script>
+</head>
+
+<body class="bg-surface text-on-surface min-h-screen font-sans">
+  <nav class="fixed top-0 left-0 h-screen w-[72px] border-r shadow flex flex-col items-center py-4 z-49">
+    <div class="sidebar-items flex flex-col items-center gap-y-6 h-full w-full">
+      <a href="#" aria-label="主页" class="sidebar-link">
         <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
           <path d="M7.54 23.15q-.2-2.05.26-3.93L9 14.04a7 7 0 0 1-.35-2.07c0-1.68.81-2.88 2.09-2.88.88 0 1.53.62 1.53 1.8q0 .57-.23 1.28l-.52 1.72q-.15.5-.15.92c0 1.2.91 1.87 2.08 1.87 2.09 0 3.57-2.16 3.57-4.96 0-3.12-2.04-5.12-5.05-5.12-3.36 0-5.49 2.19-5.49 5.24 0 1.22.38 2.36 1.11 3.14-.24.41-.5.48-.88.48-1.2 0-2.34-1.69-2.34-4 0-4 3.2-7.17 7.68-7.17 4.7 0 7.66 3.29 7.66 7.33s-2.88 7.15-5.98 7.15a3.8 3.8 0 0 1-3.06-1.48l-.62 2.5a11 11 0 0 1-1.62 3.67A11.98 11.98 0 0 0 24 12a11.99 11.99 0 1 0-24 0 12 12 0 0 0 7.54 11.15"/>
         </svg>
         </a>
-        <a href="/" aria-label="首页" class="sidebar-link" id="homeBtn">
+      <a href="/" aria-label="首页" class="sidebar-link" id="homeBtn">
         <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
           <path d="M4.6 22.73A107 107 0 0 0 11 23h2.22c2.43-.04 4.6-.16 6.18-.27A3.9 3.9 0 0 0 23 18.8v-8.46a4 4 0 0 0-1.34-3L14.4.93a3.63 3.63 0 0 0-4.82 0L2.34 7.36A4 4 0 0 0 1 10.35v8.46a3.9 3.9 0 0 0 3.6 3.92M13.08 2.4l7.25 6.44a2 2 0 0 1 .67 1.5v8.46a1.9 1.9 0 0 1-1.74 1.92q-1.39.11-3.26.19V16a4 4 0 0 0-8 0v4.92q-1.87-.08-3.26-.19A1.9 1.9 0 0 1 3 18.81v-8.46a2 2 0 0 1 .67-1.5l7.25-6.44a1.63 1.63 0 0 1 2.16 0M13.12 21h-2.24a1 1 0 0 1-.88-1v-4a2 2 0 1 1 4 0v4a1 1 0 0 1-.88 1" />
         </svg>
         </a>
-        <a href="/ideas" aria-label="探索" id="idealBtn" class="sidebar-link">
+      <a href="/ideas" aria-label="探索" id="idealBtn" class="sidebar-link">
         <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
           <path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4M9.42 7.24a3 3 0 0 0-2.18 2.18L5.7 15.57a2.25 2.25 0 0 0 2.73 2.73l6.15-1.54a3 3 0 0 0 2.18-2.18l1.54-6.15a2.25 2.25 0 0 0-2.73-2.73zm6.94.7-1.54 6.15a1 1 0 0 1-.73.73l-6.15 1.54a.25.25 0 0 1-.3-.3L9.18 9.9a1 1 0 0 1 .73-.73l6.15-1.54a.25.25 0 0 1 .3.3M12 24a12 12 0 1 0 0-24 12 12 0 0 0 0 24M2 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0" />
         </svg>
         </a>
-        <a href="/add/" aria-label="创建" id="addBtn" class="sidebar-link">
+      <a href="/add" aria-label="创建" id="addBtn" class="sidebar-link">
         <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
           <path d="M11 11H6v2h5v5h2v-5h5v-2h-5V6h-2zM5 1a4 4 0 0 0-4 4v14a4 4 0 0 0 4 4h14a4 4 0 0 0 4-4V5a4 4 0 0 0-4-4zm16 4v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h14a2 2 0 0 1 2 2"/>
         </svg>
@@ -282,9 +307,9 @@
           <path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10m3 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0m1.13-10.29A2 2 0 0 0 14.7.31a12 12 0 0 0-5.4 0c-.73.17-1.26.74-1.43 1.4l-.58 2.14-2.14-.57a2 2 0 0 0-1.93.54 12 12 0 0 0-2.7 4.67c-.22.72.01 1.46.5 1.95L2.59 12l-1.57 1.56a2 2 0 0 0-.5 1.95 12 12 0 0 0 2.7 4.68c.51.54 1.27.72 1.93.54l2.14-.58.58 2.14c.17.67.7 1.24 1.43 1.4a12 12 0 0 0 5.4 0 2 2 0 0 0 1.43-1.4l.58-2.14 2.13.58c.67.18 1.43 0 1.94-.55a12 12 0 0 0 2.7-4.67 2 2 0 0 0-.5-1.94L21.4 12l1.57-1.56c.49-.5.71-1.23.5-1.95a12 12 0 0 0-2.7-4.67 2 2 0 0 0-1.93-.54l-2.14.57zm-6.34.54a10 10 0 0 1 4.42 0l.56 2.12a2 2 0 0 0 2.45 1.41l2.13-.57a10 10 0 0 1 2.2 3.83L20 10.59a2 2 0 0 0 0 2.83l1.55 1.55a10 10 0 0 1-2.2 3.82l-2.13-.57a2 2 0 0 0-2.44 1.42l-.57 2.12a10 10 0 0 1-4.42 0l-.57-2.12a2 2 0 0 0-2.45-1.42l-2.12.57a10 10 0 0 1-2.2-3.82L4 13.42a2 2 0 0 0 0-2.83L2.45 9.03a10 10 0 0 1 2.2-3.82l2.13.57a2 2 0 0 0 2.44-1.41z"/>
         </svg>
       </a>
-      </div>
-    </nav>
-    <div id="content" class="ml-[72px]">
+    </div>
+  </nav>
+  <div id="content" class="ml-[72px]">
     <header class="py-2 text-center">
       <h2 class="text-1xl font-bold tracking-tight text-on-surface"></h2>
     </header>
@@ -296,10 +321,7 @@
     </main>
 
     <!-- 设置面板 -->
-    <div
-      id="settingsPanel"
-      class="fixed inset-0 bg-black/50 hidden items-center justify-center"
-    >
+    <div id="settingsPanel" class="fixed inset-0 bg-black/50 hidden items-center justify-center">
       <div class="bg-card rounded-xl p-4 w-72 space-y-3">
         <div class="flex justify-between items-center">
           <h2 class="font-semibold">设置</h2>
@@ -307,7 +329,7 @@
             &times;
           </button>
         </div>
-        
+
         <!-- 深色模式切换器 -->
         <div class="flex items-center justify-between py-1">
           <label class="text-sm">深色模式</label>
@@ -316,9 +338,8 @@
             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
           </label>
         </div>
-        
-        <label class="block text-sm"
-          >列数
+
+        <label class="block text-sm">列数
           <input
             id="columnCountInput"
             type="number"
@@ -328,8 +349,7 @@
             class="mt-1 w-full border rounded p-1 bg-surface text-on-surface"
           />
         </label>
-        <label class="block text-sm"
-          >加载卡片数量
+        <label class="block text-sm">加载卡片数量
           <input
             id="perPageInput"
             type="number"
@@ -339,9 +359,9 @@
           />
         </label>
         <button id="applySettings" class="w-full bg-primary text-white py-1 rounded">应用</button>
-        <button id="clearCache" class="w-full bg-red-500 text-white py-1 rounded">清理缓存</button> 
-         <footer class="text-xs text-center text-gray-400 my-4 dark:text-gray-300">
-            <a href="https://github.com/valetzx/flow-wx" class="hover:underline">查看项目源码 </a> · <a href="#">联系我吧</a>
+        <button id="clearCache" class="w-full bg-red-500 text-white py-1 rounded">清理缓存</button>
+        <footer class="text-xs text-center text-gray-400 my-4 dark:text-gray-300">
+          <a href="https://github.com/valetzx/flow-wx" class="hover:underline">查看项目源码 </a> · <a href="#">联系我吧</a>
         </footer>
       </div>
     </div>
@@ -356,15 +376,13 @@
       document.addEventListener("DOMContentLoaded", () => {
         // 初始化深色模式
         const darkModeToggle = document.getElementById('darkModeToggle');
-        const isDarkMode = localStorage.getItem('darkMode') === 'true' || 
-                          (window.matchMedia('(prefers-color-scheme: dark)').matches && 
-                          localStorage.getItem('darkMode') !== 'false');
-        
+        const isDarkMode = localStorage.getItem('darkMode') === 'true' ||
+          (window.matchMedia('(prefers-color-scheme: dark)').matches &&
+            localStorage.getItem('darkMode') !== 'false');
         if (isDarkMode) {
           document.documentElement.classList.add('dark');
           darkModeToggle.checked = true;
         }
-        
         darkModeToggle.addEventListener('change', () => {
           if (darkModeToggle.checked) {
             document.documentElement.classList.add('dark');
@@ -373,8 +391,8 @@
             document.documentElement.classList.remove('dark');
             localStorage.setItem('darkMode', 'false');
           }
-        });       });
-
+        });
+      });
       const gallery = document.getElementById('gallery');
       const loadMoreBtn = document.getElementById('loadMore');
       const settingsPanel = document.getElementById('settingsPanel');
@@ -387,31 +405,32 @@
       const imageModal = document.getElementById('imageModal');
       const modalImg = document.getElementById('modalImg');
       let imgScale = 1;
-
       const apiStored = localStorage.getItem('apiDomains') || localStorage.getItem('apiDomain') || '';
       const imgStored = localStorage.getItem('imgDomains') || '';
-      let apiDomains = apiStored
-        ? apiStored.split(/\r?\n|,/).map((s) => s.trim()).filter(Boolean)
-        : [];
-      let imgDomains = imgStored
-        ? imgStored.split(/\r?\n|,/).map((s) => s.trim()).filter(Boolean)
-        : [];
+      let apiDomains = apiStored ?
+        apiStored.split(/\r?\n|,/).map((s) => s.trim()).filter(Boolean) : [];
+      let imgDomains = imgStored ?
+        imgStored.split(/\r?\n|,/).map((s) => s.trim()).filter(Boolean) : [];
       if (apiDomains.length === 0 && Array.isArray(window.API_DOMAINS)) {
         apiDomains = window.API_DOMAINS;
       }
       if (imgDomains.length === 0 && Array.isArray(window.IMG_DOMAINS)) {
         imgDomains = window.IMG_DOMAINS;
       }
+
       function buildUrl(path, domain) {
         return domain ? domain.replace(/\/$/, '') + path : path;
       }
+
       function withDomain(path) {
         return buildUrl(path, imgDomains[0]);
       }
+
       function loadImgWithFallback(img) {
         const path = img.dataset.path;
         if (!path) return;
         let index = 0;
+
         function attempt() {
           img.src = buildUrl(path, imgDomains[index] || '');
         }
@@ -432,7 +451,6 @@
         }
         return fetch(path, options);
       }
-
       const homeLink = document.querySelector('a[aria-label="\u4e3b\u9875"]');
       let notifyDot = null;
 
@@ -464,31 +482,24 @@
         imageModal.classList.remove('flex', 'show');
         modalImg.src = '';
       }
-
       const savedCols = parseInt(localStorage.getItem('columnCount')) || 4;
       const savedPerPage = parseInt(localStorage.getItem('perPage')) || 30;
-
       const navEl = document.querySelector('nav');
       const contentEl = document.getElementById('content');
       const isMobile = /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
-
       const initialCols = isMobile ? 2 : savedCols;
-
       columnCountInput.value = String(initialCols);
       perPageInput.value = String(savedPerPage);
       gallery.style.columnCount = String(initialCols);
-
       if (isMobile) {
         document.body.classList.add('mobile');
         navEl.classList.add('mobile');
         contentEl.classList.remove('ml-[72px]');
         contentEl.classList.add('mb-[72px]');
       }
-
       let allItems = [];
       let currentPage = 0;
       let perPage = savedPerPage;
-
       const observer = new IntersectionObserver((entries, obs) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
@@ -497,7 +508,9 @@
             obs.unobserve(img);
           }
         });
-      }, { rootMargin: '100px' });
+      }, {
+        rootMargin: '100px'
+      });
 
       function getRandomColor() {
         return '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0');
@@ -528,11 +541,13 @@
 
       function buildItems(data) {
         const items = [];
-        for (const [title, { description, images }] of Object.entries(data)) {
+        for (const [title, {
+            description,
+            images
+          }] of Object.entries(data)) {
           items.push({
             type: 'title',
-            html:
-            `<div class="masonry-item">
+            html: `<div class="masonry-item">
               <div class="card-content p-5 flex flex-col gap-2">
                 <h2 class="text-xl font-semibold">${title}</h2>
                 <p class="text-sm leading-relaxed">${description}</p>
@@ -540,7 +555,11 @@
             </div>`
           });
           images.forEach((src) => {
-            items.push({ type: 'image', src, alt: title });
+            items.push({
+              type: 'image',
+              src,
+              alt: title
+            });
           });
         }
         return items;
@@ -569,25 +588,26 @@
         currentPage = 0;
         renderPage();
       }
-
       async function fetchLatest() {
         const res = await fetchWithFallback('/api/wx', {
-          headers: { 'x-skip-cache': '1' },
+          headers: {
+            'x-skip-cache': '1'
+          },
         });
         if (!res.ok) throw new Error('Network response was not ok');
         return await res.json();
       }
-
       async function initGallery() {
         const cachedStr = localStorage.getItem('wxData');
         let cached;
         if (cachedStr) {
-          try { cached = JSON.parse(cachedStr); } catch {}
+          try {
+            cached = JSON.parse(cachedStr);
+          } catch {}
         }
         if (cached) {
           applyData(cached);
         }
-
         try {
           const latest = await fetchLatest();
           const latestStr = JSON.stringify(latest);
@@ -602,23 +622,19 @@
           console.error('加载画廊失败:', err);
         }
       }
-
       loadMoreBtn.addEventListener('click', () => {
         currentPage++;
         renderPage();
       });
-
       moreBtn.addEventListener('click', (e) => {
         e.preventDefault();
         settingsPanel.classList.remove('hidden');
         settingsPanel.classList.add('flex', 'show');
       });
-
       closeSettings.addEventListener('click', () => {
         settingsPanel.classList.add('hidden');
         settingsPanel.classList.remove('flex', 'show');
       });
-
       applySettings.addEventListener('click', () => {
         const cols = Math.max(1, parseInt(columnCountInput.value) || 1);
         perPage = Math.max(1, parseInt(perPageInput.value) || 1);
@@ -630,7 +646,6 @@
         settingsPanel.classList.add('hidden');
         settingsPanel.classList.remove('flex', 'show');
       });
-
       clearCacheBtn.addEventListener('click', async () => {
         ['wxData', 'wxDataNew', 'columnCount', 'perPage'].forEach((k) => localStorage.removeItem(k));
         if ('caches' in window) {
@@ -639,22 +654,18 @@
         }
         location.reload();
       });
-
       imageModal.addEventListener('click', (e) => {
         if (e.target === imageModal) closeImage();
       });
-
       imageModal.addEventListener('wheel', (e) => {
         e.preventDefault();
         const factor = e.deltaY < 0 ? 1.1 : 0.9;
         imgScale = Math.min(5, Math.max(1, imgScale * factor));
         modalImg.style.transform = `scale(${imgScale})`;
       });
-
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') closeImage();
       });
-
       document.addEventListener('DOMContentLoaded', initGallery);
       homeLink.addEventListener('click', () => {
         const newStr = localStorage.getItem('wxDataNew');
@@ -672,9 +683,8 @@
           navigator.serviceWorker.register('/sw.js').catch(console.error);
         });
       }
-
-
     </script>
-    </div>
-  </body>
+  </div>
+</body>
+
 </html>
