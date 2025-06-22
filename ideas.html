@@ -277,24 +277,36 @@
         color: white;
       }
 
-/* 遮罩效果 */
-.banner-mask {
+/* Banner 卡片及遮罩效果 */
+.banner-card {
+  position: relative;
+  height: 280px;
+}
+
+.banner-card .banner-mask {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
-  background: rgba(var(--primary), 0.85);
+  background: rgba(249, 115, 22, 0.95); /* orange */
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #fff;
+  font-size: 1.125rem; /* text-lg */
+  font-weight: 600;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+  border-radius: 0.75rem;
   z-index: 10;
-  border-radius: 1rem;
 }
 
-
+.banner-card:hover .banner-mask {
+  opacity: 1;
+  transform: translateX(-10px);
+}
 
     </style>
     <script>
@@ -478,25 +490,31 @@
 function createBannerCard() {
   const wrapper = document.createElement("div");
   wrapper.className = "masonry-item rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer banner-card";
-  
+  wrapper.style.height = "280px";
+
+  const mask = document.createElement("div");
+  mask.className = "banner-mask";
+  mask.textContent = "随机文章 →";
+
   const content = document.createElement("div");
   content.className = "card-content p-5 flex flex-col gap-2";
   
   const h2 = document.createElement("h2");
   h2.className = "text-xl font-semibold text-slate-900";
-  h2.textContent = "空白卡片";
+  h2.textContent = "分享设计";
   
   const p = document.createElement("p");
   p.className = "text-sm text-gray-600 leading-relaxed";
-  p.textContent = "这是一个自定义空白卡片，您可以在这里添加任何内容";
+  p.textContent = "这里是我的设计合集，以及部分网络中的设计内容，可以点击查看原文详情哦";
   
   const button = document.createElement("button");
   button.className = "mt-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition";
   button.textContent = "点击添加内容";
-  
+
   content.appendChild(h2);
   content.appendChild(p);
   wrapper.appendChild(content);
+  wrapper.appendChild(mask);
   
   // 添加点击事件
   wrapper.addEventListener("click", () => {
