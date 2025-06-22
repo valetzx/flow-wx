@@ -441,8 +441,7 @@
       </div>
     </nav>
     <div id="content" class="ml-[72px]">
-      <header class="py-6 text-center">
-        <h1 class="text-1xl font-bold tracking-tight text-on-surface"></h1>
+      <header class="py-2 text-center">
       </header>
 
       <main class="px-4 max-w-screen-xl mx-auto">
@@ -548,6 +547,21 @@
           }
         });      });
 
+function showToast(message) {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = message;
+  container.appendChild(toast);
+  // trigger enter
+  requestAnimationFrame(() => toast.classList.add('show'));
+  setTimeout(() => {
+    toast.classList.remove('show');
+    toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+  }, 3000);
+}
+
 // 创建空白卡片函数
 function createBannerCard() {
   const wrapper = document.createElement("div");
@@ -643,7 +657,7 @@ function createBannerCard() {
 
   // 添加点击事件
   wrapper.addEventListener("click", () => {
-    showToast("空白卡片被点击了！您可以在这里添加自定义行为");
+    showToast("这个还没做好捏嘻嘻");
   });
 
   return wrapper;
