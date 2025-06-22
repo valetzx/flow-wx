@@ -276,6 +276,38 @@
         background-color: rgb(var(--primary));
         color: white;
       }
+
+/* 仅迁移与 banners 相关的最小样式 */
+#banners { --icon-size: 36px; }      /* 可根据卡片宽度自适应修改 */
+@media (max-width: 640px){ #banners{ --icon-size:28px } }
+
+.banners-title-big   { font-size:clamp(1.5rem,4vw,2.2rem); font-weight:700; }
+.banners-title-small { font-size:0.85rem; letter-spacing:0.1em; opacity:.7; }
+
+/* tags 容器 */
+.tags-group-all      { margin-top:2.5rem; }
+.tags-group-wrapper  {
+  display:flex; flex-wrap:nowrap; gap:0.5rem;
+  animation:rowup 25s linear infinite;
+}
+.tags-group-icon-pair{ display:flex; gap:0.5rem; }
+.tags-group-icon     {
+  width:var(--icon-size); height:var(--icon-size);
+  border-radius:8px; overflow:hidden; flex-shrink:0;
+  display:grid; place-items:center;
+}
+.tags-group-icon img { width:70%; height:70%; object-fit:contain; }
+
+/* 无限横向滚动（可根据宽度调节位移百分比） */
+@keyframes rowup{
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* 如果把 Banner 放到 masonry-item 内，需要让它跟随卡片宽度 */
+.masonry-item #banners{ padding:0; }
+
+
     </style>
     <script>
       // 在tailwind配置前设置darkMode
@@ -355,7 +387,28 @@
 
       <main class="px-4 max-w-screen-xl mx-auto">
         <!-- Masonry 容器 -->
-        <div class="masonry" id="gallery"></div>
+        <div class="masonry" id="gallery">
+<section id="banners" class="px-4 md:px-8">
+  <div class="banners-title text-center mb-6">
+    <h2 class="banners-title-big leading-tight">
+      分享设计<br>与科技生活
+    </h2>
+    <p class="banners-title-small">blog.learnonly.xyz</p>
+  </div>
+
+  <!-- 无限滚动的图标带 -->
+  <div class="tags-group-all overflow-hidden">
+    <div class="tags-group-wrapper">
+      <!-- 下面每一对为一组图标，按需删减/增补 -->
+      <div class="tags-group-icon-pair">
+        <div class="tags-group-icon bg-[#989bf8]"><img src="/img/icon/ae.png"  alt="AE"/></div>
+        <div class="tags-group-icon bg-white"><img src="/img/icon/Sketch.png" alt="Sketch"/></div>
+      </div>
+      <!-- …（其余 icon 保留或精简均可）… -->
+    </div>
+  </div>
+</section>
+        </div>
         <button
           id="loadMore"
           class="mt-4 mx-auto block px-4 py-2 rounded bg-gray-200 text-gray-700 hidden"
@@ -431,6 +484,12 @@
       </div>
 
       <script>
+  // 仅当 tags-group-wrapper 宽度 < 父容器时，复制一次内容形成无限带
+  (()=>{const wrap=document.querySelector('.tags-group-wrapper');
+    if(wrap && wrap.scrollWidth<=wrap.parentElement.offsetWidth){
+      wrap.innerHTML += wrap.innerHTML;
+    }
+  })();
       // 在DOMContentLoaded中添加深色模式初始化
       document.addEventListener("DOMContentLoaded", () => {
         // 初始化深色模式
