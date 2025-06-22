@@ -280,6 +280,7 @@
 /* Banner 卡片及遮罩效果 */
 .banner-card {
   position: relative;
+  height: 280px;
   width: 100%;
   aspect-ratio: 16/9;
 }
@@ -523,7 +524,7 @@
 function createBannerCard() {
   const wrapper = document.createElement("div");
   wrapper.className = "masonry-item rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer banner-card";
-
+  wrapper.style.height = "280px";
   const carousel = document.createElement("div");
   carousel.className = "banner-carousel";
   const slotWidth = 60;
