@@ -320,14 +320,13 @@
 
 .banner-card .carousel-slot {
   position: absolute;
-  top: 80%;
-  width: 60px;
-  height: 90px;
-  background-size: cover;
+  top: 75%;
+  width: 65px;
+  height: 95px;
   background-position: center;
   border-radius: 0.5rem;
   transform: translateY(-50%);
-  transition: background-image 0.5s ease, background-color 0.5s ease;
+  transition: background-image 1s ease, background-color 1s ease;
 }
 
 .banner-card .card-content {
@@ -522,13 +521,15 @@ function createBannerCard() {
   const carousel = document.createElement("div");
   carousel.className = "banner-carousel";
   const slotWidth = 60;
-  const slotGap = 8;
+  const slotGap = 12; // spacing between images
+  const count = 7;
   const slots = [];
-  for (let i = 0; i < 5; i++) {
+  const loopDistance = (slotWidth + slotGap) * count;
+  for (let i = 0; i < count; i++) {
     const slot = document.createElement("div");
     slot.className = "carousel-slot";
     carousel.appendChild(slot);
-    slots.push({ el: slot, x: -((slotWidth + slotGap) * (5 - i)) });
+    slots.push({ el: slot, x: -(loopDistance - i * (slotWidth + slotGap)) });
   }
 
   const mask = document.createElement("div");
@@ -588,9 +589,9 @@ function createBannerCard() {
   function animate() {
     const width = carousel.clientWidth;
     slots.forEach((s) => {
-      s.x += 1; // speed
+      s.x += 0.5; // speed
       if (s.x > width) {
-        s.x = -slotWidth - slotGap;
+        s.x -= loopDistance;
         assignImage(s.el);
       }
       s.el.style.transform = `translate(${s.x}px, -50%)`;
