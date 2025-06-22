@@ -672,30 +672,47 @@
           observer.observe(img);
           return img;
         }
+        
 const bannerData = {
   bigTitle: '分享设计<br>与科技生活',
   smallTitle: 'blog.learnonly.xyz',
   icons: [
-    { src: '/img/icon/ae.png',   alt: 'AE',      bg: '#989bf8' },
-    { src: '/img/icon/Sketch.png', alt: 'Sketch', bg: '#ffffff' },
-    { src: '/img/icon/docker.png', alt: 'Docker', bg: '#57b6e6' },
-    { src: '/img/icon/ps.png',     alt: 'PS',     bg: '#4082c3' },
+    { src: '/img/icon/ae.png',     alt: 'AE',      bg: '#989bf8' },
+    { src: '/img/icon/Sketch.png', alt: 'Sketch',  bg: '#ffffff' },
+    { src: '/img/icon/docker.png', alt: 'Docker',  bg: '#57b6e6' },
+    { src: '/img/icon/ps.png',     alt: 'PS',      bg: '#4082c3' },
     // …更多图标…
   ]
 };
+
+const gallery = document.getElementById('gallery');
+const bannerCard = createBannerCard(bannerData, {
+  iconSize: '32px'  // 根据卡片宽度选个合适值
+});
+gallery.prepend(bannerCard);
 
 const sectionEl = createBannerCard(bannerData);
 document.getElementById('gallery')  // 或者你希望插入的位置
   .prepend(sectionEl);
 
 
-function createBannerCard(item) {
-  // 1. 创建最外层 section
+function createBannerCard(item, opts = {}) {
+  const { iconSize } = opts;
+
+  // 1. 外层 Masonry item 包裹
+  const card = document.createElement('div');
+  card.className = 'masonry-item';
+
+  // 2. 内部 banner section
   const section = document.createElement('section');
   section.id = 'banners';
-  section.className = 'px-4 md:px-8';
+  // 解除全页 padding，让它自适应卡片宽度
+  section.style.padding = '0';
+  if (iconSize) {
+    section.style.setProperty('--icon-size', iconSize);
+  }
 
-  // 2. 标题区
+  // 标题区
   const titleWrapper = document.createElement('div');
   titleWrapper.className = 'banners-title text-center mb-6';
   titleWrapper.innerHTML = `
@@ -706,39 +723,35 @@ function createBannerCard(item) {
   `;
   section.appendChild(titleWrapper);
 
-  // 3. 无限滚动的图标带容器
+  // 无限滚动图标带
   const tagsAll = document.createElement('div');
   tagsAll.className = 'tags-group-all overflow-hidden';
-
   const wrapper = document.createElement('div');
   wrapper.className = 'tags-group-wrapper';
 
-  // 将 icons 列表每两个一组
+  // 每两个图标分一组
   for (let i = 0; i < item.icons.length; i += 2) {
     const pair = item.icons.slice(i, i + 2);
     const pairDiv = document.createElement('div');
     pairDiv.className = 'tags-group-icon-pair';
-
     pair.forEach(icon => {
       const iconDiv = document.createElement('div');
       iconDiv.className = 'tags-group-icon';
       iconDiv.style.background = icon.bg;
-
       const img = document.createElement('img');
       img.src = icon.src;
       img.alt = icon.alt;
-
       iconDiv.appendChild(img);
       pairDiv.appendChild(iconDiv);
     });
-
     wrapper.appendChild(pairDiv);
   }
 
   tagsAll.appendChild(wrapper);
   section.appendChild(tagsAll);
 
-  return section;
+  card.appendChild(section);
+  return card;
 }
 
         function createCard(item) {
