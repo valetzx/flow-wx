@@ -474,14 +474,14 @@
           }
         });      });
 
-// 创建空白卡片函数
+// 创建空白卡片函数（添加遮罩效果）
 function createBannerCard() {
   const wrapper = document.createElement("div");
-  wrapper.className = "masonry-item rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer banner-card";
+  wrapper.className = "masonry-item rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer banner-card relative";
   
   // 卡片内容
   const content = document.createElement("div");
-  content.className = "card-content p-5 flex flex-col gap-2";
+  content.className = "card-content p-5 flex flex-col gap-2 w-full h-full";
   
   const h2 = document.createElement("h2");
   h2.className = "text-xl font-semibold text-slate-900 dark:text-slate-100";
@@ -490,22 +490,16 @@ function createBannerCard() {
   const p = document.createElement("p");
   p.className = "text-sm text-gray-600 dark:text-gray-300 leading-relaxed";
   p.textContent = "这是一个自定义空白卡片，您可以在这里添加任何内容";
-
-  const p2 = document.createElement("p2");
-  p.className = "text-sm text-gray-600 dark:text-gray-300 leading-relaxed";
-  p.textContent = "2";
   
-
   const button = document.createElement("button");
   button.className = "mt-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition";
   button.textContent = "点击添加内容";
   
   content.appendChild(h2);
-  content.appendChild(p2);
   content.appendChild(p);
   content.appendChild(button);
   
-  // 创建遮罩元素
+  // 创建遮罩元素（只在空白卡片上）
   const mask = document.createElement("div");
   mask.className = "banner-mask";
   
@@ -523,6 +517,11 @@ function createBannerCard() {
   
   wrapper.appendChild(content);
   wrapper.appendChild(mask);
+  
+  // 添加点击事件
+  wrapper.addEventListener("click", () => {
+    alert("空白卡片被点击了！您可以在这里添加自定义行为");
+  });
   
   return wrapper;
 }
