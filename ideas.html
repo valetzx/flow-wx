@@ -276,6 +276,72 @@
         background-color: rgb(var(--primary));
         color: white;
       }
+
+/* Banner 卡片及遮罩效果 */
+.banner-card {
+  position: relative;
+  height: 280px;
+  width: 100%;
+  aspect-ratio: 16/9;
+}
+
+@media (max-width: 640px) {
+  .banner-card {
+    aspect-ratio: 4/3;
+  }
+}
+
+.banner-card .banner-mask {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(249, 115, 22, 0.95); /* orange */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.125rem; /* text-lg */
+  font-weight: 600;
+  opacity: 0;
+  transform: translateX(0);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+  border-radius: 0.75rem;
+  z-index: 10;
+}
+
+.banner-card:hover .banner-mask {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Banner 图片轮播容器 */
+.banner-card .banner-carousel {
+  position: absolute;
+  inset: 0;
+  padding: 8px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.banner-card .carousel-slot {
+  position: absolute;
+  top: 75%;
+  width: 65px;
+  height: 95px;
+  background-position: center;
+  border-radius: 0.5rem;
+  transform: translateY(-50%);
+  transition: background-image 1s ease, background-color 1s ease;
+}
+
+.banner-card .card-content {
+  position: relative;
+  z-index: 5;
+}
+
     </style>
     <script>
       // 在tailwind配置前设置darkMode
@@ -367,7 +433,7 @@
       <!-- 设置面板 -->
     <div
       id="settingsPanel"
-      class="fixed inset-0 bg-black/50 hidden items-center justify-center"
+      class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50"
     >
       <div class="bg-card rounded-xl p-4 w-72 space-y-3">
         <div class="flex justify-between items-center">
@@ -418,7 +484,7 @@
       <!-- 文章弹窗 -->
       <div
         id="articleModal"
-        class="fixed inset-0 bg-black/50 hidden items-center justify-center"
+        class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50"
       >
         <div
           class="rounded-xl w-11/12 max-w-3xl h-[80vh] overflow-auto relative p-4"
@@ -453,6 +519,107 @@
             localStorage.setItem('darkMode', 'false');
           }
         });      });
+
+// 创建空白卡片函数
+function createBannerCard() {
+  const wrapper = document.createElement("div");
+  wrapper.className = "masonry-item rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer banner-card";
+  wrapper.style.height = "280px";
+  const carousel = document.createElement("div");
+  carousel.className = "banner-carousel";
+  const slotWidth = 60;
+  const slotGap = 12; // spacing between images
+  const count = 7;
+  const slots = [];
+  const loopDistance = (slotWidth + slotGap) * count;
+  for (let i = 0; i < count; i++) {
+    const slot = document.createElement("div");
+    slot.className = "carousel-slot";
+    carousel.appendChild(slot);
+    slots.push({ el: slot, x: -(loopDistance - i * (slotWidth + slotGap)) });
+  }
+
+  const mask = document.createElement("div");
+  mask.className = "banner-mask";
+  mask.textContent = "随机文章 ➡︎";
+
+  const content = document.createElement("div");
+  content.className = "card-content p-5 flex flex-col gap-2";
+  
+  const h2 = document.createElement("h2");
+  h2.className = "text-xl font-semibold text-slate-900";
+  h2.textContent = "设计与科技";
+  
+  const p = document.createElement("p");
+  p.className = "text-sm text-gray-600 leading-relaxed";
+  p.textContent = "这里是我的设计合集📘以及部分网络中的设计内容";
+
+//  const source = document.createElement("a");
+//  source.className = "text-xs text-gray-400 hover:underline self-end";
+//  source.textContent = "可以点击查看原文详情哦";
+  
+  const button = document.createElement("button");
+  button.className = "mt-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition";
+  button.textContent = "点击添加内容";
+
+  content.appendChild(h2);
+  content.appendChild(p);
+  content.appendChild(source);
+  wrapper.appendChild(carousel);
+  wrapper.appendChild(content);
+  wrapper.appendChild(mask);
+
+  function getCachedImageUrls() {
+    try {
+      const data = JSON.parse(localStorage.getItem("wxData") || "null");
+      if (!data) return [];
+      const urls = [];
+      Object.values(data).forEach((item) => {
+        if (Array.isArray(item.images)) urls.push(...item.images);
+      });
+      return urls;
+    } catch {
+      return [];
+    }
+  }
+
+  function assignImage(slot) {
+    const urls = getCachedImageUrls();
+    if (urls.length > 0) {
+      const src = urls[Math.floor(Math.random() * urls.length)];
+      const path = `?url=${encodeURIComponent(src)}`;
+      slot.style.backgroundImage = `url(${buildUrl(path, imgDomains[0])})`;
+      slot.style.backgroundColor = "";
+    } else {
+      slot.style.backgroundImage = "";
+      slot.style.backgroundColor = getRandomColor();
+    }
+  }
+
+  slots.forEach((s) => assignImage(s.el));
+
+  function animate() {
+    const width = carousel.clientWidth;
+    slots.forEach((s) => {
+      s.x += 0.5; // speed
+      if (s.x > width) {
+        s.x -= loopDistance;
+        assignImage(s.el);
+      }
+      s.el.style.transform = `translate(${s.x}px, -50%)`;
+    });
+    requestAnimationFrame(animate);
+  }
+
+  requestAnimationFrame(animate);
+
+  // 添加点击事件
+  wrapper.addEventListener("click", () => {
+    alert("空白卡片被点击了！您可以在这里添加自定义行为");
+  });
+
+  return wrapper;
+}
 
         const gallery = document.getElementById("gallery");
         const loadMoreBtn = document.getElementById("loadMore");
@@ -745,6 +912,9 @@
 
         function renderPage() {
           gallery.innerHTML = "";
+
+          gallery.appendChild(createBannerCard());
+
           if (dailyData) {
             gallery.appendChild(createDailyCard(dailyData));
           }
@@ -759,6 +929,8 @@
             loadMoreBtn.classList.remove("hidden");
           }
         }
+
+
 
         function applyData(data) {
           allItems = buildItems(data);
