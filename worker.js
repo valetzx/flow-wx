@@ -3,7 +3,7 @@ import * as cheerio from "cheerio";
 import mainHtml from "./main.html";
 import ideasHtml from "./ideas.html";
 import adminHtml from "./admin.html";
-import addHtml from "./add.html";
+import addHtml from "./rssread.html";
 // import swHtml from "./sw.js";
 import articleText from "./article.txt";
 
@@ -119,7 +119,7 @@ async function fetchRss(url) {
   return items;
 }
 
-async function buildAddPage(env, apiDomains, imgDomains) {
+async function buildRssReadPage(env, apiDomains, imgDomains) {
   const feeds = await getRss(env);
   if (feeds.length === 0) {
     return injectConfig(addHtml, apiDomains, imgDomains, feeds);
@@ -224,7 +224,7 @@ export default {
     const indexHtml = injectConfig(mainHtml, apiDomains, imgDomains, feeds);
     const ideasPage = injectConfig(ideasHtml, apiDomains, imgDomains, feeds);
     const adminPage = injectConfig(adminHtml, apiDomains, imgDomains, feeds);
-    const addPage = await buildAddPage(env, apiDomains, imgDomains);
+    const addPage = await buildRssReadPage(env, apiDomains, imgDomains);
 
     const urls = await getUrls(env);
 
@@ -356,7 +356,7 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(cacheThenNetwork(event.request));
   } else if (url.pathname === "/ideas") {
     event.respondWith(cacheThenNetwork(event.request));
-  } else if (url.pathname === "/add" || url.pathname === "/add/") {
+  } else if (url.pathname === "/rread") {
     event.respondWith(cacheThenNetwork(event.request));
   } else if (url.pathname === "/api/rss") {
     event.respondWith(cacheThenNetwork(event.request));
@@ -471,7 +471,7 @@ async function cacheThenNetwork(request) {
       });
     }
 
-    if (pathname === "/add" || pathname === "/add/") {
+    if (pathname === "/rread") {
       return new Response(addPage, {
         headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
       });

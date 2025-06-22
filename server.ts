@@ -25,7 +25,7 @@ const apiDomains = apiDomainsEnv
   .split(/[,\s]+/)
   .map((d) => d.trim())
   .filter(Boolean);
-const imgDomainsEnv = Deno.env.get("IMG_DOMAINS") || "https://www.douban.com/feed/people/pigpigeon/interests";
+const imgDomainsEnv = Deno.env.get("IMG_DOMAINS") || "";
 const imgDomains = imgDomainsEnv
   .split(/[,\s]+/)
   .map((d) => d.trim())
@@ -56,7 +56,7 @@ const swHtml = `const IMG_CACHE = ${JSON.stringify(cacheImgDomain)};\n${swRaw}`;
 const adminHtml = injectConfig(
   await Deno.readTextFile(join(__dirname, "admin.html")),
 );
-const addHtmlBase = await Deno.readTextFile(join(__dirname, "add.html"));
+const addHtmlBase = await Deno.readTextFile(join(__dirname, "rssread.html"));
 const fallbackSentences = [
   "小荷才露尖尖角",
   "早有蜻蜓立上头",
@@ -192,7 +192,7 @@ async function fetchRss(url: string) {
   return items;
 }
 
-async function buildAddPage(): Promise<string> {
+async function buildRssReadPage(): Promise<string> {
   if (rssUrls.length === 0) return injectConfig(addHtmlBase);
   try {
     const results = await Promise.all(rssUrls.map(fetchRss));
@@ -372,8 +372,8 @@ async function handler(req: Request): Promise<Response> {
     });
   }
 
-  if (pathname === "/add" || pathname === "/add/") {
-    const page = await buildAddPage();
+  if (pathname === "/rread") {
+    const page = await buildRssReadPage();
     return new Response(page, {
       headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
     });
