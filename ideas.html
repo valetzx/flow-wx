@@ -495,7 +495,6 @@ function createBannerCard() {
   
   content.appendChild(h2);
   content.appendChild(p);
-
   
   // 创建遮罩元素（只在空白卡片上）
   const mask = document.createElement("div");
@@ -503,7 +502,13 @@ function createBannerCard() {
   
   const maskText = document.createElement("div");
   maskText.className = "mask-text";
-
+  maskText.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+    </svg>
+    <h3>点击添加内容</h3>
+    <p>自定义您的空白卡片</p>
+  `;
   
   mask.appendChild(maskText);
   
