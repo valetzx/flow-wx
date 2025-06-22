@@ -441,6 +441,10 @@
       </div>
     </nav>
     <div id="content" class="ml-[72px]">
+      <header class="py-6 text-center">
+        <h1 class="text-1xl font-bold tracking-tight text-on-surface"></h1>
+      </header>
+
       <main class="px-4 max-w-screen-xl mx-auto">
         <!-- Masonry 容器 -->
         <div class="masonry" id="gallery"></div>
@@ -455,7 +459,7 @@
       <!-- 设置面板 -->
     <div
       id="settingsPanel"
-      class="fixed inset-0 bg-black/50 hidden items-center justify-center"
+      class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50"
     >
       <div class="bg-card rounded-xl p-4 w-72 space-y-3">
         <div class="flex justify-between items-center">
@@ -506,7 +510,7 @@
       <!-- 文章弹窗 -->
       <div
         id="articleModal"
-        class="fixed inset-0 bg-black/50 hidden items-center justify-center"
+        class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50"
       >
         <div
           class="rounded-xl w-11/12 max-w-3xl h-[80vh] overflow-auto relative p-4"
@@ -588,7 +592,7 @@ function createBannerCard() {
 
   content.appendChild(h2);
   content.appendChild(p);
-  content.appendChild(source);
+//  content.appendChild(source);
   wrapper.appendChild(carousel);
   wrapper.appendChild(content);
   wrapper.appendChild(mask);
