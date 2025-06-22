@@ -114,6 +114,8 @@
       /* 弹窗文章样式美化 */
       #articleModal > div {
         box-shadow: 0 10px 25px rgb(0 0 0 / 0.2);
+        background-color: rgb(var(--card)); 
+        color: rgb(var(--on-surface)); 
       }
       #articleContent img {
         width: 100%;
@@ -122,16 +124,26 @@
         border-radius: 0.5rem;
         margin-top: 1rem;
         margin-bottom: 1rem;
+        color: rgb(var(--on-surface)); 
       }
       #articleContent h1,
       #articleContent h2,
       #articleContent h3 {
         margin-top: 1.25rem;
         font-weight: 600;
+        color: rgb(var(--on-surface)); 
       }
       #articleContent p {
         line-height: 1.7;
         margin-bottom: 1rem;
+        color: rgb(var(--on-surface)/0.9);
+      }
+      #closeArticle {
+        color: rgb(var(--on-surface)/0.7); 
+      }
+      
+      #closeArticle:hover {
+        color: rgb(var(--primary)); 
       }
       p {
         text-align: justify;
@@ -409,7 +421,7 @@
         class="fixed inset-0 bg-black/50 hidden items-center justify-center"
       >
         <div
-          class="bg-white rounded-xl w-11/12 max-w-3xl h-[80vh] overflow-auto relative p-4"
+          class="rounded-xl w-11/12 max-w-3xl h-[80vh] overflow-auto relative p-4"
         >
           <button id="closeArticle" class="absolute top-2 right-4 text-2xl">
             &times;
@@ -524,6 +536,10 @@
           articleContent.innerHTML = html;
           articleModal.classList.remove("hidden");
           articleModal.classList.add("flex", "show");
+
+        // 添加深色模式样式类到文章内容
+        const content = document.getElementById('articleContent');
+        content.classList.add('dark:prose-invert'); 
         }
 
         function showLoading() {
