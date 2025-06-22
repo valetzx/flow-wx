@@ -12,11 +12,15 @@
       <label class="block mb-1 font-semibold" for="apiInput">API 域名</label>
       <textarea id="apiInput" placeholder="https://a.com" class="border p-2 w-full h-24"></textarea>
     </div>
-    <div class="mb-4">
-      <label class="block mb-1 font-semibold" for="imgInput">图片域名</label>
-      <textarea id="imgInput" placeholder="https://img.com" class="border p-2 w-full h-24"></textarea>
-    </div>
-    <button id="saveBtn" class="bg-blue-500 text-white px-4 py-2 rounded">保存</button>
+  <div class="mb-4">
+    <label class="block mb-1 font-semibold" for="imgInput">图片域名</label>
+    <textarea id="imgInput" placeholder="https://img.com" class="border p-2 w-full h-24"></textarea>
+  </div>
+  <div class="mb-4">
+    <label class="block mb-1 font-semibold" for="rssInput">RSS 源</label>
+    <textarea id="rssInput" placeholder="https://example.com/feed.xml" class="border p-2 w-full h-24"></textarea>
+  </div>
+  <button id="saveBtn" class="bg-blue-500 text-white px-4 py-2 rounded">保存</button>
     <div class="mt-8">
       <h2 class="text-lg font-semibold mb-2">缓存信息</h2>
       <div class="mb-2">
@@ -33,12 +37,15 @@
     <script>
       const apiInput = document.getElementById('apiInput');
       const imgInput = document.getElementById('imgInput');
+      const rssInput = document.getElementById('rssInput');
       const sortSelect = document.getElementById('sortSelect');
       apiInput.value = localStorage.getItem('apiDomains') || localStorage.getItem('apiDomain') || '';
       imgInput.value = localStorage.getItem('imgDomains') || '';
+      rssInput.value = localStorage.getItem('rssFeeds') || '';
       document.getElementById('saveBtn').addEventListener('click', () => {
         localStorage.setItem('apiDomains', apiInput.value.trim());
         localStorage.setItem('imgDomains', imgInput.value.trim());
+        localStorage.setItem('rssFeeds', rssInput.value.trim());
         localStorage.removeItem('apiDomain');
         alert('已保存');
       });

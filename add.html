@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RSS 阅读器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --primary: 79, 70, 229;
+        --secondary: 139, 92, 246;
+        --accent: 236, 72, 153;
+        --surface: 241, 245, 249;
+        --on-surface: 15, 23, 42;
+        --card: 255, 255, 255;
+        --border: 229, 231, 235;
+      }
+      .dark {
+        --primary: 129, 140, 248;
+        --secondary: 167, 139, 250;
+        --accent: 244, 114, 182;
+        --surface: 15, 23, 42;
+        --on-surface: 241, 245, 249;
+        --card: 30, 41, 59;
+        --border: 55, 65, 81;
+      }
+      .masonry {
+        column-count: 4;
+        column-gap: 1rem;
+      }
+      @media (max-width: 1024px) { .masonry { column-count: 2; } }
+      @media (max-width: 640px) { .masonry { column-count: 1; } }
+      .masonry-item { break-inside: avoid; margin-bottom: 1rem; }
+      nav {
+        background-color: rgb(var(--card));
+        border-color: rgb(var(--border));
+      }
+      .sidebar-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5rem;
+        border-radius: 0.375rem;
+        color: rgb(var(--on-surface)/0.7);
+        transition: background-color 0.2s, color 0.2s;
+      }
+      .sidebar-link:hover {
+        background-color: rgb(var(--primary)/0.1);
+        color: rgb(var(--primary));
+      }
+      .masonry-item .card-content {
+        background-color: rgb(var(--card));
+        color: rgb(var(--on-surface));
+      }
+      .masonry-item .card-content h2 { color: rgb(var(--on-surface)); }
+      .masonry-item .card-content p { color: rgb(var(--on-surface)/0.8); }
+    </style>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: { extend: { colors: { primary: 'rgb(var(--primary))', card: 'rgb(var(--card))', border: 'rgb(var(--border))' } } }
+      }
+    </script>
+  </head>
+  <body class="bg-surface text-on-surface min-h-screen font-sans">
+    <nav class="fixed top-0 left-0 h-screen w-[72px] border-r shadow flex flex-col items-center py-4">
+      <div class="sidebar-items flex flex-col items-center gap-y-6 h-full w-full">
+        <a href="/#" aria-label="主页" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path d="M12 24a12 12 0 1 0 0-24 12 12 0 0 0 0 24"/></svg>
+        </a>
+        <a href="/" aria-label="首页" id="homeBtn" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        </a>
+        <a href="/ideas" aria-label="探索" id="idealBtn" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20"/></svg>
+        </a>
+        <a href="/add/" aria-label="RSS" id="addBtn" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path d="M11 11H6v2h5v5h2v-5h5v-2h-5V6h-2z"/></svg>
+        </a>
+      </div>
+    </nav>
+    <div id="content" class="ml-[72px]">
+      <header class="py-6 text-center">
+        <h1 class="text-3xl font-bold tracking-tight">RSS 阅读器</h1>
+      </header>
+      <main class="px-4 max-w-screen-xl mx-auto">
+        <div class="masonry" id="gallery"></div>
+      </main>
+    </div>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const isDark =
+          localStorage.getItem('darkMode') === 'true' ||
+          (window.matchMedia('(prefers-color-scheme: dark)').matches &&
+            localStorage.getItem('darkMode') !== 'false');
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+        }
+        if (darkModeToggle) {
+          darkModeToggle.checked = isDark;
+          darkModeToggle.addEventListener('change', () => {
+            if (darkModeToggle.checked) {
+              document.documentElement.classList.add('dark');
+              localStorage.setItem('darkMode', 'true');
+            } else {
+              document.documentElement.classList.remove('dark');
+              localStorage.setItem('darkMode', 'false');
+            }
+          });
+        }
+        loadFeeds();
+      });
+
+      async function loadFeeds() {
+        const gallery = document.getElementById('gallery');
+        const defaults = Array.isArray(window.DEFAULT_FEEDS)
+          ? window.DEFAULT_FEEDS
+          : [];
+        const stored = localStorage.getItem('rssFeeds') || '';
+        const extra = stored
+          .split(/\r?\n|,/)
+          .map((s) => s.trim())
+          .filter(Boolean);
+        const feeds = [...defaults, ...extra];
+        if (feeds.length === 0) {
+          gallery.innerHTML = '<p class="text-center text-sm">没有 RSS 源</p>';
+          return;
+        }
+        const query = feeds.map((u) => 'url=' + encodeURIComponent(u)).join('&');
+        try {
+          const res = await fetch('/api/rss?' + query);
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const data = await res.json();
+          data.items.forEach((item) => {
+            const wrapper = document.createElement('div');
+            wrapper.className =
+              'masonry-item rounded-2xl shadow overflow-hidden flex flex-col';
+            if (item.img) {
+              const img = document.createElement('img');
+              img.className = 'w-full object-cover aspect-video';
+              img.src = item.img;
+              wrapper.appendChild(img);
+            }
+            const text = document.createElement('div');
+            text.className = 'card-content p-5 flex flex-col gap-2';
+            const h2 = document.createElement('h2');
+            h2.className = 'text-xl font-semibold';
+            h2.textContent = item.title;
+            const p = document.createElement('p');
+            p.className = 'text-sm';
+            p.textContent = item.description;
+            const link = document.createElement('a');
+            link.className =
+              'text-xs text-gray-400 hover:underline self-end';
+            link.textContent = '阅读原文';
+            link.href = item.link;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            text.appendChild(h2);
+            text.appendChild(p);
+            text.appendChild(link);
+            wrapper.appendChild(text);
+            gallery.appendChild(wrapper);
+          });
+        } catch (err) {
+          gallery.innerHTML = '<p class="text-center text-sm">加载失败</p>';
+        }
+      }
+    </script>
+  </body>
+</html>

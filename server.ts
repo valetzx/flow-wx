@@ -31,10 +31,20 @@ const imgDomains = imgDomainsEnv
   .map((d) => d.trim())
   .filter(Boolean);
 const cacheImgDomain = Deno.env.get("IMG_CACHE") || "";
+const feedUrlsEnv = Deno.env.get("FEED_URLS") || "";
+const feedUrls = feedUrlsEnv
+  .split(/[,\s]+/)
+  .map((d) => d.trim())
+  .filter(Boolean);
 
 function injectConfig(html: string): string {
-  if (apiDomains.length === 0 && imgDomains.length === 0) return html;
-  const script = `<script>window.API_DOMAINS=${JSON.stringify(apiDomains)};window.IMG_DOMAINS=${JSON.stringify(imgDomains)};</script>`;
+  if (
+    apiDomains.length === 0 &&
+    imgDomains.length === 0 &&
+    feedUrls.length === 0
+  )
+    return html;
+  const script = `<script>window.API_DOMAINS=${JSON.stringify(apiDomains)};window.IMG_DOMAINS=${JSON.stringify(imgDomains)};window.DEFAULT_FEEDS=${JSON.stringify(feedUrls)};</script>`;
   return html.replace("</head>", `${script}</head>`);
 }
 
@@ -43,6 +53,9 @@ const indexHtml = injectConfig(
 );
 const ideasHtml = injectConfig(
   await Deno.readTextFile(join(__dirname, "ideas.html")),
+);
+const addHtml = injectConfig(
+  await Deno.readTextFile(join(__dirname, "add.html")),
 );
 const swRaw = await Deno.readTextFile(join(__dirname, "sw.js"));
 const swHtml = `const IMG_CACHE = ${JSON.stringify(cacheImgDomain)};\n${swRaw}`;
@@ -166,6 +179,34 @@ function proxifyHtml(html: string): string {
   return $.html();
 }
 
+// ---------- 解析 RSS ----------
+function parseRss(xml: string) {
+  const doc = new DOMParser().parseFromString(xml, "application/xml");
+  const items: { title: string; link: string; description: string; img?: string; pubDate?: string }[] = [];
+  doc.querySelectorAll('item').forEach((item) => {
+    const title = item.querySelector('title')?.textContent?.trim() || '';
+    const link = item.querySelector('link')?.textContent?.trim() || '';
+    const descHtml = item.querySelector('description')?.textContent || '';
+    const descDoc = new DOMParser().parseFromString(descHtml, 'text/html');
+    const img = descDoc.querySelector('img')?.getAttribute('src') || undefined;
+    const description = descDoc.body.textContent?.trim() || '';
+    const pubDate = item.querySelector('pubDate')?.textContent?.trim() || undefined;
+    items.push({ title, link, description, img, pubDate });
+  });
+  return items;
+}
+
+async function fetchRss(url: string) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const xml = await res.text();
+    return parseRss(xml);
+  } catch {
+    return [];
+  }
+}
+
 // ---------- 反向代理图片 ----------
 async function proxyImage(imgUrl: string): Promise<Response> {
   try {
@@ -225,6 +266,24 @@ async function handler(req: Request): Promise<Response> {
 
       cache = { data: merged, timestamp: Date.now() };
       return json(merged);
+    } catch (err) {
+      return json({ error: err.message }, 500);
+    }
+  }
+
+  // /api/rss —— 聚合 RSS 源
+  if (pathname === "/api/rss") {
+    const params = searchParams.getAll("url");
+    const feeds = params.length > 0 ? params : feedUrls;
+    try {
+      const results = await Promise.all(feeds.map(fetchRss));
+      let items = results.flat();
+      items = items.sort((a, b) => {
+        const ta = a.pubDate ? Date.parse(a.pubDate) : 0;
+        const tb = b.pubDate ? Date.parse(b.pubDate) : 0;
+        return tb - ta;
+      });
+      return json({ items });
     } catch (err) {
       return json({ error: err.message }, 500);
     }
@@ -310,6 +369,13 @@ async function handler(req: Request): Promise<Response> {
   // /@admin —— 管理页面
   if (pathname === "/@admin") {
     return new Response(adminHtml, {
+      headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
+    });
+  }
+
+  // /add —— RSS 阅读器页面
+  if (pathname === "/add" || pathname === "/add/") {
+    return new Response(addHtml, {
       headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
     });
   }

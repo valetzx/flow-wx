@@ -2,6 +2,7 @@
 import * as cheerio from "cheerio";
 import mainHtml from "./main.html";
 import ideasHtml from "./ideas.html";
+import addHtml from "./add.html";
 import adminHtml from "./admin.html";
 // import swHtml from "./sw.js";
 import articleText from "./article.txt";
@@ -65,11 +66,13 @@ async function getUrls(env) {
   return urls;
 }
 
-function injectConfig(html, apiDomains, imgDomains) {
-  if (!apiDomains.length && !imgDomains.length) return html;
+function injectConfig(html, apiDomains, imgDomains, feedUrls) {
+  if (!apiDomains.length && !imgDomains.length && !feedUrls.length) return html;
   const script = `<script>window.API_DOMAINS=${JSON.stringify(
     apiDomains,
-  )};window.IMG_DOMAINS=${JSON.stringify(imgDomains)};</script>`;
+  )};window.IMG_DOMAINS=${JSON.stringify(imgDomains)};window.DEFAULT_FEEDS=${JSON.stringify(
+    feedUrls,
+  )};</script>`;
   return html.replace("</head>", `${script}</head>`);
 }
 
@@ -87,6 +90,33 @@ function proxifyHtml(html) {
     $(el).attr('style', style);
   });
   return $.html();
+}
+
+function parseRss(xml) {
+  const doc = new DOMParser().parseFromString(xml, 'application/xml');
+  const items = [];
+  doc.querySelectorAll('item').forEach((it) => {
+    const title = it.querySelector('title')?.textContent?.trim() || '';
+    const link = it.querySelector('link')?.textContent?.trim() || '';
+    const descHtml = it.querySelector('description')?.textContent || '';
+    const descDoc = new DOMParser().parseFromString(descHtml, 'text/html');
+    const img = descDoc.querySelector('img')?.getAttribute('src') || undefined;
+    const description = descDoc.body.textContent?.trim() || '';
+    const pubDate = it.querySelector('pubDate')?.textContent?.trim() || undefined;
+    items.push({ title, link, description, img, pubDate });
+  });
+  return items;
+}
+
+async function fetchRss(url) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const xml = await res.text();
+    return parseRss(xml);
+  } catch {
+    return [];
+  }
 }
 
 async function proxyImage(imgUrl) {
@@ -175,10 +205,15 @@ export default {
       .map((d) => d.trim())
       .filter(Boolean);
     const cacheImgDomain = env.IMG_CACHE || "mmbiz.qpic.cn";
+    const feedUrls = (env.FEED_URLS || "")
+      .split(/[,\s]+/)
+      .map((d) => d.trim())
+      .filter(Boolean);
 
-    const indexHtml = injectConfig(mainHtml, apiDomains, imgDomains);
-    const ideasPage = injectConfig(ideasHtml, apiDomains, imgDomains);
-    const adminPage = injectConfig(adminHtml, apiDomains, imgDomains);
+    const indexHtml = injectConfig(mainHtml, apiDomains, imgDomains, feedUrls);
+    const ideasPage = injectConfig(ideasHtml, apiDomains, imgDomains, feedUrls);
+    const addPage = injectConfig(addHtml, apiDomains, imgDomains, feedUrls);
+    const adminPage = injectConfig(adminHtml, apiDomains, imgDomains, feedUrls);
 
     const urls = await getUrls(env);
 
@@ -198,6 +233,23 @@ export default {
         });
         cache = { data: merged, timestamp: Date.now() };
         return json(merged);
+      } catch (err) {
+        return json({ error: err.message }, 500);
+      }
+    }
+
+    if (pathname === "/api/rss") {
+      const params = searchParams.getAll('url');
+      const feeds = params.length ? params : feedUrls;
+      try {
+        const results = await Promise.all(feeds.map(fetchRss));
+        let items = results.flat();
+        items = items.sort((a, b) => {
+          const ta = a.pubDate ? Date.parse(a.pubDate) : 0;
+          const tb = b.pubDate ? Date.parse(b.pubDate) : 0;
+          return tb - ta;
+        });
+        return json({ items });
       } catch (err) {
         return json({ error: err.message }, 500);
       }
@@ -398,6 +450,12 @@ async function cacheThenNetwork(request) {
 
     if (pathname === "/@admin") {
       return new Response(adminPage, {
+        headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
+      });
+    }
+
+    if (pathname === "/add" || pathname === "/add/") {
+      return new Response(addPage, {
         headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
       });
     }
