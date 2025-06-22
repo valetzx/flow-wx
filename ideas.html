@@ -308,6 +308,34 @@
   transform: translateX(0);
 }
 
+/* Banner 图片轮播容器 */
+.banner-card .banner-carousel {
+  position: absolute;
+  inset: 0;
+  padding: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: center;
+  gap: 8px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.banner-card .banner-carousel div {
+  width: 60px;
+  height: 90px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 0.5rem;
+  transition: background-image 0.5s ease, background-color 0.5s ease;
+}
+
+.banner-card .card-content {
+  position: relative;
+  z-index: 5;
+}
+
     </style>
     <script>
       // 在tailwind配置前设置darkMode
@@ -492,6 +520,13 @@ function createBannerCard() {
   wrapper.className = "masonry-item rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer banner-card";
   wrapper.style.height = "280px";
 
+  const carousel = document.createElement("div");
+  carousel.className = "banner-carousel";
+  for (let i = 0; i < 6; i++) {
+    const slot = document.createElement("div");
+    carousel.appendChild(slot);
+  }
+
   const mask = document.createElement("div");
   mask.className = "banner-mask";
   mask.textContent = "随机文章 →";
@@ -513,14 +548,47 @@ function createBannerCard() {
 
   content.appendChild(h2);
   content.appendChild(p);
+  wrapper.appendChild(carousel);
   wrapper.appendChild(content);
   wrapper.appendChild(mask);
-  
+
+  function getCachedImageUrls() {
+    try {
+      const data = JSON.parse(localStorage.getItem("wxData") || "null");
+      if (!data) return [];
+      const urls = [];
+      Object.values(data).forEach((item) => {
+        if (Array.isArray(item.images)) urls.push(...item.images);
+      });
+      return urls;
+    } catch {
+      return [];
+    }
+  }
+
+  function updateCarousel() {
+    const urls = getCachedImageUrls();
+    for (const slot of carousel.children) {
+      if (urls.length > 0) {
+        const src = urls[Math.floor(Math.random() * urls.length)];
+        const path = `?url=${encodeURIComponent(src)}`;
+        slot.style.backgroundImage = `url(${buildUrl(path, imgDomains[0])})`;
+        slot.style.backgroundColor = "";
+      } else {
+        slot.style.backgroundImage = "";
+        slot.style.backgroundColor = getRandomColor();
+      }
+    }
+  }
+
+  updateCarousel();
+  setInterval(updateCarousel, 5000);
+
   // 添加点击事件
   wrapper.addEventListener("click", () => {
     alert("空白卡片被点击了！您可以在这里添加自定义行为");
   });
-  
+
   return wrapper;
 }
 
