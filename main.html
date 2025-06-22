@@ -4,30 +4,30 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>我的作品集</title>
-    <!-- ✨ Tailwind CDN 配置：开启 darkMode + 自定义色卡 -->
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            colors: {
-              pumpkin:{50:'#FFF8F1',100:'#FEECDC',200:'#FDD5B5',300:'#FCBE8D',400:'#FBAE6E',500:'#F9974E',600:'#F27F2B',700:'#D6691A',800:'#B05515',900:'#8A410F'},
-              jade:{50:'#ECFDF5',100:'#D1FAE5',200:'#A7F3D0',300:'#6EE7B7',400:'#34D399',500:'#10B981',600:'#059669',700:'#047857',800:'#065F46',900:'#064E3B'},
-              sky:{50:'#F0F9FF',100:'#E0F2FE',200:'#BAE6FD',300:'#7DD3FC',400:'#38BDF8',500:'#0EA5E9',600:'#0284C7',700:'#0369A1',800:'#075985',900:'#0C4A6E'},
-              fuchsia:{50:'#FDF4FF',100:'#FAE8FF',200:'#F5D0FE',300:'#F0ABFC',400:'#E879F9',500:'#D946EF',600:'#C026D3',700:'#A21CAF',800:'#86198F',900:'#701A75'},
-              sunset:{50:'#FFF7ED',100:'#FFEAD5',200:'#FED7AA',300:'#FDBA74',400:'#FB923C',500:'#F97316',600:'#EA580C',700:'#C2410C',800:'#9A3412',900:'#7C2D12'},
-              ocean:{50:'#F0FDFA',100:'#CCFBF1',200:'#99F6E4',300:'#5EEAD4',400:'#2DD4BF',500:'#14B8A6',600:'#0D9488',700:'#0F766E',800:'#115E59',900:'#134E4A'},
-              berry:{50:'#FDF2F8',100:'#FCE7F3',200:'#FBCFE8',300:'#F9A8D4',400:'#F472B6',500:'#EC4899',600:'#DB2777',700:'#BE185D',800:'#9D174D',900:'#831843'},
-              lime:{50:'#F7FEE7',100:'#ECFCCB',200:'#D9F99D',300:'#BEF264',400:'#A3E635',500:'#84CC16',600:'#65A30D',700:'#4D7C0F',800:'#3F6212',900:'#365314'},
-              steel:{50:'#F1F5F9',100:'#E2E8F0',200:'#CBD5E1',300:'#94A3B8',400:'#64748B',500:'#475569',600:'#334155',700:'#1E293B',800:'#0F172A',900:'#0A1121'},
-              blush:{50:'#FFFAF5',100:'#FFF1E6',200:'#FFE0CC',300:'#FFC299',400:'#FFA366',500:'#FF8533',600:'#FF6600',700:'#CC5200',800:'#994000',900:'#663000'}
-            }
-          }
-        }
-      };
-    </script>
+    <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+      /* 自定义主题色卡 */
+      :root {
+        --primary: 79, 70, 229;
+        --secondary: 139, 92, 246;
+        --accent: 236, 72, 153;
+        --surface: 241, 245, 249;
+        --on-surface: 15, 23, 42;
+        --card: 255, 255, 255;
+        --border: 229, 231, 235;
+      }
+
+      .dark {
+        --primary: 129, 140, 248;
+        --secondary: 167, 139, 250;
+        --accent: 244, 114, 182;
+        --surface: 15, 23, 42;
+        --on-surface: 241, 245, 249;
+        --card: 30, 41, 59;
+        --border: 55, 65, 81;
+      }
+
       /* Masonry 布局 */
       .masonry {
         column-count: 4;
@@ -43,9 +43,25 @@
           column-count: 1;
         }
       }
+
+      .masonry-item .card-content {
+        background-color: rgb(var(--card));
+        color: rgb(var(--on-surface));
+      }
+      
+      .masonry-item .card-content h2 {
+        color: rgb(var(--on-surface));
+      }
+
+      .masonry-item .card-content p {
+        color: rgb(var(--on-surface)/0.8);
+      }
+
       .masonry-item {
         break-inside: avoid;
         margin-bottom: 1rem;
+        border-radius: 1rem;
+        overflow: hidden; 
       }
       .sidebar-link {
         display: flex;
@@ -148,10 +164,97 @@
         }
       }
 
+      /* 侧边栏适配深色模式 */
+      nav {
+        background-color: rgb(var(--card));
+        border-color: rgb(var(--border));
+      }
+      
+      .sidebar-link {
+        color: rgb(var(--on-surface)/0.7);
+      }
+      
+      .sidebar-link:hover {
+        background-color: rgb(var(--primary)/0.1);
+        color: rgb(var(--primary));
+      }
+      
+      /* 文字卡片适配深色模式 */
+      .masonry-item {
+        background-color: rgb(var(--card));
+        color: rgb(var(--on-surface));
+      }
+      
+      .masonry-item h2 {
+        color: rgb(var(--on-surface));
+      }
+      
+      .masonry-item p {
+        color: rgb(var(--on-surface)/0.8);
+      }
+      
+      .masonry-item a {
+        color: rgb(var(--on-surface)/0.6);
+      }
+      
+      .masonry-item a:hover {
+        color: rgb(var(--primary));
+      }
+      
+      /* 图片弹窗适配深色模式 */
+      #imageModal {
+        background-color: rgba(0, 0, 0, 0.9);
+      }
+      
+      /* 设置面板适配深色模式 */
+      #settingsPanel > div {
+        background-color: rgb(var(--card));
+        color: rgb(var(--on-surface));
+      }
+      
+      #settingsPanel label {
+        color: rgb(var(--on-surface)/0.9);
+      }
+      
+      #settingsPanel input {
+        background-color: rgb(var(--surface));
+        color: rgb(var(--on-surface));
+        border-color: rgb(var(--border));
+      }
+      
+      /* 加载按钮适配深色模式 */
+      #loadMore {
+        background-color: rgb(var(--surface));
+        color: rgb(var(--on-surface));
+      }
+      
+      #loadMore:hover {
+        background-color: rgb(var(--primary));
+        color: white;
+      }
     </style>
+    <script>
+      // 在tailwind配置前设置darkMode
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              primary: 'rgb(var(--primary))',
+              secondary: 'rgb(var(--secondary))',
+              accent: 'rgb(var(--accent))',
+              surface: 'rgb(var(--surface))',
+              'on-surface': 'rgb(var(--on-surface))',
+              card: 'rgb(var(--card))',
+              border: 'rgb(var(--border))'
+            }
+          }
+        }
+      }
+    </script>
   </head>
-  <body class="bg-gradient-to-br from-slate-50 to-slate-200 dark:from-slate-900 dark:to-slate-800 min-h-screen font-sans">
-    <nav class="fixed top-0 left-0 h-screen w-[72px] bg-white dark:bg-slate-800 border-r dark:border-slate-700 shadow flex flex-col items-center py-4">
+  <body class="bg-surface text-on-surface min-h-screen font-sans">
+     <nav class="fixed top-0 left-0 h-screen w-[72px] border-r shadow flex flex-col items-center py-4"">
       <div class="sidebar-items flex flex-col items-center gap-y-6 h-full w-full">
         <a href="#" aria-label="主页" class="sidebar-link">
         <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
@@ -182,78 +285,98 @@
       </div>
     </nav>
     <div id="content" class="ml-[72px]">
-      <header class="py-6 text-center">
-        <h1 class="text-3xl font-bold tracking-tight text-slate-800 dark:text-slate-100">
-          图集
-        </h1>
-      </header>
+    <header class="py-6 text-center">
+      <h1 class="text-3xl font-bold tracking-tight text-on-surface">
+        图集
+      </h1>
+    </header>
 
-      <main class="px-4 max-w-screen-xl mx-auto">
-        <div class="masonry" id="gallery"></div>
-        <button id="loadMore" class="mt-4 mx-auto block px-4 py-2 rounded bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-100 hidden">加载更多</button>
-      </main>
+    <main class="px-4 max-w-screen-xl mx-auto">
+      <!-- Masonry 容器 -->
+      <div class="masonry" id="gallery"></div>
+      <button id="loadMore" class="mt-4 mx-auto block px-4 py-2 rounded bg-gray-200 text-gray-700 hidden">加载更多</button>
+    </main>
 
     <!-- 设置面板 -->
-      <div id="settingsPanel" class="fixed inset-0 bg-black/50 hidden items-center justify-center">
-        <div class="bg-white dark:bg-slate-800 rounded-xl p-4 w-72 space-y-3">
-          <div class="flex justify-between items-center">
-            <h2 class="font-semibold">设置</h2>
-            <button id="closeSettings" class="text-xl leading-none">&times;</button>
-          </div>
-
-          <label class="block text-sm">列数
-            <input id="columnCountInput" type="number" min="1" max="6" value="4" class="mt-1 w-full border rounded p-1 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"/>
-          </label>
-
-          <label class="block text-sm">加载卡片数量
-            <input id="perPageInput" type="number" min="1" value="30" class="mt-1 w-full border rounded p-1 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"/>
-          </label>
-
-          <!-- ✨ 新增亮 / 暗模式开关 -->
-          <label class="flex justify-between items-center text-sm select-none">
-            <span>深色模式</span>
-            <input id="themeToggle" type="checkbox"
-              class="peer h-6 w-11 appearance-none rounded-full bg-gray-300 transition-colors
-                     after:absolute after:ml-0.5 after:mt-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white
-                     after:transition-transform checked:bg-blue-600
-                     checked:after:translate-x-5 relative cursor-pointer"/>
-          </label>
-
-          <button id="applySettings" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-1 rounded">应用</button>
-          <button id="clearCache" class="w-full bg-red-500 hover:bg-red-600 text-white py-1 rounded">清理缓存</button>
-          <footer class="text-xs text-center text-gray-400 my-4">
-            <a href="https://github.com/valetzx/flow-wx" class="hover:underline">查看项目源码</a> · <a href="#">联系我吧</a>
-          </footer>
+    <div
+      id="settingsPanel"
+      class="fixed inset-0 bg-black/50 hidden items-center justify-center"
+    >
+      <div class="bg-card rounded-xl p-4 w-72 space-y-3">
+        <div class="flex justify-between items-center">
+          <h2 class="font-semibold">设置</h2>
+          <button id="closeSettings" class="text-xl leading-none">
+            &times;
+          </button>
         </div>
+        
+        <!-- 深色模式切换器 -->
+        <div class="flex items-center justify-between py-1">
+          <label class="text-sm">深色模式</label>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="darkModeToggle" class="sr-only peer">
+            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+          </label>
+        </div>
+        
+        <label class="block text-sm"
+          >列数
+          <input
+            id="columnCountInput"
+            type="number"
+            min="1"
+            max="6"
+            value="4"
+            class="mt-1 w-full border rounded p-1 bg-surface text-on-surface"
+          />
+        </label>
+        <label class="block text-sm"
+          >加载卡片数量
+          <input
+            id="perPageInput"
+            type="number"
+            min="1"
+            value="30"
+            class="mt-1 w-full border rounded p-1 bg-surface text-on-surface"
+          />
+        </label>
+        <button id="applySettings" class="w-full bg-primary text-white py-1 rounded">应用</button>
+        <button id="clearCache" class="w-full bg-red-500 text-white py-1 rounded">清理缓存</button> 
+         <footer class="text-xs text-center text-gray-400 my-4 dark:text-gray-300">
+            <a href="https://github.com/valetzx/flow-wx" class="hover:underline">查看项目源码 </a> · <a href="#">联系我吧</a>
+        </footer>
       </div>
+    </div>
 
     <!-- 图片查看弹窗 -->
-      <div id="imageModal" class="fixed inset-0 hidden items-center justify-center">
-        <img id="modalImg" src="" alt="preview" class="rounded" />
-      </div>
+    <div id="imageModal" class="fixed inset-0 hidden items-center justify-center">
+      <img id="modalImg" src="" alt="preview" class="rounded" />
+    </div>
 
     <script>
-              /* ---------- 亮 / 暗主题切换 ---------- */
-        const themeToggle  = document.getElementById('themeToggle');
-        const root         = document.documentElement;
-        const storedTheme  = localStorage.getItem('theme');
-        const prefersDark  = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-        if (storedTheme === 'dark' || (!storedTheme && prefersDark)) {
-          root.classList.add('dark');
-          if (themeToggle) themeToggle.checked = true;
-        }
-
-        themeToggle?.addEventListener('change', (e) => {
-          if (e.target.checked) {
-            root.classList.add('dark');
-            localStorage.setItem('theme', 'dark');
-          } else {
-            root.classList.remove('dark');
-            localStorage.setItem('theme', 'light');
-          }
-        });
+      // 在DOMContentLoaded中添加深色模式初始化
+      document.addEventListener("DOMContentLoaded", () => {
+        // 初始化深色模式
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const isDarkMode = localStorage.getItem('darkMode') === 'true' || 
+                          (window.matchMedia('(prefers-color-scheme: dark)').matches && 
+                          localStorage.getItem('darkMode') !== 'false');
         
+        if (isDarkMode) {
+          document.documentElement.classList.add('dark');
+          darkModeToggle.checked = true;
+        }
+        
+        darkModeToggle.addEventListener('change', () => {
+          if (darkModeToggle.checked) {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('darkMode', 'true');
+          } else {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('darkMode', 'false');
+          }
+        });       });
+
       const gallery = document.getElementById('gallery');
       const loadMoreBtn = document.getElementById('loadMore');
       const settingsPanel = document.getElementById('settingsPanel');
@@ -411,7 +534,12 @@
           items.push({
             type: 'title',
             html:
-              `<div class="masonry-item p-5 bg-white rounded-2xl shadow hover:shadow-lg transition flex flex-col gap-2">\n  <h2 class="text-xl font-semibold text-slate-900">${title}</h2>\n  <p class="text-sm text-gray-600 leading-relaxed">${description}</p>\n</div>`
+            `<div class="masonry-item">
+              <div class="card-content p-5 flex flex-col gap-2">
+                <h2 class="text-xl font-semibold">${title}</h2>
+                <p class="text-sm leading-relaxed">${description}</p>
+              </div>
+            </div>`
           });
           images.forEach((src) => {
             items.push({ type: 'image', src, alt: title });
@@ -546,6 +674,8 @@
           navigator.serviceWorker.register('/sw.js').catch(console.error);
         });
       }
+
+
     </script>
     </div>
   </body>
