@@ -30,11 +30,18 @@ const imgDomains = imgDomainsEnv
   .split(/[,\s]+/)
   .map((d) => d.trim())
   .filter(Boolean);
+const rssEnv = Deno.env.get("RSS_URLS") || "";
+const rssUrls = rssEnv.split(/[,\s]+/).map((d) => d.trim()).filter(Boolean);
 const cacheImgDomain = Deno.env.get("IMG_CACHE") || "";
 
-function injectConfig(html: string): string {
-  if (apiDomains.length === 0 && imgDomains.length === 0) return html;
-  const script = `<script>window.API_DOMAINS=${JSON.stringify(apiDomains)};window.IMG_DOMAINS=${JSON.stringify(imgDomains)};</script>`;
+function injectConfig(html: string, items: unknown[] = []): string {
+  if (
+    apiDomains.length === 0 &&
+    imgDomains.length === 0 &&
+    rssUrls.length === 0 &&
+    items.length === 0
+  ) return html;
+  const script = `<script>window.API_DOMAINS=${JSON.stringify(apiDomains)};window.IMG_DOMAINS=${JSON.stringify(imgDomains)};window.DEFAULT_FEEDS=${JSON.stringify(rssUrls)};window.PRELOAD_ITEMS=${JSON.stringify(items)};</script>`;
   return html.replace("</head>", `${script}</head>`);
 }
 
@@ -49,6 +56,7 @@ const swHtml = `const IMG_CACHE = ${JSON.stringify(cacheImgDomain)};\n${swRaw}`;
 const adminHtml = injectConfig(
   await Deno.readTextFile(join(__dirname, "admin.html")),
 );
+const addHtmlBase = await Deno.readTextFile(join(__dirname, "add.html"));
 const fallbackSentences = [
   "小荷才露尖尖角",
   "早有蜻蜓立上头",
@@ -164,6 +172,35 @@ function proxifyHtml(html: string): string {
   });
 
   return $.html();
+}
+
+// ---------- 解析 RSS ----------
+async function fetchRss(url: string) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const xml = await res.text();
+  const $ = cheerio.load(xml, { xmlMode: true });
+  const items: { title: string; link: string; description: string; pubDate: string }[] = [];
+  $("item").each((_, el) => {
+    items.push({
+      title: $(el).find("title").text().trim(),
+      link: $(el).find("link").text().trim(),
+      description: $(el).find("description").text().trim(),
+      pubDate: $(el).find("pubDate").text().trim(),
+    });
+  });
+  return items;
+}
+
+async function buildAddPage(): Promise<string> {
+  if (rssUrls.length === 0) return injectConfig(addHtmlBase);
+  try {
+    const results = await Promise.all(rssUrls.map(fetchRss));
+    const items = results.flat();
+    return injectConfig(addHtmlBase, items);
+  } catch (_e) {
+    return injectConfig(addHtmlBase);
+  }
 }
 
 // ---------- 反向代理图片 ----------
@@ -294,6 +331,20 @@ async function handler(req: Request): Promise<Response> {
     }
   }
 
+  // /api/rss —— 获取 RSS 并返回 JSON
+  if (pathname === "/api/rss") {
+    const urlParams = searchParams.getAll("url");
+    const list = urlParams.length > 0 ? urlParams : rssUrls;
+    if (list.length === 0) return json({ items: [] });
+    try {
+      const results = await Promise.all(list.map(fetchRss));
+      const items = results.flat();
+      return json({ items });
+    } catch (err) {
+      return json({ error: err.message }, 500);
+    }
+  }
+
   if (pathname === "/sw.js") {
     return new Response(swHtml, {
       headers: withCors({ "Content-Type": "text/javascript; charset=utf-8" }),
@@ -317,6 +368,13 @@ async function handler(req: Request): Promise<Response> {
   // /ideas —— 灵感瀑布流页面
   if (pathname === "/ideas") {
     return new Response(ideasHtml, {
+      headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
+    });
+  }
+
+  if (pathname === "/add" || pathname === "/add/") {
+    const page = await buildAddPage();
+    return new Response(page, {
       headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
     });
   }

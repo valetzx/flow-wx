@@ -3,6 +3,7 @@ import * as cheerio from "cheerio";
 import mainHtml from "./main.html";
 import ideasHtml from "./ideas.html";
 import adminHtml from "./admin.html";
+import addHtml from "./add.html";
 // import swHtml from "./sw.js";
 import articleText from "./article.txt";
 
@@ -45,6 +46,8 @@ let urls = [];
 let urlsInit = false;
 let cache = { data: null, timestamp: 0 };
 let dailyCache = { data: null, timestamp: 0 };
+let rssUrls = [];
+let rssInit = false;
 
 async function getUrls(env) {
   if (!urlsInit) {
@@ -65,11 +68,21 @@ async function getUrls(env) {
   return urls;
 }
 
-function injectConfig(html, apiDomains, imgDomains) {
-  if (!apiDomains.length && !imgDomains.length) return html;
+async function getRss(env) {
+  if (!rssInit) {
+    rssInit = true;
+    const envStr = env.RSS_URLS || "";
+    rssUrls = envStr.split(/[,\s]+/).map((s) => s.trim()).filter(Boolean);
+  }
+  return rssUrls;
+}
+
+function injectConfig(html, apiDomains, imgDomains, feeds, items = []) {
+  if (!apiDomains.length && !imgDomains.length && !feeds.length && !items.length)
+    return html;
   const script = `<script>window.API_DOMAINS=${JSON.stringify(
     apiDomains,
-  )};window.IMG_DOMAINS=${JSON.stringify(imgDomains)};</script>`;
+  )};window.IMG_DOMAINS=${JSON.stringify(imgDomains)};window.DEFAULT_FEEDS=${JSON.stringify(feeds)};window.PRELOAD_ITEMS=${JSON.stringify(items)};</script>`;
   return html.replace("</head>", `${script}</head>`);
 }
 
@@ -87,6 +100,37 @@ function proxifyHtml(html) {
     $(el).attr('style', style);
   });
   return $.html();
+}
+
+async function fetchRss(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const xml = await res.text();
+  const $ = cheerio.load(xml, { xmlMode: true });
+  const items = [];
+  $("item").each((_, el) => {
+    items.push({
+      title: $(el).find("title").text().trim(),
+      link: $(el).find("link").text().trim(),
+      description: $(el).find("description").text().trim(),
+      pubDate: $(el).find("pubDate").text().trim(),
+    });
+  });
+  return items;
+}
+
+async function buildAddPage(env, apiDomains, imgDomains) {
+  const feeds = await getRss(env);
+  if (feeds.length === 0) {
+    return injectConfig(addHtml, apiDomains, imgDomains, feeds);
+  }
+  try {
+    const results = await Promise.all(feeds.map(fetchRss));
+    const items = results.flat();
+    return injectConfig(addHtml, apiDomains, imgDomains, feeds, items);
+  } catch (_e) {
+    return injectConfig(addHtml, apiDomains, imgDomains, feeds);
+  }
 }
 
 async function proxyImage(imgUrl) {
@@ -176,9 +220,11 @@ export default {
       .filter(Boolean);
     const cacheImgDomain = env.IMG_CACHE || "mmbiz.qpic.cn";
 
-    const indexHtml = injectConfig(mainHtml, apiDomains, imgDomains);
-    const ideasPage = injectConfig(ideasHtml, apiDomains, imgDomains);
-    const adminPage = injectConfig(adminHtml, apiDomains, imgDomains);
+    const feeds = await getRss(env);
+    const indexHtml = injectConfig(mainHtml, apiDomains, imgDomains, feeds);
+    const ideasPage = injectConfig(ideasHtml, apiDomains, imgDomains, feeds);
+    const adminPage = injectConfig(adminHtml, apiDomains, imgDomains, feeds);
+    const addPage = await buildAddPage(env, apiDomains, imgDomains);
 
     const urls = await getUrls(env);
 
@@ -247,6 +293,19 @@ export default {
           headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
         });
       } catch (err) {
+      return json({ error: err.message }, 500);
+    }
+    }
+
+    if (pathname === "/api/rss") {
+      const list = searchParams.getAll("url");
+      const feeds = list.length > 0 ? list : await getRss(env);
+      if (feeds.length === 0) return json({ items: [] });
+      try {
+        const results = await Promise.all(feeds.map(fetchRss));
+        const items = results.flat();
+        return json({ items });
+      } catch (err) {
         return json({ error: err.message }, 500);
       }
     }
@@ -296,6 +355,10 @@ self.addEventListener("fetch", (event) => {
   } else if (url.pathname === "/") {
     event.respondWith(cacheThenNetwork(event.request));
   } else if (url.pathname === "/ideas") {
+    event.respondWith(cacheThenNetwork(event.request));
+  } else if (url.pathname === "/add" || url.pathname === "/add/") {
+    event.respondWith(cacheThenNetwork(event.request));
+  } else if (url.pathname === "/api/rss") {
     event.respondWith(cacheThenNetwork(event.request));
   }
 });
@@ -404,6 +467,12 @@ async function cacheThenNetwork(request) {
 
     if (pathname === "/ideas") {
       return new Response(ideasPage, {
+        headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
+      });
+    }
+
+    if (pathname === "/add" || pathname === "/add/") {
+      return new Response(addPage, {
         headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
       });
     }
