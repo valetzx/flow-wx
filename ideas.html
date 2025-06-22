@@ -491,13 +491,11 @@ function createBannerCard() {
   p.className = "text-sm text-gray-600 dark:text-gray-300 leading-relaxed";
   p.textContent = "这是一个自定义空白卡片，您可以在这里添加任何内容";
   
-  const button = document.createElement("button");
-  button.className = "mt-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition";
-  button.textContent = "点击添加内容";
+
   
   content.appendChild(h2);
   content.appendChild(p);
-  content.appendChild(button);
+
   
   // 创建遮罩元素（只在空白卡片上）
   const mask = document.createElement("div");
@@ -505,13 +503,7 @@ function createBannerCard() {
   
   const maskText = document.createElement("div");
   maskText.className = "mask-text";
-  maskText.innerHTML = `
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-    </svg>
-    <h3>点击添加内容</h3>
-    <p>自定义您的空白卡片</p>
-  `;
+
   
   mask.appendChild(maskText);
   
@@ -818,6 +810,8 @@ function createBannerCard() {
         function renderPage() {
           gallery.innerHTML = "";
 
+          gallery.appendChild(createBannerCard());
+
           if (dailyData) {
             gallery.appendChild(createDailyCard(dailyData));
           }
@@ -833,7 +827,7 @@ function createBannerCard() {
           }
         }
 
-          gallery.appendChild(createBannerCard());
+
 
         function applyData(data) {
           allItems = buildItems(data);
