@@ -308,6 +308,45 @@
   transform: translateX(0);
 }
 
+/* Banner 背景轮播 */
+.banner-carousel-wrapper {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  z-index: 0;
+}
+
+.banner-carousel {
+  display: flex;
+  gap: 8px;
+  width: max-content;
+  animation: banner-scroll 20s linear infinite;
+}
+
+.banner-carousel img,
+.banner-carousel .color-block {
+  width: 60px;
+  height: 90px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border-radius: 0.375rem;
+}
+
+.banner-card .card-content {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes banner-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
     </style>
     <script>
       // 在tailwind配置前设置darkMode
@@ -491,6 +530,14 @@ function createBannerCard() {
   const wrapper = document.createElement("div");
   wrapper.className = "masonry-item rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer banner-card";
   wrapper.style.height = "280px";
+
+  const carouselWrapper = document.createElement('div');
+  carouselWrapper.className = 'banner-carousel-wrapper';
+  const carousel = document.createElement('div');
+  carousel.className = 'banner-carousel';
+  carouselWrapper.appendChild(carousel);
+  wrapper.appendChild(carouselWrapper);
+  loadBannerCarousel(carousel);
 
   const mask = document.createElement("div");
   mask.className = "banner-mask";
@@ -681,6 +728,52 @@ function createBannerCard() {
               .toString(16)
               .padStart(6, "0")
           );
+        }
+
+        async function getRandomCachedImages(count) {
+          const urls = [];
+          if (!('caches' in window)) return urls;
+          try {
+            const cache = await caches.open('wx-cache-v2');
+            const keys = await cache.keys();
+            const images = [];
+            for (const req of keys) {
+              const res = await cache.match(req);
+              if (res && res.headers.get('Content-Type')?.startsWith('image/')) {
+                images.push(req.url);
+              }
+            }
+            for (let i = 0; i < count && images.length > 0; i++) {
+              const idx = Math.floor(Math.random() * images.length);
+              urls.push(images.splice(idx, 1)[0]);
+            }
+          } catch (e) {
+            console.error(e);
+          }
+          return urls;
+        }
+
+        async function loadBannerCarousel(container) {
+          const count = 6;
+          let urls = await getRandomCachedImages(count);
+          const els = [];
+          if (urls.length === 0) {
+            for (let i = 0; i < count; i++) {
+              const block = document.createElement('div');
+              block.className = 'color-block';
+              block.style.backgroundColor = getRandomColor();
+              els.push(block);
+            }
+          } else {
+            urls.forEach((src) => {
+              const img = document.createElement('img');
+              img.src = src;
+              img.loading = 'lazy';
+              els.push(img);
+            });
+          }
+          const all = els.concat(els.map((el) => el.cloneNode(true)));
+          all.forEach((el) => container.appendChild(el));
         }
 
         function createImage(src, alt) {
