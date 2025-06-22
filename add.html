@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RSS 阅读器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --primary: 79, 70, 229;
+        --secondary: 139, 92, 246;
+        --accent: 236, 72, 153;
+        --surface: 241, 245, 249;
+        --on-surface: 15, 23, 42;
+        --card: 255, 255, 255;
+        --border: 229, 231, 235;
+      }
+      .dark {
+        --primary: 129, 140, 248;
+        --secondary: 167, 139, 250;
+        --accent: 244, 114, 182;
+        --surface: 15, 23, 42;
+        --on-surface: 241, 245, 249;
+        --card: 30, 41, 59;
+        --border: 55, 65, 81;
+      }
+      .masonry {
+        column-count: 3;
+        column-gap: 1rem;
+      }
+      @media (max-width: 1024px) {
+        .masonry {
+          column-count: 2;
+        }
+      }
+      @media (max-width: 640px) {
+        .masonry {
+          column-count: 1;
+        }
+      }
+      .masonry-item {
+        break-inside: avoid;
+        margin-bottom: 1rem;
+      }
+      .sidebar-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5rem;
+        border-radius: 0.375rem;
+        color: #6b7280;
+        transition:
+          background-color 0.2s,
+          color 0.2s;
+      }
+      .sidebar-link:hover {
+        background-color: #f1f5f9;
+        color: #111827;
+      }
+    </style>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "rgb(var(--primary))",
+              secondary: "rgb(var(--secondary))",
+              accent: "rgb(var(--accent))",
+              surface: "rgb(var(--surface))",
+              "on-surface": "rgb(var(--on-surface))",
+              card: "rgb(var(--card))",
+              border: "rgb(var(--border))",
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="bg-surface text-on-surface min-h-screen font-sans">
+    <nav
+      class="fixed top-0 left-0 h-screen w-[72px] border-r shadow flex flex-col items-center py-4"
+    >
+      <div
+        class="sidebar-items flex flex-col items-center gap-y-6 h-full w-full"
+      >
+        <a href="/#" aria-label="主页" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+            <path
+              d="M7.54 23.15q-.2-2.05.26-3.93L9 14.04a7 7 0 0 1-.35-2.07c0-1.68.81-2.88 2.09-2.88.88 0 1.53.62 1.53 1.8q0 .57-.23 1.28l-.52 1.72q-.15.5-.15.92c0 1.2.91 1.87 2.08 1.87 2.09 0 3.57-2.16 3.57-4.96 0-3.12-2.04-5.12-5.05-5.12-3.36 0-5.49 2.19-5.49 5.24 0 1.22.38 2.36 1.11 3.14-.24.41-.5.48-.88.48-1.2 0-2.34-1.69-2.34-4 0-4 3.2-7.17 7.68-7.17 4.7 0 7.66 3.29 7.66 7.33s-2.88 7.15-5.98 7.15a3.8 3.8 0 0 1-3.06-1.48l-.62 2.5a11 11 0 0 1-1.62 3.67A11.98 11.98 0 0 0 24 12a11.99 11.99 0 1 0-24 0 12 12 0 0 0 7.54 11.15"
+            />
+          </svg>
+        </a>
+        <a href="/" aria-label="首页" class="sidebar-link" id="homeBtn">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+            <path
+              d="M4.6 22.73A107 107 0 0 0 11 23h2.22c2.43-.04 4.6-.16 6.18-.27A3.9 3.9 0 0 0 23 18.8v-8.46a4 4 0 0 0-1.34-3L14.4.93a3.63 3.63 0 0 0-4.82 0L2.34 7.36A4 4 0 0 0 1 10.35v8.46a3.9 3.9 0 0 0 3.6 3.92M13.08 2.4l7.25 6.44a2 2 0 0 1 .67 1.5v8.46a1.9 1.9 0 0 1-1.74 1.92q-1.39.11-3.26.19V16a4 4 0 0 0-8 0v4.92q-1.87-.08-3.26-.19A1.9 1.9 0 0 1 3 18.81v-8.46a2 2 0 0 1 .67-1.5l7.25-6.44a1.63 1.63 0 0 1 2.16 0M13.12 21h-2.24a1 1 0 0 1-.88-1v-4a2 2 0 1 1 4 0v4a1 1 0 0 1-.88 1"
+            />
+          </svg>
+        </a>
+        <a href="/ideas" aria-label="探索" id="idealBtn" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+            <path
+              d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4M9.42 7.24a3 3 0 0 0-2.18 2.18L5.7 15.57a2.25 2.25 0 0 0 2.73 2.73l6.15-1.54a3 3 0 0 0 2.18-2.18l1.54-6.15a2.25 2.25 0 0 0-2.73-2.73zm6.94.7-1.54 6.15a1 1 0 0 1-.73.73l-6.15 1.54a.25.25 0 0 1-.3-.3L9.18 9.9a1 1 0 0 1 .73-.73l6.15-1.54a.25.25 0 0 1 .3.3M12 24a12 12 0 1 0 0-24 12 12 0 0 0 0 24M2 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0"
+            />
+          </svg>
+        </a>
+        <a href="/add" aria-label="创建" id="addBtn" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+            <path
+              d="M11 11H6v2h5v5h2v-5h5v-2h-5V6h-2zM5 1a4 4 0 0 0-4 4v14a4 4 0 0 0 4 4h14a4 4 0 0 0 4-4V5a4 4 0 0 0-4-4zm16 4v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h14a2 2 0 0 1 2 2"
+            />
+          </svg>
+        </a>
+      </div>
+    </nav>
+    <div id="content" class="ml-[72px]">
+      <header class="py-6 text-center">
+        <h1 class="text-3xl font-bold tracking-tight text-on-surface">
+          RSS 阅读器
+        </h1>
+      </header>
+      <main class="px-4 max-w-screen-xl mx-auto">
+        <div class="masonry" id="feedList"></div>
+      </main>
+    </div>
+    <script>
+      document.addEventListener("DOMContentLoaded", async () => {
+        const feedList = document.getElementById("feedList");
+        const defaults = Array.isArray(window.DEFAULT_FEEDS)
+          ? window.DEFAULT_FEEDS
+          : [];
+        const extra = (localStorage.getItem("rssFeeds") || "")
+          .split(/\r?\n|,/)
+          .map((s) => s.trim())
+          .filter(Boolean);
+        const feeds = defaults.concat(extra);
+        async function load(url) {
+          const res = await fetch("/api/rss?url=" + encodeURIComponent(url));
+          if (!res.ok) throw new Error("fail");
+          return (await res.json()).items || [];
+        }
+        for (const url of feeds) {
+          try {
+            const items = await load(url);
+            for (const it of items) {
+              const card = document.createElement("div");
+              card.className = "masonry-item rounded-2xl shadow bg-card p-4";
+              const title = document.createElement("h2");
+              title.className = "text-lg font-semibold mb-2";
+              title.textContent = it.title;
+              const desc = document.createElement("p");
+              desc.className = "text-sm text-gray-600 mb-2";
+              desc.innerHTML = it.description;
+              const link = document.createElement("a");
+              link.href = it.link;
+              link.target = "_blank";
+              link.className = "text-xs text-gray-400 hover:underline self-end";
+              link.textContent = "查看原文";
+              card.appendChild(title);
+              card.appendChild(desc);
+              card.appendChild(link);
+              feedList.appendChild(card);
+            }
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

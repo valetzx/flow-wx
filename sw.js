@@ -41,6 +41,10 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(cacheThenNetwork(event.request));
   } else if (url.pathname === "/ideas") {
     event.respondWith(cacheThenNetwork(event.request));
+  } else if (url.pathname === "/add" || url.pathname === "/add/") {
+    event.respondWith(cacheThenNetwork(event.request));
+  } else if (url.pathname === "/api/rss") {
+    event.respondWith(cacheThenNetwork(event.request));
   }
 });
 
