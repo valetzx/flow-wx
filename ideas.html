@@ -281,6 +281,14 @@
 .banner-card {
   position: relative;
   height: 280px;
+  width: 100%;
+  aspect-ratio: 16/9;
+}
+
+@media (max-width: 640px) {
+  .banner-card {
+    aspect-ratio: 4/3;
+  }
 }
 
 .banner-card .banner-mask {
@@ -517,7 +525,6 @@ function createBannerCard() {
   const wrapper = document.createElement("div");
   wrapper.className = "masonry-item rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer banner-card";
   wrapper.style.height = "280px";
-
   const carousel = document.createElement("div");
   carousel.className = "banner-carousel";
   const slotWidth = 60;
@@ -534,18 +541,22 @@ function createBannerCard() {
 
   const mask = document.createElement("div");
   mask.className = "banner-mask";
-  mask.textContent = "随机文章 →";
+  mask.textContent = "随机文章 ➡︎";
 
   const content = document.createElement("div");
   content.className = "card-content p-5 flex flex-col gap-2";
   
   const h2 = document.createElement("h2");
   h2.className = "text-xl font-semibold text-slate-900";
-  h2.textContent = "分享设计";
+  h2.textContent = "设计与科技";
   
   const p = document.createElement("p");
   p.className = "text-sm text-gray-600 leading-relaxed";
-  p.textContent = "这里是我的设计合集，以及部分网络中的设计内容，可以点击查看原文详情哦";
+  p.textContent = "这里是我的设计合集📘以及部分网络中的设计内容";
+
+//  const source = document.createElement("a");
+//  source.className = "text-xs text-gray-400 hover:underline self-end";
+//  source.textContent = "可以点击查看原文详情哦";
   
   const button = document.createElement("button");
   button.className = "mt-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition";
@@ -553,6 +564,7 @@ function createBannerCard() {
 
   content.appendChild(h2);
   content.appendChild(p);
+  content.appendChild(source);
   wrapper.appendChild(carousel);
   wrapper.appendChild(content);
   wrapper.appendChild(mask);
