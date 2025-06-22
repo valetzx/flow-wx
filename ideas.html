@@ -474,46 +474,34 @@
           }
         });      });
 
-// 创建空白卡片函数（添加遮罩效果）
+// 创建空白卡片函数
 function createBannerCard() {
   const wrapper = document.createElement("div");
-  wrapper.className = "masonry-item rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer banner-card relative";
+  wrapper.className = "masonry-item rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer banner-card";
   
-  // 卡片内容
   const content = document.createElement("div");
-  content.className = "card-content p-5 flex flex-col gap-2 w-full h-full";
+  content.className = "card-content p-5 flex flex-col gap-2";
   
   const h2 = document.createElement("h2");
-  h2.className = "text-xl font-semibold text-slate-900 dark:text-slate-100";
+  h2.className = "text-xl font-semibold text-slate-900";
   h2.textContent = "空白卡片";
   
   const p = document.createElement("p");
-  p.className = "text-sm text-gray-600 dark:text-gray-300 leading-relaxed";
+  p.className = "text-sm text-gray-600 leading-relaxed";
   p.textContent = "这是一个自定义空白卡片，您可以在这里添加任何内容";
-  
 
+  const p2 = document.createElement("p");
+  p.className = "text-sm text-gray-600 leading-relaxed";
+  p.textContent = "3";
+  
+  const button = document.createElement("button");
+  button.className = "mt-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition";
+  button.textContent = "点击添加内容";
   
   content.appendChild(h2);
   content.appendChild(p);
-  
-  // 创建遮罩元素（只在空白卡片上）
-  const mask = document.createElement("div");
-  mask.className = "banner-mask";
-  
-  const maskText = document.createElement("div");
-  maskText.className = "mask-text";
-  maskText.innerHTML = `
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-    </svg>
-    <h3>点击添加内容</h3>
-    <p>自定义您的空白卡片</p>
-  `;
-  
-  mask.appendChild(maskText);
-  
+  content.appendChild(p2);
   wrapper.appendChild(content);
-  wrapper.appendChild(mask);
   
   // 添加点击事件
   wrapper.addEventListener("click", () => {
