@@ -441,12 +441,6 @@
       </div>
     </nav>
     <div id="content" class="ml-[72px]">
-      <header class="py-6 text-center">
-        <h1 class="text-3xl font-bold tracking-tight text-on-surface">
-          文章
-        </h1>
-      </header>
-
       <main class="px-4 max-w-screen-xl mx-auto">
         <!-- Masonry 容器 -->
         <div class="masonry" id="gallery"></div>
@@ -549,21 +543,6 @@
             localStorage.setItem('darkMode', 'false');
           }
         });      });
-
-function showToast(message) {
-  const container = document.getElementById('toastContainer');
-  if (!container) return;
-  const toast = document.createElement('div');
-  toast.className = 'toast';
-  toast.textContent = message;
-  container.appendChild(toast);
-  // trigger enter
-  requestAnimationFrame(() => toast.classList.add('show'));
-  setTimeout(() => {
-    toast.classList.remove('show');
-    toast.addEventListener('transitionend', () => toast.remove(), { once: true });
-  }, 3000);
-}
 
 // 创建空白卡片函数
 function createBannerCard() {
