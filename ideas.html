@@ -280,7 +280,7 @@
 /* Banner 卡片及遮罩效果 */
 .banner-card {
   position: relative;
-  height: 200px;
+  height: 280px;
 }
 
 .banner-card .banner-mask {
@@ -288,7 +288,7 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  background: rgba(249, 115, 22, 0.9); /* orange */
+  background: rgba(249, 115, 22, 0.95); /* orange */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -305,10 +305,8 @@
 
 .banner-card:hover .banner-mask {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateX(-10px);
 }
-
-
 
     </style>
     <script>
@@ -492,7 +490,7 @@
 function createBannerCard() {
   const wrapper = document.createElement("div");
   wrapper.className = "masonry-item rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer banner-card";
-  wrapper.style.height = "200px";
+  wrapper.style.height = "280px";
 
   const mask = document.createElement("div");
   mask.className = "banner-mask";
@@ -503,11 +501,11 @@ function createBannerCard() {
   
   const h2 = document.createElement("h2");
   h2.className = "text-xl font-semibold text-slate-900";
-  h2.textContent = "空白卡片";
+  h2.textContent = "分享设计";
   
   const p = document.createElement("p");
   p.className = "text-sm text-gray-600 leading-relaxed";
-  p.textContent = "这是一个自定义空白卡片，您可以在这里添加任何内容";
+  p.textContent = "这里是我的设计合集，以及部分网络中的设计内容，可以点击查看原文详情哦";
   
   const button = document.createElement("button");
   button.className = "mt-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition";
