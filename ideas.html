@@ -276,38 +276,6 @@
         background-color: rgb(var(--primary));
         color: white;
       }
-
-/* 仅迁移与 banners 相关的最小样式 */
-#banners { --icon-size: 36px; }      /* 可根据卡片宽度自适应修改 */
-@media (max-width: 640px){ #banners{ --icon-size:28px } }
-
-.banners-title-big   { font-size:clamp(1.5rem,4vw,2.2rem); font-weight:700; }
-.banners-title-small { font-size:0.85rem; letter-spacing:0.1em; opacity:.7; }
-
-/* tags 容器 */
-.tags-group-all      { margin-top:2.5rem; }
-.tags-group-wrapper  {
-  display:flex; flex-wrap:nowrap; gap:0.5rem;
-  animation:rowup 25s linear infinite;
-}
-.tags-group-icon-pair{ display:flex; gap:0.5rem; }
-.tags-group-icon     {
-  width:var(--icon-size); height:var(--icon-size);
-  border-radius:8px; overflow:hidden; flex-shrink:0;
-  display:grid; place-items:center;
-}
-.tags-group-icon img { width:70%; height:70%; object-fit:contain; }
-
-/* 无限横向滚动（可根据宽度调节位移百分比） */
-@keyframes rowup{
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-
-/* 如果把 Banner 放到 masonry-item 内，需要让它跟随卡片宽度 */
-.masonry-item #banners{ padding:0; }
-
-
     </style>
     <script>
       // 在tailwind配置前设置darkMode
@@ -463,12 +431,6 @@
       </div>
 
       <script>
-  // 仅当 tags-group-wrapper 宽度 < 父容器时，复制一次内容形成无限带
-  (()=>{const wrap=document.querySelector('.tags-group-wrapper');
-    if(wrap && wrap.scrollWidth<=wrap.parentElement.offsetWidth){
-      wrap.innerHTML += wrap.innerHTML;
-    }
-  })();
       // 在DOMContentLoaded中添加深色模式初始化
       document.addEventListener("DOMContentLoaded", () => {
         // 初始化深色模式
@@ -491,6 +453,39 @@
             localStorage.setItem('darkMode', 'false');
           }
         });      });
+
+function createBannerCard() {
+  const wrapper = document.createElement("div");
+  wrapper.className = "masonry-item rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer banner-card";
+  
+  const content = document.createElement("div");
+  content.className = "card-content p-5 flex flex-col gap-2";
+  
+  const h2 = document.createElement("h2");
+  h2.className = "text-xl font-semibold text-slate-900";
+  h2.textContent = "空白卡片";
+  
+  const p = document.createElement("p");
+  p.className = "text-sm text-gray-600 leading-relaxed";
+  p.textContent = "这是一个自定义空白卡片，您可以在这里添加任何内容";
+  
+  const button = document.createElement("button");
+  button.className = "mt-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition";
+  button.textContent = "点击添加内容";
+  
+  content.appendChild(h2);
+  content.appendChild(p);
+  content.appendChild(button);
+  wrapper.appendChild(content);
+  
+  // 添加点击事件
+  wrapper.addEventListener("click", () => {
+    alert("空白卡片被点击了！您可以在这里添加自定义行为");
+  });
+  
+  return wrapper;
+}
+
 
         const gallery = document.getElementById("gallery");
         const loadMoreBtn = document.getElementById("loadMore");
@@ -672,87 +667,6 @@
           observer.observe(img);
           return img;
         }
-        
-const bannerData = {
-  bigTitle: '分享设计<br>与科技生活',
-  smallTitle: 'blog.learnonly.xyz',
-  icons: [
-    { src: '/img/icon/ae.png',     alt: 'AE',      bg: '#989bf8' },
-    { src: '/img/icon/Sketch.png', alt: 'Sketch',  bg: '#ffffff' },
-    { src: '/img/icon/docker.png', alt: 'Docker',  bg: '#57b6e6' },
-    { src: '/img/icon/ps.png',     alt: 'PS',      bg: '#4082c3' },
-    // …更多图标…
-  ]
-};
-
-const gallery = document.getElementById('gallery');
-const bannerCard = createBannerCard(bannerData, {
-  iconSize: '32px'  // 根据卡片宽度选个合适值
-});
-gallery.prepend(bannerCard);
-
-const sectionEl = createBannerCard(bannerData);
-document.getElementById('gallery')  // 或者你希望插入的位置
-  .prepend(sectionEl);
-
-
-function createBannerCard(item, opts = {}) {
-  const { iconSize } = opts;
-
-  // 1. 外层 Masonry item 包裹
-  const card = document.createElement('div');
-  card.className = 'masonry-item';
-
-  // 2. 内部 banner section
-  const section = document.createElement('section');
-  section.id = 'banners';
-  // 解除全页 padding，让它自适应卡片宽度
-  section.style.padding = '0';
-  if (iconSize) {
-    section.style.setProperty('--icon-size', iconSize);
-  }
-
-  // 标题区
-  const titleWrapper = document.createElement('div');
-  titleWrapper.className = 'banners-title text-center mb-6';
-  titleWrapper.innerHTML = `
-    <h2 class="banners-title-big leading-tight">
-      ${item.bigTitle}
-    </h2>
-    <p class="banners-title-small">${item.smallTitle}</p>
-  `;
-  section.appendChild(titleWrapper);
-
-  // 无限滚动图标带
-  const tagsAll = document.createElement('div');
-  tagsAll.className = 'tags-group-all overflow-hidden';
-  const wrapper = document.createElement('div');
-  wrapper.className = 'tags-group-wrapper';
-
-  // 每两个图标分一组
-  for (let i = 0; i < item.icons.length; i += 2) {
-    const pair = item.icons.slice(i, i + 2);
-    const pairDiv = document.createElement('div');
-    pairDiv.className = 'tags-group-icon-pair';
-    pair.forEach(icon => {
-      const iconDiv = document.createElement('div');
-      iconDiv.className = 'tags-group-icon';
-      iconDiv.style.background = icon.bg;
-      const img = document.createElement('img');
-      img.src = icon.src;
-      img.alt = icon.alt;
-      iconDiv.appendChild(img);
-      pairDiv.appendChild(iconDiv);
-    });
-    wrapper.appendChild(pairDiv);
-  }
-
-  tagsAll.appendChild(wrapper);
-  section.appendChild(tagsAll);
-
-  card.appendChild(section);
-  return card;
-}
 
         function createCard(item) {
           const wrapper = document.createElement("div");
@@ -864,6 +778,7 @@ function createBannerCard(item, opts = {}) {
 
         function renderPage() {
           gallery.innerHTML = "";
+          gallery.appendChild(createBannerCard());
           if (dailyData) {
             gallery.appendChild(createDailyCard(dailyData));
           }
