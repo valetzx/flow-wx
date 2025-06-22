@@ -25,7 +25,7 @@ const apiDomains = apiDomainsEnv
   .split(/[,\s]+/)
   .map((d) => d.trim())
   .filter(Boolean);
-const imgDomainsEnv = Deno.env.get("IMG_DOMAINS") || "";
+const imgDomainsEnv = Deno.env.get("IMG_DOMAINS") || "https://www.douban.com/feed/people/pigpigeon/interests";
 const imgDomains = imgDomainsEnv
   .split(/[,\s]+/)
   .map((d) => d.trim())
