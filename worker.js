@@ -95,7 +95,9 @@ async function proxyImage(imgUrl) {
       headers: {
         Referer: "https://mp.weixin.qq.com/",
         "User-Agent": "Mozilla/5.0",
+        Accept: "image/webp,image/*,*/*;q=0.8",
       },
+      cf: { image: { format: "webp" } },
     });
     if (!wechatRes.ok) {
       return new Response("fetch image fail", {
@@ -106,7 +108,7 @@ async function proxyImage(imgUrl) {
     return new Response(wechatRes.body, {
       status: 200,
       headers: withCors({
-        "Content-Type": wechatRes.headers.get("Content-Type") || "image/jpeg",
+        "Content-Type": "image/webp",
         "Cache-Control": "public, max-age=31536000, immutable",
       }),
     });

@@ -6,6 +6,8 @@ import {
   join,
 } from "https://deno.land/std@0.224.0/path/mod.ts";
 import cheerio from "npm:cheerio@1.0.0-rc.12";
+import sharp from "npm:sharp@0.34.2";
+import { Buffer } from "node:buffer";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -173,6 +175,7 @@ async function proxyImage(imgUrl: string): Promise<Response> {
       headers: {
         Referer: "https://mp.weixin.qq.com/", // 关键！
         "User-Agent": "Mozilla/5.0 (Deno)",
+        Accept: "image/webp,image/*,*/*;q=0.8",
       },
     });
 
@@ -183,12 +186,18 @@ async function proxyImage(imgUrl: string): Promise<Response> {
       });
     }
 
-    return new Response(wechatRes.body, {
+    const buf = Buffer.from(await wechatRes.arrayBuffer());
+    let webpBuf: Buffer;
+    try {
+      webpBuf = await sharp(buf).webp().toBuffer();
+    } catch {
+      webpBuf = buf;
+    }
+
+    return new Response(webpBuf, {
       status: 200,
       headers: withCors({
-        // 透传 Content-Type
-        "Content-Type": wechatRes.headers.get("Content-Type") ?? "image/jpeg",
-        // 强缓存一年
+        "Content-Type": "image/webp",
         "Cache-Control": "public, max-age=31536000, immutable",
       }),
     });
