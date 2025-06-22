@@ -393,7 +393,7 @@
   <div id="content" class="ml-[72px]">
     <header class="py-6 px-4 max-w-screen-xl mx-auto">
       <div class="rss-header">
-        <div class="rss-avatar">金</div>
+        <div class="rss-avatar"></div>
         <div class="rss-info">
           <h1 class="text-3xl font-bold tracking-tight text-on-surface">
             金桔猪的收藏
@@ -516,106 +516,45 @@
         const articleContent = document.getElementById("articleContent");
         const clearCacheBtn = document.getElementById('clearCache');
         
-        // RSS源数据（模拟豆瓣收藏）
-        const rssData = [
-          {
-            title: "看过阿诺拉",
-            link: "https://movie.douban.com/subject/36195543/",
-            imgSrc: "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2912764859.webp",
-            creator: "金桔猪",
-            pubDate: "2025-02-21",
-            type: "movie"
-          },
-          {
-            title: "看过新宿野战医院",
-            link: "https://movie.douban.com/subject/36902609/",
-            imgSrc: "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2909993898.webp",
-            creator: "金桔猪",
-            pubDate: "2024-12-07",
-            type: "movie"
-          },
-          {
-            title: "想看荒野机器人",
-            link: "https://movie.douban.com/subject/36689857/",
-            imgSrc: "https://img2.doubanio.com/view/photo/s_ratio_poster/public/p2913022141.webp",
-            creator: "金桔猪",
-            pubDate: "2024-11-17",
-            type: "movie"
-          },
-          {
-            title: "看过某种物质",
-            link: "https://movie.douban.com/subject/35882838/",
-            imgSrc: "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2912441039.webp",
-            creator: "金桔猪",
-            pubDate: "2024-11-17",
-            type: "movie"
-          },
-          {
-            title: "看过小妇人",
-            link: "https://movie.douban.com/subject/26348103/",
-            imgSrc: "https://img9.doubanio.com/view/photo/s_ratio_poster/public/p2572928166.webp",
-            creator: "金桔猪",
-            pubDate: "2024-11-12",
-            type: "movie"
-          },
-          {
-            title: "看过他是龙",
-            link: "https://movie.douban.com/subject/26726098/",
-            imgSrc: "https://img2.doubanio.com/view/photo/s_ratio_poster/public/p2374045871.webp",
-            creator: "金桔猪",
-            pubDate: "2024-09-17",
-            type: "movie"
-          },
-          {
-            title: "看过死侍与金刚狼",
-            link: "https://movie.douban.com/subject/26957900/",
-            imgSrc: "https://img9.doubanio.com/view/photo/s_ratio_poster/public/p2908440764.webp",
-            creator: "金桔猪",
-            pubDate: "2024-08-11",
-            type: "movie"
-          },
-          {
-            title: "看过塔罗牌",
-            link: "https://movie.douban.com/subject/36733268/",
-            imgSrc: "https://img3.doubanio.com/view/photo/s_ratio_poster/public/p2911767273.webp",
-            creator: "金桔猪",
-            pubDate: "2024-08-11",
-            type: "movie"
-          },
-          {
-            title: "想读“没话找话”指南",
-            link: "https://book.douban.com/subject/36124823/",
-            imgSrc: "https://img9.doubanio.com/view/subject/s/public/s34330754.jpg",
-            creator: "金桔猪",
-            pubDate: "2024-06-24",
-            type: "book"
-          },
-          {
-            title: "想读日常生活中的非暴力沟通",
-            link: "https://book.douban.com/subject/36506276/",
-            imgSrc: "https://img3.doubanio.com/view/subject/s/public/s34619022.jpg",
-            creator: "金桔猪",
-            pubDate: "2024-06-24",
-            type: "book"
-          },
-          {
-            title: "听过Midnights",
-            link: "https://music.douban.com/subject/36130489/",
-            imgSrc: "https://img9.doubanio.com/view/subject/s/public/s34359738.jpg",
-            creator: "金桔猪",
-            pubDate: "2024-05-15",
-            type: "music"
-          },
-          {
-            title: "听过30",
-            link: "https://music.douban.com/subject/35669718/",
-            imgSrc: "https://img1.doubanio.com/view/subject/s/public/s34036615.jpg",
-            creator: "金桔猪",
-            pubDate: "2024-04-10",
-            type: "music"
-          }
-        ];
+async function fetchRSS() {
 
+const url = 'https://www.douban.com/feed/people/pigpigeon/interests';
+
+try {
+
+// 使用代理，假设我们的代理接口在同源下
+
+const res = await fetch(`${encodeURIComponent(url)}`);
+
+if (res.ok) {
+
+const text = await res.text();
+
+return parseRSS(text);
+
+} else {
+
+throw new Error('Network error');
+
+}
+
+} catch (err) {
+
+console.error('使用代理获取RSS失败，使用模拟数据', err);
+
+// 使用模拟数据
+return parseRSS(text);
+
+}
+
+}
+
+function parseRSS(text) {
+
+const parser = new DOMParser();
+
+const xmlDoc = parser.parseFromString(text, "text/xml");
+  
         const navEl = document.querySelector("nav");
         const contentEl = document.getElementById("content");
         const isMobile = /Mobi|Android|iPhone|Windows Phone/i.test(
