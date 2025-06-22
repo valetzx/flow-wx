@@ -3,6 +3,7 @@ import * as cheerio from "cheerio";
 import mainHtml from "./main.html";
 import ideasHtml from "./ideas.html";
 import adminHtml from "./admin.html";
+import addHtml from "./add.html";
 // import swHtml from "./sw.js";
 import articleText from "./article.txt";
 
@@ -179,6 +180,7 @@ export default {
     const indexHtml = injectConfig(mainHtml, apiDomains, imgDomains);
     const ideasPage = injectConfig(ideasHtml, apiDomains, imgDomains);
     const adminPage = injectConfig(adminHtml, apiDomains, imgDomains);
+    const addPage = injectConfig(addHtml, apiDomains, imgDomains);
 
     const urls = await getUrls(env);
 
@@ -297,6 +299,8 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(cacheThenNetwork(event.request));
   } else if (url.pathname === "/ideas") {
     event.respondWith(cacheThenNetwork(event.request));
+  } else if (url.pathname === "/add") {
+    event.respondWith(cacheThenNetwork(event.request));
   }
 });
 
@@ -404,6 +408,12 @@ async function cacheThenNetwork(request) {
 
     if (pathname === "/ideas") {
       return new Response(ideasPage, {
+        headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
+      });
+    }
+
+    if (pathname === "/add") {
+      return new Response(addPage, {
         headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
       });
     }

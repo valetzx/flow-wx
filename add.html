@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RSS 阅读器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --primary: 79, 70, 229;
+        --secondary: 139, 92, 246;
+        --accent: 236, 72, 153;
+        --surface: 241, 245, 249;
+        --on-surface: 15, 23, 42;
+        --card: 255, 255, 255;
+        --border: 229, 231, 235;
+      }
+      .dark {
+        --primary: 129, 140, 248;
+        --secondary: 167, 139, 250;
+        --accent: 244, 114, 182;
+        --surface: 15, 23, 42;
+        --on-surface: 241, 245, 249;
+        --card: 30, 41, 59;
+        --border: 55, 65, 81;
+      }
+      .masonry { column-count: 4; column-gap: 1rem; }
+      @media (max-width: 1024px) { .masonry { column-count: 2; } }
+      @media (max-width: 640px) { .masonry { column-count: 1; } }
+      .masonry-item { break-inside: avoid; margin-bottom: 1rem; }
+      .sidebar-link { display: flex; align-items: center; justify-content: center; padding: 0.5rem; border-radius: 0.375rem; color: #6b7280; transition: background-color 0.2s, color 0.2s; }
+      .sidebar-link:hover { background-color: #f1f5f9; color: #111827; }
+      nav.mobile #homeBtn { display:none; }
+      nav.mobile { top:auto; bottom:0; left:0; height:72px; width:100%; flex-direction:row; border-right:none; border-top:1px solid #e5e7eb; }
+      nav.mobile .sidebar-link { flex:1; margin-top:5px; }
+      nav.mobile .sidebar-items { flex-direction:row; width:100%; }
+      nav.mobile .sidebar-items > * { margin:0; flex:1; --tw-space-y-reverse:0; margin-top:0; margin-bottom:calc(1.5rem * var(--tw-space-y-reverse)); }
+      nav.mobile #moreBtn #addBtn #idealBtn { margin-top:0; }
+      nav.mobile .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top:0; }
+      body.mobile #content { margin-left:0; margin-bottom:72px; }
+    </style>
+  </head>
+  <body class="bg-surface text-on-surface min-h-screen font-sans">
+    <nav class="fixed top-0 left-0 h-screen w-[72px] border-r shadow flex flex-col items-center py-4">
+      <div class="sidebar-items flex flex-col items-center gap-y-6 h-full w-full">
+        <a href="/#" aria-label="主页" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path d="M7.54 23.15q-.2-2.05.26-3.93L9 14.04a7 7 0 0 1-.35-2.07c0-1.68.81-2.88 2.09-2.88.88 0 1.53.62 1.53 1.8q0 .57-.23 1.28l-.52 1.72q-.15.5-.15.92c0 1.2.91 1.87 2.08 1.87 2.09 0 3.57-2.16 3.57-4.96 0-3.12-2.04-5.12-5.05-5.12-3.36 0-5.49 2.19-5.49 5.24 0 1.22.38 2.36 1.11 3.14-.24.41-.5.48-.88.48-1.2 0-2.34-1.69-2.34-4 0-4 3.2-7.17 7.68-7.17 4.7 0 7.66 3.29 7.66 7.33s-2.88 7.15-5.98 7.15a3.8 3.8 0 0 1-3.06-1.48l-.62 2.5a11 11 0 0 1-1.62 3.67A11.98 11.98 0 0 0 24 12a11.99 11.99 0 1 0-24 0 12 12 0 0 0 7.54 11.15"/></svg>
+        </a>
+        <a href="/" aria-label="首页" class="sidebar-link" id="homeBtn">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path d="M4.6 22.73A107 107 0 0 0 11 23h2.22c2.43-.04 4.6-.16 6.18-.27A3.9 3.9 0 0 0 23 18.8v-8.46a4 4 0 0 0-1.34-3L14.4.93a3.63 3.63 0 0 0-4.82 0L2.34 7.36A4 4 0 0 0 1 10.35v8.46a3.9 3.9 0 0 0 3.6 3.92M13.08 2.4l7.25 6.44a2 2 0 0 1 .67 1.5v8.46a1.9 1.9 0 0 1-1.74 1.92q-1.39.11-3.26.19V16a4 4 0 0 0-8 0v4.92q-1.87-.08-3.26-.19A1.9 1.9 0 0 1 3 18.81v-8.46a2 2 0 0 1 .67-1.5l7.25-6.44a1.63 1.63 0 0 1 2.16 0M13.12 21h-2.24a1 1 0 0 1-.88-1v-4a2 2 0 1 1 4 0v4a1 1 0 0 1-.88 1"/></svg>
+        </a>
+        <a href="/ideas" aria-label="探索" id="idealBtn" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4M9.42 7.24a3 3 0 0 0-2.18 2.18L5.7 15.57a2.25 2.25 0 0 0 2.73 2.73l6.15-1.54a3 3 0 0 0 2.18-2.18l1.54-6.15a2.25 2.25 0 0 0-2.73-2.73zm6.94.7-1.54 6.15a1 1 0 0 1-.73.73l-6.15 1.54a.25.25 0 0 1-.3-.3L9.18 9.9a1 1 0 0 1 .73-.73l6.15-1.54a.25.25 0 0 1 .3.3M12 24a12 12 0 1 0 0-24 12 12 0 0 0 0 24M2 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0"/></svg>
+        </a>
+        <a href="/add" aria-label="创建" id="addBtn" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path d="M11 11H6v2h5v5h2v-5h5v-2h-5V6h-2zM5 1a4 4 0 0 0-4 4v14a4 4 0 0 0 4 4h14a4 4 0 0 0 4-4V5a4 4 0 0 0-4-4zm16 4v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h14a2 2 0 0 1 2 2"/></svg>
+        </a>
+        <a href="#" aria-label="更多" id="moreBtn" class="sidebar-link mt-auto">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10m3 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/><path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10m3 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0m1.13-10.29A2 2 0 0 0 14.7.31a12 12 0 0 0-5.4 0c-.73.17-1.26.74-1.43 1.4l-.58 2.14-2.14-.57a2 2 0 0 0-1.93.54 12 12 0 0 0-2.7 4.67c-.22.72.01 1.46.5 1.95L2.59 12l-1.57 1.56a2 2 0 0 0-.5 1.95 12 12 0 0 0 2.7 4.68c.51.54 1.27.72 1.93.54l2.14-.58.58 2.14c.17.67.7 1.24 1.43 1.4a12 12 0 0 0 5.4 0 2 2 0 0 0 1.43-1.4l.58-2.14 2.13.58c.67.18 1.43 0 1.94-.55a12 12 0 0 0 2.7-4.67 2 2 0 0 0-.5-1.94L21.4 12l1.57-1.56c.49-.5.71-1.23.5-1.95a12 12 0 0 0-2.7-4.67 2 2 0 0 0-1.93-.54l-2.14.57zm-6.34.54a10 10 0 0 1 4.42 0l.56 2.12a2 2 0 0 0 2.45 1.41l2.13-.57a10 10 0 0 1 2.2 3.83L20 10.59a2 2 0 0 0 0 2.83l1.55 1.55a10 10 0 0 1-2.2 3.82l-2.13-.57a2 2 0 0 0-2.44 1.42l-.57 2.12a10 10 0 0 1-4.42 0l-.57-2.12a2 2 0 0 0-2.45-1.42l-2.12.57a10 10 0 0 1-2.2-3.82L4 13.42a2 2 0 0 0 0-2.83L2.45 9.03a10 10 0 0 1 2.2-3.82l2.13.57a2 2 0 0 0 2.44-1.41z"/></svg>
+        </a>
+      </div>
+    </nav>
+    <div id="content" class="ml-[72px]">
+      <header class="py-6 text-center">
+        <h1 class="text-3xl font-bold tracking-tight text-on-surface">订阅</h1>
+      </header>
+      <main class="px-4 max-w-screen-xl mx-auto">
+        <div class="masonry" id="gallery"></div>
+        <button id="loadMore" class="mt-4 mx-auto block px-4 py-2 rounded bg-gray-200 text-gray-700 hidden">加载更多</button>
+      </main>
+      <div id="settingsPanel" class="fixed inset-0 bg-black/50 hidden items-center justify-center">
+        <div class="bg-card rounded-xl p-4 w-72 space-y-3">
+          <div class="flex justify-between items-center">
+            <h2 class="font-semibold">设置</h2>
+            <button id="closeSettings" class="text-xl leading-none">&times;</button>
+          </div>
+          <div class="flex items-center justify-between py-1">
+            <label class="text-sm">深色模式</label>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="darkModeToggle" class="sr-only peer">
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+            </label>
+          </div>
+          <label class="block text-sm">列数
+            <input id="columnCountInput" type="number" min="1" max="6" value="4" class="mt-1 w-full border rounded p-1 bg-surface text-on-surface" />
+          </label>
+          <label class="block text-sm">加载卡片数量
+            <input id="perPageInput" type="number" min="1" value="30" class="mt-1 w-full border rounded p-1 bg-surface text-on-surface" />
+          </label>
+          <label class="block text-sm">RSS 源
+            <input id="rssInput" type="text" class="mt-1 w-full border rounded p-1 bg-surface text-on-surface" placeholder="https://example.com/feed.xml" />
+          </label>
+          <button id="applySettings" class="w-full bg-primary text-white py-1 rounded">应用</button>
+          <button id="clearCache" class="w-full bg-red-500 text-white py-1 rounded">清理缓存</button>
+          <footer class="text-xs text-center text-gray-400 my-4">
+            <a href="https://github.com/valetzx/flow-wx" class="hover:underline">查看项目源码</a>
+          </footer>
+        </div>
+      </div>
+    </div>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const isDark = localStorage.getItem('darkMode') === 'true' || (window.matchMedia('(prefers-color-scheme: dark)').matches && localStorage.getItem('darkMode') !== 'false');
+        if (isDark) { document.documentElement.classList.add('dark'); darkModeToggle.checked = true; }
+        darkModeToggle.addEventListener('change', () => {
+          if (darkModeToggle.checked) { document.documentElement.classList.add('dark'); localStorage.setItem('darkMode','true'); } else { document.documentElement.classList.remove('dark'); localStorage.setItem('darkMode','false'); }
+        });
+
+        const gallery = document.getElementById('gallery');
+        const loadMoreBtn = document.getElementById('loadMore');
+        const settingsPanel = document.getElementById('settingsPanel');
+        const moreBtn = document.getElementById('moreBtn');
+        const closeSettings = document.getElementById('closeSettings');
+        const applySettings = document.getElementById('applySettings');
+        const columnCountInput = document.getElementById('columnCountInput');
+        const perPageInput = document.getElementById('perPageInput');
+        const rssInput = document.getElementById('rssInput');
+        const clearCacheBtn = document.getElementById('clearCache');
+
+        const savedCols = parseInt(localStorage.getItem('rssCols')) || 4;
+        const savedPerPage = parseInt(localStorage.getItem('rssPerPage')) || 20;
+        const savedFeed = localStorage.getItem('rssFeeds') || '';
+
+        columnCountInput.value = savedCols;
+        perPageInput.value = savedPerPage;
+        rssInput.value = savedFeed;
+        gallery.style.columnCount = String(savedCols);
+        let perPage = savedPerPage;
+        let allItems = [];
+        let currentPage = 0;
+
+        function createImage(src, alt){
+          const img = document.createElement('img');
+          img.className = 'w-full rounded-t-2xl object-cover hover:opacity-90 transition-opacity aspect-video';
+          img.src = src;
+          img.alt = alt;
+          img.loading = 'lazy';
+          return img;
+        }
+
+        function createCard(item){
+          const wrapper = document.createElement('div');
+          wrapper.className = 'masonry-item rounded-2xl shadow overflow-hidden flex flex-col';
+          if(item.imgSrc){ wrapper.appendChild(createImage(item.imgSrc, item.title)); }
+          const text = document.createElement('div');
+          text.className = 'card-content p-5 flex flex-col gap-2';
+          const h2 = document.createElement('h2');
+          h2.className = 'text-xl font-semibold text-slate-900 tracking-tight mb-1';
+          h2.textContent = item.title;
+          const p = document.createElement('p');
+          p.className = 'text-sm text-gray-600 leading-relaxed mb-2';
+          p.textContent = item.description;
+          const link = document.createElement('a');
+          link.className = 'text-xs text-gray-400 hover:underline self-end';
+          link.href = item.url; link.target = '_blank'; link.rel = 'noopener noreferrer';
+          link.textContent = '查看原文';
+          text.appendChild(h2); text.appendChild(p); text.appendChild(link);
+          wrapper.appendChild(text);
+          return wrapper;
+        }
+
+        function renderPage(){
+          gallery.innerHTML='';
+          const end = (currentPage + 1) * perPage;
+          const items = allItems.slice(0, end);
+          items.forEach(it=>gallery.appendChild(createCard(it)));
+          if(end >= allItems.length){ loadMoreBtn.classList.add('hidden'); } else { loadMoreBtn.classList.remove('hidden'); }
+        }
+
+        function applyData(items){
+          allItems = items;
+          currentPage = 0;
+          renderPage();
+        }
+
+        async function fetchFeed(url){
+          const res = await fetch(url);
+          if(!res.ok) throw new Error('network');
+          const text = await res.text();
+          const doc = new DOMParser().parseFromString(text,'application/xml');
+          const arr = [];
+          doc.querySelectorAll('item').forEach(it=>{
+            const title = it.querySelector('title')?.textContent?.trim() || '';
+            const link = it.querySelector('link')?.textContent?.trim() || '';
+            const descRaw = it.querySelector('description')?.textContent || '';
+            const tmp = document.createElement('div'); tmp.innerHTML = descRaw; const desc = tmp.textContent || tmp.innerText || '';
+            let imgSrc = it.querySelector('enclosure')?.getAttribute('url');
+            if(!imgSrc){ const m = descRaw.match(/<img[^>]+src="([^"]+)"/i); if(m) imgSrc = m[1]; }
+            arr.push({title, url: link, description: desc.trim(), imgSrc});
+          });
+          return arr;
+        }
+
+        async function init(){
+          const feedUrl = savedFeed || rssInput.placeholder;
+          const cachedStr = localStorage.getItem('rssData');
+          if(cachedStr){ try{ applyData(JSON.parse(cachedStr)); }catch{} }
+          try{
+            const items = await fetchFeed(feedUrl);
+            localStorage.setItem('rssData', JSON.stringify(items));
+            applyData(items);
+          }catch(e){ console.error('加载RSS失败',e); }
+        }
+
+        loadMoreBtn.addEventListener('click',()=>{ currentPage++; renderPage(); });
+        moreBtn.addEventListener('click',e=>{ e.preventDefault(); settingsPanel.classList.remove('hidden'); settingsPanel.classList.add('flex'); });
+        closeSettings.addEventListener('click',()=>{ settingsPanel.classList.add('hidden'); settingsPanel.classList.remove('flex'); });
+        applySettings.addEventListener('click',()=>{
+          const cols = Math.max(1, parseInt(columnCountInput.value)||1);
+          perPage = Math.max(1, parseInt(perPageInput.value)||1);
+          gallery.style.columnCount = String(cols);
+          localStorage.setItem('rssCols', String(cols));
+          localStorage.setItem('rssPerPage', String(perPage));
+          localStorage.setItem('rssFeeds', rssInput.value.trim());
+          currentPage=0;
+          init();
+          settingsPanel.classList.add('hidden');
+          settingsPanel.classList.remove('flex');
+        });
+        clearCacheBtn.addEventListener('click',()=>{ ['rssData','rssCols','rssPerPage','rssFeeds'].forEach(k=>localStorage.removeItem(k)); location.reload(); });
+        init();
+      });
+    </script>
+  </body>
+</html>
