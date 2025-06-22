@@ -130,38 +130,49 @@
         const defaults = Array.isArray(window.DEFAULT_FEEDS)
           ? window.DEFAULT_FEEDS
           : [];
+        const preloaded = Array.isArray(window.PRELOAD_ITEMS)
+          ? window.PRELOAD_ITEMS
+          : [];
         const extra = (localStorage.getItem("rssFeeds") || "")
           .split(/\r?\n|,/)
           .map((s) => s.trim())
-          .filter(Boolean);
-        const feeds = defaults.concat(extra);
+          .filter(Boolean)
+          .filter((u) => !defaults.includes(u));
+
+        function render(items) {
+          for (const it of items) {
+            const card = document.createElement("div");
+            card.className = "masonry-item rounded-2xl shadow bg-card p-4";
+            const title = document.createElement("h2");
+            title.className = "text-lg font-semibold mb-2";
+            title.textContent = it.title;
+            const desc = document.createElement("p");
+            desc.className = "text-sm text-gray-600 mb-2";
+            desc.innerHTML = it.description;
+            const link = document.createElement("a");
+            link.href = it.link;
+            link.target = "_blank";
+            link.className = "text-xs text-gray-400 hover:underline self-end";
+            link.textContent = "查看原文";
+            card.appendChild(title);
+            card.appendChild(desc);
+            card.appendChild(link);
+            feedList.appendChild(card);
+          }
+        }
+
+        render(preloaded);
+
         async function load(url) {
           const res = await fetch("/api/rss?url=" + encodeURIComponent(url));
           if (!res.ok) throw new Error("fail");
           return (await res.json()).items || [];
         }
-        for (const url of feeds) {
+
+        for (const url of extra) {
           try {
             const items = await load(url);
-            for (const it of items) {
-              const card = document.createElement("div");
-              card.className = "masonry-item rounded-2xl shadow bg-card p-4";
-              const title = document.createElement("h2");
-              title.className = "text-lg font-semibold mb-2";
-              title.textContent = it.title;
-              const desc = document.createElement("p");
-              desc.className = "text-sm text-gray-600 mb-2";
-              desc.innerHTML = it.description;
-              const link = document.createElement("a");
-              link.href = it.link;
-              link.target = "_blank";
-              link.className = "text-xs text-gray-400 hover:underline self-end";
-              link.textContent = "查看原文";
-              card.appendChild(title);
-              card.appendChild(desc);
-              card.appendChild(link);
-              feedList.appendChild(card);
-            }
+            render(items);
           } catch (e) {
             console.error(e);
           }

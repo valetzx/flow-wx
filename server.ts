@@ -34,9 +34,14 @@ const rssEnv = Deno.env.get("RSS_URLS") || "";
 const rssUrls = rssEnv.split(/[,\s]+/).map((d) => d.trim()).filter(Boolean);
 const cacheImgDomain = Deno.env.get("IMG_CACHE") || "";
 
-function injectConfig(html: string): string {
-  if (apiDomains.length === 0 && imgDomains.length === 0 && rssUrls.length === 0) return html;
-  const script = `<script>window.API_DOMAINS=${JSON.stringify(apiDomains)};window.IMG_DOMAINS=${JSON.stringify(imgDomains)};window.DEFAULT_FEEDS=${JSON.stringify(rssUrls)};</script>`;
+function injectConfig(html: string, items: unknown[] = []): string {
+  if (
+    apiDomains.length === 0 &&
+    imgDomains.length === 0 &&
+    rssUrls.length === 0 &&
+    items.length === 0
+  ) return html;
+  const script = `<script>window.API_DOMAINS=${JSON.stringify(apiDomains)};window.IMG_DOMAINS=${JSON.stringify(imgDomains)};window.DEFAULT_FEEDS=${JSON.stringify(rssUrls)};window.PRELOAD_ITEMS=${JSON.stringify(items)};</script>`;
   return html.replace("</head>", `${script}</head>`);
 }
 
@@ -51,9 +56,7 @@ const swHtml = `const IMG_CACHE = ${JSON.stringify(cacheImgDomain)};\n${swRaw}`;
 const adminHtml = injectConfig(
   await Deno.readTextFile(join(__dirname, "admin.html")),
 );
-const addHtml = injectConfig(
-  await Deno.readTextFile(join(__dirname, "add.html")),
-);
+const addHtmlBase = await Deno.readTextFile(join(__dirname, "add.html"));
 const fallbackSentences = [
   "小荷才露尖尖角",
   "早有蜻蜓立上头",
@@ -187,6 +190,17 @@ async function fetchRss(url: string) {
     });
   });
   return items;
+}
+
+async function buildAddPage(): Promise<string> {
+  if (rssUrls.length === 0) return injectConfig(addHtmlBase);
+  try {
+    const results = await Promise.all(rssUrls.map(fetchRss));
+    const items = results.flat();
+    return injectConfig(addHtmlBase, items);
+  } catch (_e) {
+    return injectConfig(addHtmlBase);
+  }
 }
 
 // ---------- 反向代理图片 ----------
@@ -359,7 +373,8 @@ async function handler(req: Request): Promise<Response> {
   }
 
   if (pathname === "/add" || pathname === "/add/") {
-    return new Response(addHtml, {
+    const page = await buildAddPage();
+    return new Response(page, {
       headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
     });
   }

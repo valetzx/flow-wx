@@ -77,11 +77,12 @@ async function getRss(env) {
   return rssUrls;
 }
 
-function injectConfig(html, apiDomains, imgDomains, feeds) {
-  if (!apiDomains.length && !imgDomains.length && !feeds.length) return html;
+function injectConfig(html, apiDomains, imgDomains, feeds, items = []) {
+  if (!apiDomains.length && !imgDomains.length && !feeds.length && !items.length)
+    return html;
   const script = `<script>window.API_DOMAINS=${JSON.stringify(
     apiDomains,
-  )};window.IMG_DOMAINS=${JSON.stringify(imgDomains)};window.DEFAULT_FEEDS=${JSON.stringify(feeds)};</script>`;
+  )};window.IMG_DOMAINS=${JSON.stringify(imgDomains)};window.DEFAULT_FEEDS=${JSON.stringify(feeds)};window.PRELOAD_ITEMS=${JSON.stringify(items)};</script>`;
   return html.replace("</head>", `${script}</head>`);
 }
 
@@ -116,6 +117,20 @@ async function fetchRss(url) {
     });
   });
   return items;
+}
+
+async function buildAddPage(env, apiDomains, imgDomains) {
+  const feeds = await getRss(env);
+  if (feeds.length === 0) {
+    return injectConfig(addHtml, apiDomains, imgDomains, feeds);
+  }
+  try {
+    const results = await Promise.all(feeds.map(fetchRss));
+    const items = results.flat();
+    return injectConfig(addHtml, apiDomains, imgDomains, feeds, items);
+  } catch (_e) {
+    return injectConfig(addHtml, apiDomains, imgDomains, feeds);
+  }
 }
 
 async function proxyImage(imgUrl) {
@@ -209,7 +224,7 @@ export default {
     const indexHtml = injectConfig(mainHtml, apiDomains, imgDomains, feeds);
     const ideasPage = injectConfig(ideasHtml, apiDomains, imgDomains, feeds);
     const adminPage = injectConfig(adminHtml, apiDomains, imgDomains, feeds);
-    const addPage = injectConfig(addHtml, apiDomains, imgDomains, feeds);
+    const addPage = await buildAddPage(env, apiDomains, imgDomains);
 
     const urls = await getUrls(env);
 
