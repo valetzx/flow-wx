@@ -5,6 +5,7 @@ import ideasHtml from "./ideas.html";
 import adminHtml from "./admin.html";
 // import swHtml from "./sw.js";
 import articleText from "./article.txt";
+
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
@@ -12,14 +13,14 @@ const CORS_HEADERS = {
 };
 
 function withCors(headers = {}) {
-  return {
-    ...headers,
-    ...CORS_HEADERS
-  };
+  return { ...headers, ...CORS_HEADERS };
 }
+
+
 const DAILY_URL = "https://www.cikeee.com/api?app_key=pub_23020990025";
 const DAILY_TTL = 60 * 60 * 8000;
 const CACHE_TTL = 60 * 60 * 1000;
+
 const fallbackSentences = [
   "小荷才露尖尖角",
   "早有蜻蜓立上头",
@@ -39,16 +40,12 @@ const fallbackSentences = [
 function randomSentence() {
   return fallbackSentences[Math.floor(Math.random() * fallbackSentences.length)];
 }
+
 let urls = [];
 let urlsInit = false;
-let cache = {
-  data: null,
-  timestamp: 0
-};
-let dailyCache = {
-  data: null,
-  timestamp: 0
-};
+let cache = { data: null, timestamp: 0 };
+let dailyCache = { data: null, timestamp: 0 };
+
 async function getUrls(env) {
   if (!urlsInit) {
     urlsInit = true;
@@ -77,11 +74,9 @@ function injectConfig(html, apiDomains, imgDomains) {
 }
 
 function proxifyHtml(html) {
-  const $ = cheerio.load(html, {
-    decodeEntities: false
-  });
+  const $ = cheerio.load(html, { decodeEntities: false });
   $('[style]').each((_, el) => {
-    let style = $(el).attr('style') ? ? '';
+    let style = $(el).attr('style') ?? '';
     style = style.replace(/url\((['"]?)(https?:\/\/[^'"\)]+)\1\)/g, (match, q, url) => {
       if (url.includes('mmbiz')) {
         const clean = url.replace(/&amp;/g, '&');
@@ -93,6 +88,7 @@ function proxifyHtml(html) {
   });
   return $.html();
 }
+
 async function proxyImage(imgUrl) {
   try {
     const wechatRes = await fetch(imgUrl, {
@@ -115,59 +111,42 @@ async function proxyImage(imgUrl) {
       }),
     });
   } catch {
-    return new Response("proxy error", {
-      status: 502,
-      headers: withCors()
-    });
+    return new Response("proxy error", { status: 502, headers: withCors() });
   }
 }
+
 async function scrape(url) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 15000);
   try {
     const res = await fetch(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0"
-      },
+      headers: { "User-Agent": "Mozilla/5.0" },
       signal: controller.signal,
     });
     const html = await res.text();
-    const $ = cheerio.load(html, {
-      decodeEntities: false
-    });
+    const $ = cheerio.load(html, { decodeEntities: false });
     const name = $('#activity-name').text().trim() ||
       $('.rich_media_title').text().trim() ||
       randomSentence();
     const time = $('#publish_time').text().trim() ||
-      $('meta[property="article:published_time"]').attr('content') ? .trim();
-    const description = $('meta[property="og:description"]').attr('content') ? .trim() ||
+      $('meta[property="article:published_time"]').attr('content')?.trim();
+    const description = $('meta[property="og:description"]').attr('content')?.trim() ||
       $('#js_content p').first().text().trim();
     const images = [];
     $('#js_content img').each((_, el) => {
       const src = $(el).attr('data-src') || $(el).attr('src');
       if (src) images.push(src.split('?')[0]);
     });
-    const jsonWxRaw = $('catch#json-wx').html() ? .trim();
+    const jsonWxRaw = $('catch#json-wx').html()?.trim();
     let jsonWx;
     if (jsonWxRaw) {
       try {
         jsonWx = JSON.parse(jsonWxRaw.replace(/&quot;/g, '"'));
       } catch (e) {
-        jsonWx = {
-          parseError: e.message,
-          raw: jsonWxRaw
-        };
+        jsonWx = { parseError: e.message, raw: jsonWxRaw };
       }
     }
-    return {
-      [name]: {
-        time,
-        description,
-        images,
-        jsonWx,
-        url
-      }
-    };
+    return { [name]: { time, description, images, jsonWx, url } };
   } finally {
     clearTimeout(timer);
   }
@@ -176,23 +155,17 @@ async function scrape(url) {
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: withCors({
-      "Content-Type": "application/json; charset=utf-8"
-    }),
+    headers: withCors({ "Content-Type": "application/json; charset=utf-8" }),
   });
 }
+
 export default {
   async fetch(req, env) {
     if (req.method === "OPTIONS") {
-      return new Response(null, {
-        status: 204,
-        headers: withCors()
-      });
+      return new Response(null, { status: 204, headers: withCors() });
     }
-    const {
-      pathname,
-      searchParams
-    } = new URL(req.url);
+
+    const { pathname, searchParams } = new URL(req.url);
     const apiDomains = (env.API_DOMAINS || "")
       .split(/[,\s]+/)
       .map((d) => d.trim())
@@ -202,10 +175,13 @@ export default {
       .map((d) => d.trim())
       .filter(Boolean);
     const cacheImgDomain = env.IMG_CACHE || "mmbiz.qpic.cn";
+
     const indexHtml = injectConfig(mainHtml, apiDomains, imgDomains);
     const ideasPage = injectConfig(ideasHtml, apiDomains, imgDomains);
     const adminPage = injectConfig(adminHtml, apiDomains, imgDomains);
+
     const urls = await getUrls(env);
+
     if (pathname === "/api/wx") {
       try {
         if (cache.data && Date.now() - cache.timestamp < CACHE_TTL) {
@@ -217,22 +193,16 @@ export default {
           if (r.status === "fulfilled") {
             Object.assign(merged, r.value);
           } else {
-            merged[`(抓取失败) ${urls[i]}`] = {
-              error: String(r.reason)
-            };
+            merged[`(抓取失败) ${urls[i]}`] = { error: String(r.reason) };
           }
         });
-        cache = {
-          data: merged,
-          timestamp: Date.now()
-        };
+        cache = { data: merged, timestamp: Date.now() };
         return json(merged);
       } catch (err) {
-        return json({
-          error: err.message
-        }, 500);
+        return json({ error: err.message }, 500);
       }
     }
+
     if (pathname === "/api/daily") {
       try {
         if (dailyCache.data && Date.now() - dailyCache.timestamp < DAILY_TTL) {
@@ -241,22 +211,16 @@ export default {
         const res = await fetch(DAILY_URL);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        dailyCache = {
-          data,
-          timestamp: Date.now()
-        };
+        dailyCache = { data, timestamp: Date.now() };
         return json(data);
       } catch (err) {
-        return json({
-          error: err.message
-        }, 500);
+        return json({ error: err.message }, 500);
       }
     }
+
     if (pathname === "/api/article") {
       const url = searchParams.get("url") || urls[0];
-      if (!url) return json({
-        error: "missing url"
-      }, 400);
+      if (!url) return json({ error: "missing url" }, 400);
       try {
         const res = await fetch(url, {
           headers: {
@@ -266,9 +230,7 @@ export default {
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const html = await res.text();
-        const $ = cheerio.load(html, {
-          decodeEntities: false
-        });
+        const $ = cheerio.load(html, { decodeEntities: false });
         const title = $('#activity-name').text().trim() ||
           $('.rich_media_title').text().trim() ||
           randomSentence();
@@ -282,18 +244,15 @@ export default {
         const content = proxifyHtml($('#js_content').html() || "");
         const page = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8" /><title>${title}</title></head><body><h1 class="text-2xl font-semibold mb-2">${title}</h1>${content}</body></html>`;
         return new Response(page, {
-          headers: withCors({
-            "Content-Type": "text/html; charset=utf-8"
-          }),
+          headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
         });
       } catch (err) {
-        return json({
-          error: err.message
-        }, 500);
+        return json({ error: err.message }, 500);
       }
     }
+
     if (pathname === "/sw.js") {
-      const swHtml = `
+        const swHtml = `
 const IMG_CACHE = ${JSON.stringify(cacheImgDomain)};
 const CACHE_NAME = "wx-cache-v2";
 const CACHE_AGE = 6 * 24 * 60 * 60 * 1000;
@@ -426,38 +385,31 @@ async function cacheThenNetwork(request) {
   }
 }
         `;
-      return new Response(swHtml, {
-        headers: withCors({
-          "Content-Type": "application/javascript"
-        })
+        return new Response(swHtml, {
+          headers: withCors({ "Content-Type": "application/javascript" })
       });
     }
+
     if (pathname === "/img") {
       const imgUrl = searchParams.get("url");
-      if (!imgUrl) return new Response("missing url", {
-        status: 400,
-        headers: withCors()
-      });
+      if (!imgUrl) return new Response("missing url", { status: 400, headers: withCors() });
       return await proxyImage(imgUrl);
     }
+
     if (pathname === "/@admin") {
       return new Response(adminPage, {
-        headers: withCors({
-          "Content-Type": "text/html; charset=utf-8"
-        }),
+        headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
       });
     }
+
     if (pathname === "/ideas") {
       return new Response(ideasPage, {
-        headers: withCors({
-          "Content-Type": "text/html; charset=utf-8"
-        }),
+        headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
       });
     }
+
     return new Response(indexHtml, {
-      headers: withCors({
-        "Content-Type": "text/html; charset=utf-8"
-      }),
+      headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
     });
   },
 };
