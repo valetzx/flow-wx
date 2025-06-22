@@ -308,6 +308,33 @@
   transform: translateX(0);
 }
 
+/* Banner 图片轮播容器 */
+.banner-card .banner-carousel {
+  position: absolute;
+  inset: 0;
+  padding: 8px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.banner-card .carousel-slot {
+  position: absolute;
+  top: 80%;
+  width: 60px;
+  height: 90px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 0.5rem;
+  transform: translateY(-50%);
+  transition: background-image 0.5s ease, background-color 0.5s ease;
+}
+
+.banner-card .card-content {
+  position: relative;
+  z-index: 5;
+}
+
     </style>
     <script>
       // 在tailwind配置前设置darkMode
@@ -492,6 +519,18 @@ function createBannerCard() {
   wrapper.className = "masonry-item rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer banner-card";
   wrapper.style.height = "280px";
 
+  const carousel = document.createElement("div");
+  carousel.className = "banner-carousel";
+  const slotWidth = 60;
+  const slotGap = 8;
+  const slots = [];
+  for (let i = 0; i < 5; i++) {
+    const slot = document.createElement("div");
+    slot.className = "carousel-slot";
+    carousel.appendChild(slot);
+    slots.push({ el: slot, x: -((slotWidth + slotGap) * (5 - i)) });
+  }
+
   const mask = document.createElement("div");
   mask.className = "banner-mask";
   mask.textContent = "随机文章 →";
@@ -513,14 +552,59 @@ function createBannerCard() {
 
   content.appendChild(h2);
   content.appendChild(p);
+  wrapper.appendChild(carousel);
   wrapper.appendChild(content);
   wrapper.appendChild(mask);
-  
+
+  function getCachedImageUrls() {
+    try {
+      const data = JSON.parse(localStorage.getItem("wxData") || "null");
+      if (!data) return [];
+      const urls = [];
+      Object.values(data).forEach((item) => {
+        if (Array.isArray(item.images)) urls.push(...item.images);
+      });
+      return urls;
+    } catch {
+      return [];
+    }
+  }
+
+  function assignImage(slot) {
+    const urls = getCachedImageUrls();
+    if (urls.length > 0) {
+      const src = urls[Math.floor(Math.random() * urls.length)];
+      const path = `?url=${encodeURIComponent(src)}`;
+      slot.style.backgroundImage = `url(${buildUrl(path, imgDomains[0])})`;
+      slot.style.backgroundColor = "";
+    } else {
+      slot.style.backgroundImage = "";
+      slot.style.backgroundColor = getRandomColor();
+    }
+  }
+
+  slots.forEach((s) => assignImage(s.el));
+
+  function animate() {
+    const width = carousel.clientWidth;
+    slots.forEach((s) => {
+      s.x += 1; // speed
+      if (s.x > width) {
+        s.x = -slotWidth - slotGap;
+        assignImage(s.el);
+      }
+      s.el.style.transform = `translate(${s.x}px, -50%)`;
+    });
+    requestAnimationFrame(animate);
+  }
+
+  requestAnimationFrame(animate);
+
   // 添加点击事件
   wrapper.addEventListener("click", () => {
     alert("空白卡片被点击了！您可以在这里添加自定义行为");
   });
-  
+
   return wrapper;
 }
 
