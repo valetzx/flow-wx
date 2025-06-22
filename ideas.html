@@ -386,26 +386,6 @@
       </header>
 
       <main class="px-4 max-w-screen-xl mx-auto">
-<section id="banners" class="px-4 md:px-8">
-  <div class="banners-title text-center mb-6">
-    <h2 class="banners-title-big leading-tight">
-      分享设计<br>与科技生活
-    </h2>
-    <p class="banners-title-small">blog.learnonly.xyz</p>
-  </div>
-
-  <!-- 无限滚动的图标带 -->
-  <div class="tags-group-all overflow-hidden">
-    <div class="tags-group-wrapper">
-      <!-- 下面每一对为一组图标，按需删减/增补 -->
-      <div class="tags-group-icon-pair">
-        <div class="tags-group-icon bg-[#989bf8]"><img src="/img/icon/ae.png"  alt="AE"/></div>
-        <div class="tags-group-icon bg-white"><img src="/img/icon/Sketch.png" alt="Sketch"/></div>
-      </div>
-      <!-- …（其余 icon 保留或精简均可）… -->
-    </div>
-  </div>
-</section>
         <!-- Masonry 容器 -->
         <div class="masonry" id="gallery"></div>
         <button
@@ -692,6 +672,74 @@
           observer.observe(img);
           return img;
         }
+const bannerData = {
+  bigTitle: '分享设计<br>与科技生活',
+  smallTitle: 'blog.learnonly.xyz',
+  icons: [
+    { src: '/img/icon/ae.png',   alt: 'AE',      bg: '#989bf8' },
+    { src: '/img/icon/Sketch.png', alt: 'Sketch', bg: '#ffffff' },
+    { src: '/img/icon/docker.png', alt: 'Docker', bg: '#57b6e6' },
+    { src: '/img/icon/ps.png',     alt: 'PS',     bg: '#4082c3' },
+    // …更多图标…
+  ]
+};
+
+const sectionEl = createBannerCard(bannerData);
+document.getElementById('gallery')  // 或者你希望插入的位置
+  .prepend(sectionEl);
+
+
+function createBannerCard(item) {
+  // 1. 创建最外层 section
+  const section = document.createElement('section');
+  section.id = 'banners';
+  section.className = 'px-4 md:px-8';
+
+  // 2. 标题区
+  const titleWrapper = document.createElement('div');
+  titleWrapper.className = 'banners-title text-center mb-6';
+  titleWrapper.innerHTML = `
+    <h2 class="banners-title-big leading-tight">
+      ${item.bigTitle}
+    </h2>
+    <p class="banners-title-small">${item.smallTitle}</p>
+  `;
+  section.appendChild(titleWrapper);
+
+  // 3. 无限滚动的图标带容器
+  const tagsAll = document.createElement('div');
+  tagsAll.className = 'tags-group-all overflow-hidden';
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'tags-group-wrapper';
+
+  // 将 icons 列表每两个一组
+  for (let i = 0; i < item.icons.length; i += 2) {
+    const pair = item.icons.slice(i, i + 2);
+    const pairDiv = document.createElement('div');
+    pairDiv.className = 'tags-group-icon-pair';
+
+    pair.forEach(icon => {
+      const iconDiv = document.createElement('div');
+      iconDiv.className = 'tags-group-icon';
+      iconDiv.style.background = icon.bg;
+
+      const img = document.createElement('img');
+      img.src = icon.src;
+      img.alt = icon.alt;
+
+      iconDiv.appendChild(img);
+      pairDiv.appendChild(iconDiv);
+    });
+
+    wrapper.appendChild(pairDiv);
+  }
+
+  tagsAll.appendChild(wrapper);
+  section.appendChild(tagsAll);
+
+  return section;
+}
 
         function createCard(item) {
           const wrapper = document.createElement("div");
