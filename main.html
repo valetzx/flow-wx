@@ -594,13 +594,13 @@
         const searchBtn = document.createElement('button');
         searchBtn.id = 'searchBtn';
         searchBtn.textContent = '🔍︎';
-        searchBtn.className = 'px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary';
+        searchBtn.className = 'px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary bg-card';
         tagList.appendChild(searchBtn);
         tags.forEach((t) => {
           const btn = document.createElement('button');
           btn.dataset.tag = t;
           btn.textContent = t;
-          btn.className = 'px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary';
+          btn.className = 'px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary bg-card';
           tagList.appendChild(btn);
         });
       }
