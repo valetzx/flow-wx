@@ -85,10 +85,15 @@ interface ArticleMeta {
 }
 
 function parseArticles(text: string): ArticleMeta[] {
-  const parts = text.split(/^---\s*$/m).map((p) => p.trim()).filter(Boolean);
-  if (parts.length === 1 && !/\nurl:/.test(parts[0])) {
-    return text.split(/\r?\n/).map((l) => ({ url: l.trim() })).filter((a) => a.url);
+  const trimmed = text.trim();
+  if (!trimmed.startsWith("---")) {
+    return trimmed
+      .split(/\r?\n/)
+      .map((l) => ({ url: l.trim() }))
+      .filter((a) => a.url);
   }
+
+  const parts = trimmed.split(/^---\s*$/m).map((p) => p.trim()).filter(Boolean);
   const articles: ArticleMeta[] = [];
   for (const part of parts) {
     const lines = part.split(/\r?\n/);
