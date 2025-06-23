@@ -105,7 +105,11 @@ function parseArticles(text: string): ArticleMeta[] {
         current = kv[1];
         const value = kv[2];
         if (value === "") {
-          meta[current] = [];
+          if (current === "tags") {
+            meta[current] = [];
+          } else {
+            meta[current] = "";
+          }
         } else {
           meta[current] = value;
         }
@@ -131,6 +135,34 @@ try {
 } catch {
   const localText = await Deno.readTextFile(join(__dirname, "article.txt"));
   articles = parseArticles(localText);
+}
+
+async function fetchTitle(url: string): Promise<string> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15_000);
+  try {
+    const res = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0 (Deno)" },
+      signal: controller.signal,
+    });
+    const html = await res.text();
+    const $ = cheerio.load(html, { decodeEntities: false });
+    const title = $("#activity-name").text().trim() ||
+      $(".rich_media_title").text().trim();
+    return title || randomSentence();
+  } catch {
+    return randomSentence();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+for (const art of articles) {
+  if (!art.title ||
+    (Array.isArray(art.title) && art.title.length === 0) ||
+    (typeof art.title === "string" && art.title.trim() === "")) {
+    art.title = await fetchTitle(art.url);
+  }
 }
 
 // 抓取结果缓存（JSON）
