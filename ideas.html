@@ -468,6 +468,7 @@
   </nav>
   <div id="content" class="ml-[72px]">
     <header class="py-2 text-center"> </header>
+    <div id="tagList" class="flex flex-wrap justify-center gap-2 px-4 mb-2"></div>
     <main class="px-4 max-w-screen-xl mx-auto">
       <!-- Masonry 容器 -->
       <div class="masonry" id="gallery"></div> <button id="loadMore" class="mt-4 mx-auto block px-4 py-2 rounded bg-gray-200 text-gray-700 hidden">
@@ -643,7 +644,8 @@
         });
         return wrapper;
       }
-      const gallery = document.getElementById("gallery");
+        const gallery = document.getElementById("gallery");
+        const tagList = document.getElementById("tagList");
       const loadMoreBtn = document.getElementById("loadMore");
       const settingsPanel = document.getElementById("settingsPanel");
       const moreBtn = document.getElementById("moreBtn");
@@ -764,9 +766,12 @@
         contentEl.classList.remove("ml-[72px]");
         contentEl.classList.add("mb-[72px]");
       }
-      let allItems = [];
-      let currentPage = 0;
-      let perPage = savedPerPage;
+        let rawData = {};
+        let allItems = [];
+        let currentPage = 0;
+        let perPage = savedPerPage;
+        let selectedTag = '';
+        let searchTerm = '';
       const observer = new IntersectionObserver(
         (entries, obs) => {
           entries.forEach((entry) => {
@@ -901,27 +906,81 @@
         return wrapper;
       }
 
-      function buildItems(data) {
-        const items = [];
-        for (const [title, {
-            description,
-            images,
-            url,
-            tags
-          }] of Object.entries(data, )) {
-          const imgSrc = Array.isArray(images) && images.length > 0 ? images[Math.floor(Math.random() * images.length)] : null;
-          items.push({
-            title,
-            description,
-            imgSrc,
-            url,
-            tags
+        function buildItems(data) {
+          const items = [];
+          for (const [title, { description, images, url, tags }] of Object.entries(data)) {
+            const imgSrc = Array.isArray(images) && images.length > 0 ? images[Math.floor(Math.random() * images.length)] : null;
+            items.push({ title, description, imgSrc, url, tags });
+          }
+          return items;
+        }
+
+        function collectTags(data) {
+          const set = new Set();
+          Object.values(data).forEach((v) => {
+            if (Array.isArray(v.tags)) {
+              v.tags.forEach((t) => set.add(t));
+            }
+          });
+          return Array.from(set);
+        }
+
+        function renderTags(tags) {
+          tagList.innerHTML = '';
+          const searchBtn = document.createElement('button');
+          searchBtn.id = 'searchBtn';
+          searchBtn.textContent = '搜索';
+          searchBtn.className = 'px-3 py-1 rounded-full text-sm border hover:bg-primary/10';
+          tagList.appendChild(searchBtn);
+          tags.forEach((t) => {
+            const btn = document.createElement('button');
+            btn.dataset.tag = t;
+            btn.textContent = t;
+            btn.className = 'px-3 py-1 rounded-full text-sm border hover:bg-primary/10';
+            tagList.appendChild(btn);
           });
         }
-        return items;
-      }
 
-      function renderPage() {
+        function filterData(data) {
+          const filtered = {};
+          for (const [k, v] of Object.entries(data)) {
+            const tags = Array.isArray(v.tags) ? v.tags : [];
+            if ((selectedTag || searchTerm) && tags.length === 0) {
+              continue;
+            }
+            if (selectedTag && !tags.includes(selectedTag)) {
+              continue;
+            }
+            if (searchTerm && !k.includes(searchTerm)) {
+              continue;
+            }
+            filtered[k] = v;
+          }
+          return filtered;
+        }
+
+        function applyFilter() {
+          const data = filterData(rawData);
+          allItems = buildItems(data);
+          currentPage = 0;
+          renderPage();
+          Array.from(tagList.querySelectorAll('button[data-tag]')).forEach((btn) => {
+            btn.classList.remove('bg-primary', 'text-white');
+            if (btn.dataset.tag === selectedTag) {
+              btn.classList.add('bg-primary', 'text-white');
+            }
+          });
+          const sBtn = document.getElementById('searchBtn');
+          if (sBtn) {
+            if (searchTerm) {
+              sBtn.classList.add('bg-primary', 'text-white');
+            } else {
+              sBtn.classList.remove('bg-primary', 'text-white');
+            }
+          }
+        }
+
+        function renderPage() {
         gallery.innerHTML = "";
         gallery.appendChild(createBannerCard());
         if (dailyData) {
@@ -939,11 +998,13 @@
         }
       }
 
-      function applyData(data) {
-        allItems = buildItems(data);
-        currentPage = 0;
-        renderPage();
-      }
+        function applyData(data) {
+          rawData = data;
+          renderTags(collectTags(data));
+          selectedTag = '';
+          searchTerm = '';
+          applyFilter();
+        }
       async function fetchLatest() {
         const res = await fetchWithFallback("/api/wx", {
           headers: {
@@ -1011,10 +1072,25 @@
           console.error("加载每日电影失败:", err);
         }
       }
-      loadMoreBtn.addEventListener("click", () => {
-        currentPage++;
-        renderPage();
-      });
+        loadMoreBtn.addEventListener("click", () => {
+          currentPage++;
+          renderPage();
+        });
+        tagList.addEventListener('click', (e) => {
+          const searchBtn = e.target.closest('#searchBtn');
+          if (searchBtn) {
+            const term = prompt('请输入标题关键词');
+            if (term !== null) {
+              searchTerm = term.trim();
+              applyFilter();
+            }
+            return;
+          }
+          const btn = e.target.closest('button[data-tag]');
+          if (!btn) return;
+          selectedTag = btn.dataset.tag || '';
+          applyFilter();
+        });
       moreBtn.addEventListener("click", (e) => {
         e.preventDefault();
         settingsPanel.classList.remove("hidden");
