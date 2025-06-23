@@ -820,15 +820,29 @@
         p.className = "text-sm text-gray-600 leading-relaxed mb-2";
         p.textContent = item.description;
         const link = document.createElement("a");
-        link.className = "text-xs text-gray-400 hover:underline self-end";
+        link.className = "text-xs text-gray-400 hover:underline";
         link.textContent = "查看原文";
         link.href = item.url;
         link.target = "_blank";
         link.rel = "noopener noreferrer";
         link.addEventListener("click", (e) => e.stopPropagation());
+        const bottom = document.createElement("div");
+        bottom.className = "flex justify-between items-end mt-auto";
+        const tagsEl = document.createElement("div");
+        tagsEl.className = "flex flex-wrap gap-1";
+        if (Array.isArray(item.tags) && item.tags.length > 0) {
+          for (const tag of item.tags) {
+            const span = document.createElement("span");
+            span.className = "text-xs text-gray-400 hover:text-primary transition-colors";
+            span.textContent = tag;
+            tagsEl.appendChild(span);
+          }
+          bottom.appendChild(tagsEl);
+        }
+        bottom.appendChild(link);
         text.appendChild(h2);
         text.appendChild(p);
-        text.appendChild(link);
+        text.appendChild(bottom);
         wrapper.appendChild(text);
         wrapper.addEventListener("click", async () => {
           const url = wrapper.dataset.url;
@@ -890,14 +904,16 @@
         for (const [title, {
             description,
             images,
-            url
+            url,
+            tags
           }] of Object.entries(data, )) {
           const imgSrc = Array.isArray(images) && images.length > 0 ? images[Math.floor(Math.random() * images.length)] : null;
           items.push({
             title,
             description,
             imgSrc,
-            url
+            url,
+            tags
           });
         }
         return items;
