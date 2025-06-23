@@ -4,7 +4,7 @@ title:
 tags:
 abbrlink: 1a1a
 describe: 
-date: 2022-02-25 17:24:12
+date: 2022-02-25 17:24
 ---
 
 ---
@@ -15,7 +15,7 @@ tags:
   - 设计
 abbrlink: 1a1b
 describe: ▁▁
-date: 2024-02-25 17:24:12
+date: 2024-09-05 22:36
 ---
 
 ---
@@ -26,7 +26,7 @@ tags:
   - 设计
 abbrlink: 1a1c
 describe:   
-date: 2024-02-24 17:24:12
+date: 2025-06-19 21:13
 ---
 
 ---
@@ -37,5 +37,29 @@ tags:
   - 设计
 abbrlink: 1a1d
 describe:   
-date: 2024-02-23 17:24:12
+date: 2025-06-02 20:50
+---
+
+---
+url: https://mp.weixin.qq.com/s/lV14lI8O67VN6cEazaqIOA
+title: Ai合集1
+tags:
+  - AI
+  - 科技
+  - 分享
+abbrlink: 1a1e
+describe:  
+date: 2025-03-06 11:52
+---
+
+---
+url: https://mp.weixin.qq.com/s/uIeij0G6M2rkq1JAuP4Xcw
+title: Ai合集2
+tags:
+  - AI
+  - 科技
+  - 分享
+abbrlink: 1a1f
+describe:   
+date: 2025-04-14 20:50
 ---
