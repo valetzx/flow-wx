@@ -564,13 +564,14 @@
         const count = 7;
         const slots = [];
         const loopDistance = (slotWidth + slotGap) * count;
+        const startOffset = -1; 
         for (let i = 0; i < count; i++) {
           const slot = document.createElement("div");
           slot.className = "carousel-slot";
           carousel.appendChild(slot);
           slots.push({
             el: slot,
-            x: -(loopDistance - i * (slotWidth + slotGap))
+            x: i * (slotWidth + slotGap) + startOffset
           });
         }
         const mask = document.createElement("div");
