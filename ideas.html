@@ -820,7 +820,7 @@
         p.className = "text-sm text-gray-600 leading-relaxed mb-2";
         p.textContent = item.description;
         const link = document.createElement("a");
-        link.className = "text-xs text-gray-400 hover:underline";
+        link.className = "text-xs text-gray-400";
         link.textContent = "查看原文";
         link.href = item.url;
         link.target = "_blank";
@@ -834,7 +834,7 @@
           for (const tag of item.tags) {
             const span = document.createElement("span");
             span.className = "text-xs text-gray-400 hover:text-primary transition-colors";
-            span.textContent = tag;
+            span.textContent = "#" + tag;
             tagsEl.appendChild(span);
           }
           bottom.appendChild(tagsEl);
