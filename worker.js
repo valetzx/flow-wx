@@ -1,5 +1,6 @@
 // Cloudflare Worker version of server.ts
 import * as cheerio from "cheerio";
+import { parseAll } from "yaml";
 import mainHtml from "./main.html";
 import ideasHtml from "./ideas.html";
 import adminHtml from "./admin.html";
@@ -41,6 +42,17 @@ function randomSentence() {
   return fallbackSentences[Math.floor(Math.random() * fallbackSentences.length)];
 }
 
+function parseArticles(text) {
+  try {
+    const docs = parseAll(text);
+    return docs.map((d) => (typeof d === "object" && d ? d : {})).filter((d) => typeof d.url === "string");
+  } catch {
+    return [];
+  }
+}
+
+let articles = [];
+
 let urls = [];
 let urlsInit = false;
 let cache = { data: null, timestamp: 0 };
@@ -49,18 +61,24 @@ let dailyCache = { data: null, timestamp: 0 };
 async function getUrls(env) {
   if (!urlsInit) {
     urlsInit = true;
+    let text = "";
     if (env.WX_URL) {
       try {
         const res = await fetch(env.WX_URL);
         if (res.ok) {
-          const txt = await res.text();
-          urls = txt.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+          text = await res.text();
         }
       } catch {}
     }
-    if (urls.length === 0) {
-      urls = articleText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    if (!text) {
+      text = articleText;
     }
+    articles = parseArticles(text);
+    if (articles.length === 0) {
+      urls = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+      articles = urls.map((u) => ({ url: u }));
+    }
+    urls = articles.map((a) => a.url);
   }
   return urls;
 }
@@ -146,7 +164,7 @@ async function scrape(url) {
         jsonWx = { parseError: e.message, raw: jsonWxRaw };
       }
     }
-    return { [name]: { time, description, images, jsonWx, url } };
+    return { [name]: { time, description, images, jsonWx, url, tags: article.tags, abbrlink: article.abbrlink } };
   } finally {
     clearTimeout(timer);
   }
@@ -187,13 +205,13 @@ export default {
         if (cache.data && Date.now() - cache.timestamp < CACHE_TTL) {
           return json(cache.data);
         }
-        const results = await Promise.allSettled(urls.map(scrape));
+        const results = await Promise.allSettled(articles.map(scrape));
         const merged = {};
         results.forEach((r, i) => {
           if (r.status === "fulfilled") {
             Object.assign(merged, r.value);
           } else {
-            merged[`(抓取失败) ${urls[i]}`] = { error: String(r.reason) };
+            merged[`(抓取失败) ${articles[i].url}`] = { error: String(r.reason) };
           }
         });
         cache = { data: merged, timestamp: Date.now() };
@@ -219,7 +237,13 @@ export default {
     }
 
     if (pathname === "/api/article") {
-      const url = searchParams.get("url") || urls[0];
+      let url = searchParams.get("url");
+      const abbr = searchParams.get("abbr");
+      if (!url && abbr) {
+        const found = articles.find((a) => a.abbrlink === abbr);
+        if (found) url = found.url;
+      }
+      if (!url) url = articles[0]?.url;
       if (!url) return json({ error: "missing url" }, 400);
       try {
         const res = await fetch(url, {
@@ -231,9 +255,11 @@ export default {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const html = await res.text();
         const $ = cheerio.load(html, { decodeEntities: false });
-        const title = $('#activity-name').text().trim() ||
+        const defaultTitle = $('#activity-name').text().trim() ||
           $('.rich_media_title').text().trim() ||
           randomSentence();
+        const meta = articles.find((a) => a.url === url);
+        const title = meta?.title?.trim() || defaultTitle;
         $('#js_content img').each((_, el) => {
           const src = $(el).attr('data-src') || $(el).attr('src');
           if (src) {
@@ -385,9 +411,18 @@ async function cacheThenNetwork(request) {
   }
 }
         `;
-        return new Response(swHtml, {
-          headers: withCors({ "Content-Type": "application/javascript" })
+      return new Response(swHtml, {
+        headers: withCors({ "Content-Type": "application/javascript" })
       });
+    }
+
+    if (pathname.startsWith("/a/")) {
+      const slug = pathname.slice(3);
+      const found = articles.find((a) => a.abbrlink === slug);
+      if (found) {
+        return Response.redirect(found.url, 302);
+      }
+      return new Response("not found", { status: 404, headers: withCors() });
     }
 
     if (pathname === "/img") {
