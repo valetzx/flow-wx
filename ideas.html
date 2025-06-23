@@ -940,13 +940,13 @@
           const searchBtn = document.createElement('button');
           searchBtn.id = 'searchBtn';
           searchBtn.textContent = '🔍︎';
-          searchBtn.className = 'px-3 py-1 rounded-full text-sm border hover:bg-primary/10';
+          searchBtn.className = 'px-3 py-1 rounded-full text-sm border hover:border-primary hover:border-2';
           tagList.appendChild(searchBtn);
           tags.forEach((t) => {
             const btn = document.createElement('button');
             btn.dataset.tag = t;
             btn.textContent = t;
-            btn.className = 'px-3 py-1 rounded-full text-sm border hover:bg-primary/10';
+            btn.className = 'px-3 py-1 rounded-full text-sm border hover:border-primary hover:border-2';
             tagList.appendChild(btn);
           });
         }
@@ -1011,8 +1011,6 @@
         function applyData(data) {
           rawData = data;
           renderTags(collectTags(data));
-          selectedTag = '';
-          searchTerm = '';
           applyFilter();
         }
       async function fetchLatest() {
