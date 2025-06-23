@@ -67,7 +67,11 @@ function parseArticles(text) {
         current = kv[1];
         const value = kv[2];
         if (value === "") {
-          meta[current] = [];
+          if (current === "tags") {
+            meta[current] = [];
+          } else {
+            meta[current] = "";
+          }
         } else {
           meta[current] = value;
         }
@@ -98,6 +102,28 @@ async function getArticles(env) {
     }
     if (articles.length === 0) {
       articles = parseArticles(articleText);
+    }
+
+    async function fetchTitle(url) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 15000);
+      try {
+        const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" }, signal: controller.signal });
+        const html = await res.text();
+        const $ = cheerio.load(html, { decodeEntities: false });
+        const t = $('#activity-name').text().trim() || $('.rich_media_title').text().trim();
+        return t || randomSentence();
+      } catch {
+        return randomSentence();
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    for (const art of articles) {
+      if (!art.title || (Array.isArray(art.title) && art.title.length === 0) || (typeof art.title === 'string' && art.title.trim() === '')) {
+        art.title = await fetchTitle(art.url);
+      }
     }
   }
   return articles;
