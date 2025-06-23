@@ -256,6 +256,15 @@
       background-color: rgb(var(--primary));
       color: white;
     }
+
+    /* 隐藏滚动条的容器 */
+    .no-scrollbar {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
   </style>
   <script>
     // 在tailwind配置前设置darkMode
@@ -313,7 +322,7 @@
     <header class="py-2 text-center">
       <h2 class="text-1xl font-bold tracking-tight text-on-surface"></h2>
     </header>
-    <div id="tagList" class="flex flex-wrap justify-center gap-2 px-4 mb-4"></div>
+    <div id="tagList" class="flex overflow-x-auto whitespace-nowrap gap-2 px-4 mb-4 no-scrollbar"></div>
 
     <main class="px-4 max-w-screen-xl mx-auto">
       <!-- Masonry 容器 -->
