@@ -940,13 +940,13 @@
           const searchBtn = document.createElement('button');
           searchBtn.id = 'searchBtn';
           searchBtn.textContent = '🔍︎';
-          searchBtn.className = 'px-3 py-1 rounded-full text-sm border hover:border-primary hover:border-2';
+          searchBtn.className = 'px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary';
           tagList.appendChild(searchBtn);
           tags.forEach((t) => {
             const btn = document.createElement('button');
             btn.dataset.tag = t;
             btn.textContent = t;
-            btn.className = 'px-3 py-1 rounded-full text-sm border hover:border-primary hover:border-2';
+            btn.className = 'px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary';
             tagList.appendChild(btn);
           });
         }
@@ -975,17 +975,17 @@
           currentPage = 0;
           renderPage();
           Array.from(tagList.querySelectorAll('button[data-tag]')).forEach((btn) => {
-            btn.classList.remove('bg-primary', 'text-white');
+            btn.classList.remove('bg-primary', 'text-white', 'border-primary');
             if (btn.dataset.tag === selectedTag) {
-              btn.classList.add('bg-primary', 'text-white');
+              btn.classList.add('bg-primary', 'text-white', 'border-primary');
             }
           });
           const sBtn = document.getElementById('searchBtn');
           if (sBtn) {
             if (searchTerm) {
-              sBtn.classList.add('bg-primary', 'text-white');
+              sBtn.classList.add('bg-primary', 'text-white', 'border-primary');
             } else {
-              sBtn.classList.remove('bg-primary', 'text-white');
+              sBtn.classList.remove('bg-primary', 'text-white', 'border-primary');
             }
           }
         }
