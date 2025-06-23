@@ -313,7 +313,7 @@
     <header class="py-2 text-center">
       <h2 class="text-1xl font-bold tracking-tight text-on-surface"></h2>
     </header>
-    <div id="tagList" class="flex flex-wrap justify-center gap-2 px-4 mb-2"></div>
+    <div id="tagList" class="flex flex-wrap justify-center gap-2 px-4 mb-4"></div>
 
     <main class="px-4 max-w-screen-xl mx-auto">
       <!-- Masonry 容器 -->
@@ -584,7 +584,7 @@
         tagList.innerHTML = '';
         const searchBtn = document.createElement('button');
         searchBtn.id = 'searchBtn';
-        searchBtn.textContent = '搜索';
+        searchBtn.textContent = '🔍︎';
         searchBtn.className = 'px-3 py-1 rounded-full text-sm border hover:bg-primary/10';
         tagList.appendChild(searchBtn);
         tags.forEach((t) => {
