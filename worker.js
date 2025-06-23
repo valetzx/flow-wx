@@ -41,28 +41,61 @@ function randomSentence() {
   return fallbackSentences[Math.floor(Math.random() * fallbackSentences.length)];
 }
 
-let urls = [];
-let urlsInit = false;
+let articles = [];
+let articlesInit = false;
 let cache = { data: null, timestamp: 0 };
 let dailyCache = { data: null, timestamp: 0 };
 
-async function getUrls(env) {
-  if (!urlsInit) {
-    urlsInit = true;
+function parseArticles(text) {
+  const parts = text.split(/^---\s*$/m).map((p) => p.trim()).filter(Boolean);
+  if (parts.length === 1 && !/\nurl:/.test(parts[0])) {
+    return text.split(/\r?\n/).map((l) => ({ url: l.trim() })).filter((a) => a.url);
+  }
+  const arr = [];
+  for (const part of parts) {
+    const lines = part.split(/\r?\n/);
+    const meta = {};
+    let current = null;
+    for (const line of lines) {
+      const kv = line.match(/^([\w]+):\s*(.*)$/);
+      if (kv) {
+        current = kv[1];
+        const value = kv[2];
+        if (value === "") {
+          meta[current] = [];
+        } else {
+          meta[current] = value;
+        }
+        continue;
+      }
+      const m = line.match(/^\s*-\s*(.+)$/);
+      if (m && current) {
+        if (!Array.isArray(meta[current])) meta[current] = [];
+        meta[current].push(m[1]);
+      }
+    }
+    if (meta.url) arr.push(meta);
+  }
+  return arr;
+}
+
+async function getArticles(env) {
+  if (!articlesInit) {
+    articlesInit = true;
     if (env.WX_URL) {
       try {
         const res = await fetch(env.WX_URL);
         if (res.ok) {
           const txt = await res.text();
-          urls = txt.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+          articles = parseArticles(txt);
         }
       } catch {}
     }
-    if (urls.length === 0) {
-      urls = articleText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    if (articles.length === 0) {
+      articles = parseArticles(articleText);
     }
   }
-  return urls;
+  return articles;
 }
 
 function injectConfig(html, apiDomains, imgDomains) {
@@ -115,7 +148,8 @@ async function proxyImage(imgUrl) {
   }
 }
 
-async function scrape(url) {
+async function scrape(article) {
+  const { url } = article;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 15000);
   try {
@@ -125,12 +159,14 @@ async function scrape(url) {
     });
     const html = await res.text();
     const $ = cheerio.load(html, { decodeEntities: false });
-    const name = $('#activity-name').text().trim() ||
+    const name = article.title ||
+      $('#activity-name').text().trim() ||
       $('.rich_media_title').text().trim() ||
       randomSentence();
-    const time = $('#publish_time').text().trim() ||
+    const time = article.date ||
+      $('#publish_time').text().trim() ||
       $('meta[property="article:published_time"]').attr('content')?.trim();
-    const description = $('meta[property="og:description"]').attr('content')?.trim() ||
+    const description = article.describe || $('meta[property="og:description"]').attr('content')?.trim() ||
       $('#js_content p').first().text().trim();
     const images = [];
     $('#js_content img').each((_, el) => {
@@ -146,7 +182,7 @@ async function scrape(url) {
         jsonWx = { parseError: e.message, raw: jsonWxRaw };
       }
     }
-    return { [name]: { time, description, images, jsonWx, url } };
+    return { [name]: { time, description, images, jsonWx, url, tags: article.tags, abbrlink: article.abbrlink, date: article.date } };
   } finally {
     clearTimeout(timer);
   }
@@ -166,6 +202,15 @@ export default {
     }
 
     const { pathname, searchParams } = new URL(req.url);
+
+    const abbrMatch = pathname.match(/^\/a\/([\w-]+)$/);
+    if (abbrMatch) {
+      const found = articles.find((a) => a.abbrlink === abbrMatch[1]);
+      if (found) {
+        return Response.redirect(found.url, 302);
+      }
+      return new Response("not found", { status: 404, headers: withCors() });
+    }
     const apiDomains = (env.API_DOMAINS || "")
       .split(/[,\s]+/)
       .map((d) => d.trim())
@@ -180,20 +225,20 @@ export default {
     const ideasPage = injectConfig(ideasHtml, apiDomains, imgDomains);
     const adminPage = injectConfig(adminHtml, apiDomains, imgDomains);
 
-    const urls = await getUrls(env);
+    const articles = await getArticles(env);
 
     if (pathname === "/api/wx") {
       try {
         if (cache.data && Date.now() - cache.timestamp < CACHE_TTL) {
           return json(cache.data);
         }
-        const results = await Promise.allSettled(urls.map(scrape));
+        const results = await Promise.allSettled(articles.map(scrape));
         const merged = {};
         results.forEach((r, i) => {
           if (r.status === "fulfilled") {
             Object.assign(merged, r.value);
           } else {
-            merged[`(抓取失败) ${urls[i]}`] = { error: String(r.reason) };
+            merged[`(抓取失败) ${articles[i].url}`] = { error: String(r.reason) };
           }
         });
         cache = { data: merged, timestamp: Date.now() };
@@ -219,7 +264,13 @@ export default {
     }
 
     if (pathname === "/api/article") {
-      const url = searchParams.get("url") || urls[0];
+      const abbr = searchParams.get("abbr");
+      let url = searchParams.get("url");
+      if (abbr) {
+        const found = articles.find((a) => a.abbrlink === abbr);
+        if (found) url = found.url;
+      }
+      if (!url) url = articles[0]?.url;
       if (!url) return json({ error: "missing url" }, 400);
       try {
         const res = await fetch(url, {
@@ -231,9 +282,13 @@ export default {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const html = await res.text();
         const $ = cheerio.load(html, { decodeEntities: false });
-        const title = $('#activity-name').text().trim() ||
+        let title = $('#activity-name').text().trim() ||
           $('.rich_media_title').text().trim() ||
           randomSentence();
+        if (abbr) {
+          const found = articles.find((a) => a.abbrlink === abbr);
+          if (found && found.title) title = found.title;
+        }
         $('#js_content img').each((_, el) => {
           const src = $(el).attr('data-src') || $(el).attr('src');
           if (src) {
