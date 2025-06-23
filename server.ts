@@ -74,21 +74,63 @@ const WX_URL = Deno.env.get("WX_URL") || "article.txt";
 const DAILY_URL = "https://www.cikeee.com/api?app_key=pub_23020990025";
 const DAILY_TTL = 60 * 60 * 8000;
 let dailyCache: { data: unknown; timestamp: number } = { data: null, timestamp: 0 };
-let urls: string[] = [];
+
+interface ArticleMeta {
+  url: string;
+  title?: string;
+  tags?: string[];
+  abbrlink?: string;
+  describe?: string;
+  date?: string;
+}
+
+function parseArticles(text: string): ArticleMeta[] {
+  const trimmed = text.trim();
+  if (!trimmed.startsWith("---")) {
+    return trimmed
+      .split(/\r?\n/)
+      .map((l) => ({ url: l.trim() }))
+      .filter((a) => a.url);
+  }
+
+  const parts = trimmed.split(/^---\s*$/m).map((p) => p.trim()).filter(Boolean);
+  const articles: ArticleMeta[] = [];
+  for (const part of parts) {
+    const lines = part.split(/\r?\n/);
+    const meta: any = {};
+    let current: string | null = null;
+    for (const line of lines) {
+      const kv = line.match(/^([\w]+):\s*(.*)$/);
+      if (kv) {
+        current = kv[1];
+        const value = kv[2];
+        if (value === "") {
+          meta[current] = [];
+        } else {
+          meta[current] = value;
+        }
+        continue;
+      }
+      const m = line.match(/^\s*-\s*(.+)$/);
+      if (m && current) {
+        if (!Array.isArray(meta[current])) meta[current] = [];
+        meta[current].push(m[1]);
+      }
+    }
+    if (meta.url) articles.push(meta as ArticleMeta);
+  }
+  return articles;
+}
+
+let articles: ArticleMeta[] = [];
 try {
   const res = await fetch(WX_URL);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const text = await res.text();
-  urls = text
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter(Boolean);
+  articles = parseArticles(text);
 } catch {
   const localText = await Deno.readTextFile(join(__dirname, "article.txt"));
-  urls = localText
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter(Boolean);
+  articles = parseArticles(localText);
 }
 
 // 抓取结果缓存（JSON）
@@ -96,7 +138,8 @@ const CACHE_TTL = 60 * 60 * 1000;
 let cache: { data: unknown; timestamp: number } = { data: null, timestamp: 0 };
 
 // ---------- 业务函数 ----------
-async function scrape(url: string) {
+async function scrape(article: ArticleMeta) {
+  const { url } = article;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 15_000);
 
@@ -109,14 +152,16 @@ async function scrape(url: string) {
 
     const $ = cheerio.load(html, { decodeEntities: false });
 
-    const name = $("#activity-name").text().trim() ||
+    const name = article.title ||
+      $("#activity-name").text().trim() ||
       $(".rich_media_title").text().trim() ||
       randomSentence();
 
-    const time = $("#publish_time").text().trim() ||
+    const time = article.date ||
+      $("#publish_time").text().trim() ||
       $('meta[property="article:published_time"]').attr("content")?.trim();
 
-    const description =
+    const description = article.describe ||
       $('meta[property="og:description"]').attr("content")?.trim() ||
       $("#js_content p").first().text().trim();
 
@@ -137,7 +182,18 @@ async function scrape(url: string) {
       }
     }
 
-    return { [name]: { time, description, images, jsonWx, url } };
+    return {
+      [name]: {
+        time,
+        description,
+        images,
+        jsonWx,
+        url,
+        tags: article.tags,
+        abbrlink: article.abbrlink,
+        date: article.date,
+      },
+    };
   } finally {
     clearTimeout(timer);
   }
@@ -206,6 +262,17 @@ async function handler(req: Request): Promise<Response> {
 
   const { pathname, searchParams } = new URL(req.url);
 
+  // /a/{abbr} —— 短链接跳转
+  const abbrMatch = pathname.match(/^\/a\/([\w-]+)$/);
+  if (abbrMatch) {
+    const abbr = abbrMatch[1];
+    const found = articles.find((a) => a.abbrlink === abbr);
+    if (found) {
+      return Response.redirect(found.url, 302);
+    }
+    return new Response("not found", { status: 404, headers: withCors() });
+  }
+
   // /api/wx —— 抓取并返回 JSON
   if (pathname === "/api/wx") {
     try {
@@ -213,13 +280,13 @@ async function handler(req: Request): Promise<Response> {
         return json(cache.data);
       }
 
-      const results = await Promise.allSettled(urls.map(scrape));
+      const results = await Promise.allSettled(articles.map(scrape));
       const merged: Record<string, unknown> = {};
       results.forEach((r, i) => {
         if (r.status === "fulfilled") {
           Object.assign(merged, r.value);
         } else {
-          merged[`(抓取失败) ${urls[i]}`] = { error: String(r.reason) };
+          merged[`(抓取失败) ${articles[i].url}`] = { error: String(r.reason) };
         }
       });
 
@@ -248,7 +315,13 @@ async function handler(req: Request): Promise<Response> {
 
   // /api/article —— 抓取单篇文章并返回 HTML
   if (pathname === "/api/article") {
-    const url = searchParams.get("url") || urls[0];
+    const abbr = searchParams.get("abbr");
+    let url = searchParams.get("url");
+    if (abbr) {
+      const found = articles.find((a) => a.abbrlink === abbr);
+      if (found) url = found.url;
+    }
+    if (!url) url = articles[0]?.url;
     if (!url) return json({ error: "missing url" }, 400);
     try {
       const res = await fetch(url, {
@@ -260,9 +333,13 @@ async function handler(req: Request): Promise<Response> {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const html = await res.text();
       const $ = cheerio.load(html, { decodeEntities: false });
-      const title = $("#activity-name").text().trim() ||
+      let title = $("#activity-name").text().trim() ||
         $(".rich_media_title").text().trim() ||
         randomSentence();
+      if (abbr) {
+        const found = articles.find((a) => a.abbrlink === abbr);
+        if (found?.title) title = found.title;
+      }
       // 将微信文章中的 data-src 替换为 src，方便直接展示图片
       $("#js_content img").each((_, el) => {
         const src = $(el).attr("data-src") || $(el).attr("src");

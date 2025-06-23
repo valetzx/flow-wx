@@ -10,7 +10,22 @@
 
 ## 部署到 Deno  (推荐)
 
-直接fork+star本项目，更改本地 `article.txt` 文件中你想获取文章的链接（一行一篇）然后在Deno面板中选择你fork的仓库导入，选择 `server.ts` 进行部署
+直接fork+star本项目，修改 `article.txt` 以配置需要抓取的文章。每篇文章形如：
+
+```txt
+---
+url: https://example.com/wechat-article
+title: 可选自定义标题
+tags:
+  - 可选标签
+abbrlink: 可选短链
+describe: 可选描述
+date: 2024-01-01 12:00:00
+---
+```
+
+若文件不以 `---` 开头，则仍按旧格式（每行一个 URL）解析。
+配置完成后在 Deno 面板中选择你 fork 的仓库导入，选择 `server.ts` 进行部署。
 
 ## 部署到 Cloudflare Workers
 
