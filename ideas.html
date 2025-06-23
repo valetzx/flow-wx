@@ -337,6 +337,15 @@
       color: white;
     }
 
+    /* 隐藏滚动条的容器 */
+    .no-scrollbar {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
     /* Banner 卡片及遮罩效果 */
 
     .banner-card {
@@ -468,7 +477,7 @@
   </nav>
   <div id="content" class="ml-[72px]">
     <header class="py-2 text-center"> </header>
-    <div id="tagList" class="flex flex-wrap justify-center gap-2 px-4 mb-4"></div>
+    <div id="tagList" class="flex overflow-x-auto whitespace-nowrap gap-2 px-4 mb-4 no-scrollbar"></div>
     <main class="px-4 max-w-screen-xl mx-auto">
       <!-- Masonry 容器 -->
       <div class="masonry" id="gallery"></div> <button id="loadMore" class="mt-4 mx-auto block px-4 py-2 rounded bg-gray-200 text-gray-700 hidden">
