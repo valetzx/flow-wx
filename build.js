@@ -27,6 +27,8 @@ async function buildHtml(name) {
 await buildHtml('main.html');
 await buildHtml('ideas.html');
 await buildHtml('admin.html');
+await fs.copyFile(path.join(__dirname, 'common.css'), path.join(outDir, 'common.css'));
+await fs.copyFile(path.join(__dirname, 'common.js'), path.join(outDir, 'common.js'));
 
 const swRaw = await fs.readFile(path.join(__dirname, 'sw.js'), 'utf8');
 const swOut = `const IMG_CACHE = ${JSON.stringify(cacheImgDomain)};\n${swRaw}`;
