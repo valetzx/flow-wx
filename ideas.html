@@ -565,7 +565,7 @@
       function createBannerCard() {
         const wrapper = document.createElement("div");
         wrapper.className = "masonry-item rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer banner-card";
-        wrapper.dataset.tag = '随机文章';
+        wrapper.dataset.tag = '';
         wrapper.style.height = "280px";
         const carousel = document.createElement("div");
         carousel.className = "banner-carousel";
@@ -607,7 +607,7 @@
         tagsEl.className = "flex overflow-x-auto whitespace-nowrap gap-1 no-scrollbar";
         const span = document.createElement("span");
         span.className = "text-xs text-gray-400 hover:text-primary transition-colors";
-        span.textContent = "#随机文章";
+        span.textContent = "";
         tagsEl.appendChild(span);
         content.appendChild(tagsEl);
         //  content.appendChild(source);
@@ -788,7 +788,7 @@
         let allItems = [];
         let currentPage = 0;
         let perPage = savedPerPage;
-        let selectedTag = '';
+        let selectedTags = [];
         let searchTerm = '';
         const EXTRA_TAGS = ['随机文章', '电影'];
       const observer = new IntersectionObserver(
@@ -983,9 +983,11 @@
             if ((selectedTag || searchTerm) && tags.length === 0) {
               continue;
             }
-            if (selectedTag && !tags.includes(selectedTag)) {
-              continue;
-            }
+            if (selectedTags.length) {
+              const tags = Array.isArray(v.tags) ? v.tags : [];
+              if (!selectedTags.some((t) => tags.includes(t))) {
+                continue;
+              }
             if (searchTerm && !k.includes(searchTerm)) {
               continue;
             }
@@ -1007,7 +1009,7 @@
           renderPage();
           Array.from(tagList.querySelectorAll('button[data-tag]')).forEach((btn) => {
             btn.classList.remove('bg-primary', 'text-white', 'border-primary');
-            if (btn.dataset.tag === selectedTag) {
+            if (selectedTags.includes(btn.dataset.tag)) {
               btn.classList.add('bg-primary', 'text-white', 'border-primary');
             }
           });
@@ -1136,7 +1138,13 @@
           }
           const btn = e.target.closest('button[data-tag]');
           if (!btn) return;
-          selectedTag = btn.dataset.tag || '';
+          const tag = btn.dataset.tag;
+          if (!tag) return;
+          if (selectedTags.includes(tag)) {
+            selectedTags = selectedTags.filter((t) => t !== tag);
+          } else {
+            selectedTags.push(tag);
+          }
           applyFilter();
         });
       moreBtn.addEventListener("click", (e) => {
