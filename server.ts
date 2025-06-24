@@ -292,7 +292,6 @@ async function buildArticlePage(url: string, abbr?: string): Promise<Response> {
   </head>
   <body>
     <h1 class="text-2xl font-semibold mb-2">${title}</h1>
-    <p><a href="${url}" target="_blank" rel="noopener noreferrer">查看原文</a></p>
     ${content}
   </body>
 </html>`;

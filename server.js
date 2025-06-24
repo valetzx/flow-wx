@@ -223,7 +223,7 @@ async function buildArticlePage(url, abbr, res) {
       }
     });
     const content = proxifyHtml($('#js_content').html() || '');
-    const page = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8" /><title>${title}</title></head><body><h1 class="text-2xl font-semibold mb-2">${title}</h1><p><a href="${url}" target="_blank" rel="noopener noreferrer">查看原文</a></p>${content}</body></html>`;
+    const page = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8" /><title>${title}</title></head><body><h1 class="text-2xl font-semibold mb-2">${title}</h1>${content}</body></html>`;
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.send(page);
   } catch (err) {
