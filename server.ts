@@ -72,6 +72,7 @@ function randomSentence() {
 // 微信文章列表
 const WX_URL = Deno.env.get("WX_URL") || "article.txt";
 const DAILY_URL = "https://www.cikeee.com/api?app_key=pub_23020990025";
+const BIL_URL = "https://www.bilibili.com/opus/953541215728435240";
 const DAILY_TTL = 60 * 60 * 8000;
 let dailyCache: { data: unknown; timestamp: number } = { data: null, timestamp: 0 };
 
@@ -393,6 +394,31 @@ async function handler(req: Request): Promise<Response> {
       dailyCache = { data, timestamp: Date.now() };
       return json(data);
     } catch (err) {
+      return json({ error: err.message }, 500);
+    }
+  }
+
+  if (pathname === "/api/bil") {
+    try {
+      const r = await fetch(BIL_URL, { headers: { "User-Agent": "Mozilla/5.0 (Deno)" } });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const html = await r.text();
+      const $ = cheerio.load(html);
+      const title = $(".opus-module-title__text").first().text().trim();
+      const content = $(".opus-module-content").first().text().trim();
+      const images: string[] = [];
+      $(".opus-module-content img").each((_, el) => {
+        const src = $(el).attr("src");
+        if (src) images.push(src);
+      });
+      if (!title && !content) {
+        console.log("Bilibili fetch failed: content not found");
+        return json({ error: "content not found or captcha" }, 502);
+      }
+      console.log("Bilibili fetch success");
+      return json({ title, content, images });
+    } catch (err) {
+      console.log("Bilibili fetch error:", err.message);
       return json({ error: err.message }, 500);
     }
   }

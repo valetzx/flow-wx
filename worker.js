@@ -18,6 +18,7 @@ function withCors(headers = {}) {
 
 
 const DAILY_URL = "https://www.cikeee.com/api?app_key=pub_23020990025";
+const BIL_URL = "https://www.bilibili.com/opus/953541215728435240";
 const DAILY_TTL = 60 * 60 * 8000;
 const CACHE_TTL = 60 * 60 * 1000;
 
@@ -321,20 +322,45 @@ export default {
       }
     }
 
-    if (pathname === "/api/daily") {
-      try {
-        if (dailyCache.data && Date.now() - dailyCache.timestamp < DAILY_TTL) {
-          return json(dailyCache.data);
-        }
-        const res = await fetch(DAILY_URL);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        dailyCache = { data, timestamp: Date.now() };
-        return json(data);
-      } catch (err) {
-        return json({ error: err.message }, 500);
+  if (pathname === "/api/daily") {
+    try {
+      if (dailyCache.data && Date.now() - dailyCache.timestamp < DAILY_TTL) {
+        return json(dailyCache.data);
       }
+      const res = await fetch(DAILY_URL);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      dailyCache = { data, timestamp: Date.now() };
+      return json(data);
+    } catch (err) {
+      return json({ error: err.message }, 500);
     }
+  }
+
+  if (pathname === "/api/bil") {
+    try {
+      const r = await fetch(BIL_URL, { headers: { "User-Agent": "Mozilla/5.0" } });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const html = await r.text();
+      const $ = cheerio.load(html);
+      const title = $(".opus-module-title__text").first().text().trim();
+      const content = $(".opus-module-content").first().text().trim();
+      const images = [];
+      $(".opus-module-content img").each((_, el) => {
+        const src = $(el).attr("src");
+        if (src) images.push(src);
+      });
+      if (!title && !content) {
+        console.log("Bilibili fetch failed: content not found");
+        return json({ error: "content not found or captcha" }, 502);
+      }
+      console.log("Bilibili fetch success");
+      return json({ title, content, images });
+    } catch (err) {
+      console.log("Bilibili fetch error:", err.message);
+      return json({ error: err.message }, 500);
+    }
+  }
 
 //     if (pathname === "/api/article") {
 //       const abbr = searchParams.get("abbr");
