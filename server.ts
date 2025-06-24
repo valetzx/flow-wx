@@ -137,7 +137,27 @@ try {
   articles = parseArticles(localText);
 }
 
+async function fetchBiliTitle(url: string): Promise<string> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15_000);
+  try {
+    const res = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0 (Deno)" },
+      signal: controller.signal,
+    });
+    const html = await res.text();
+    const $ = cheerio.load(html, { decodeEntities: false });
+    const title = $(".opus-module-title__text").first().text().trim();
+    return title || randomSentence();
+  } catch {
+    return randomSentence();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function fetchTitle(url: string): Promise<string> {
+  if (url.includes("bilibili.com")) return await fetchBiliTitle(url);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 15_000);
   try {
@@ -167,7 +187,8 @@ for (const art of articles) {
 
 // 抓取结果缓存（JSON）
 const CACHE_TTL = 60 * 60 * 1000;
-let cache: { data: unknown; timestamp: number } = { data: null, timestamp: 0 };
+let wxCache: { data: unknown; timestamp: number } = { data: null, timestamp: 0 };
+let bilCache: { data: unknown; timestamp: number } = { data: null, timestamp: 0 };
 
 // ---------- 业务函数 ----------
 async function scrape(article: ArticleMeta) {
@@ -220,6 +241,39 @@ async function scrape(article: ArticleMeta) {
         description,
         images,
         jsonWx,
+        url,
+        tags: article.tags,
+        abbrlink: article.abbrlink,
+        date: article.date,
+      },
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function scrapeBili(article: ArticleMeta) {
+  const { url } = article;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15_000);
+  try {
+    const res = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0 (Deno)" },
+      signal: controller.signal,
+    });
+    const html = await res.text();
+    const $ = cheerio.load(html, { decodeEntities: false });
+    const name = article.title || $(".opus-module-title__text").first().text().trim() || randomSentence();
+    const description = article.describe || $(".opus-module-content").first().text().trim();
+    const images: string[] = [];
+    $(".opus-module-content img").each((_, el) => {
+      const src = $(el).attr("src");
+      if (src) images.push(src.startsWith("//") ? `https:${src}` : src);
+    });
+    return {
+      [name]: {
+        description,
+        images,
         url,
         tags: article.tags,
         abbrlink: article.abbrlink,
@@ -303,6 +357,41 @@ async function buildArticlePage(url: string, abbr?: string): Promise<Response> {
   }
 }
 
+async function buildBiliPage(url: string): Promise<Response> {
+  try {
+    const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 (Deno)" } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const html = await res.text();
+    const $ = cheerio.load(html, { decodeEntities: false });
+    const title = $(".opus-module-title__text").first().text().trim() || randomSentence();
+    $(".opus-module-content img").each((_, el) => {
+      const src = $(el).attr("src");
+      if (src) {
+        const clean = src.startsWith("//") ? `https:${src}` : src;
+        const imgPath = `?url=${encodeURIComponent(clean)}`;
+        const domain = imgDomains[0];
+        const full = domain ? domain.replace(/\/$/, "") + imgPath : imgPath;
+        $(el).attr("src", full);
+      }
+    });
+    const content = $(".opus-module-content").first().html() || "";
+    const page = `<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>${title}</title>
+  </head>
+  <body>
+    <h1 class="text-2xl font-semibold mb-2">${title}</h1>
+    ${content}
+  </body>
+</html>`;
+    return new Response(page, { headers: withCors({ "Content-Type": "text/html; charset=utf-8" }) });
+  } catch (err) {
+    return json({ error: err.message }, 500);
+  }
+}
+
 // ---------- 反向代理图片 ----------
 async function proxyImage(imgUrl: string): Promise<Response> {
   try {
@@ -350,6 +439,9 @@ async function handler(req: Request): Promise<Response> {
     const found = articles.find((a) => a.abbrlink === abbr);
     if (found) {
       if (searchParams.get("view") === "1") {
+        if (found.url.includes("bilibili.com")) {
+          return await buildBiliPage(found.url);
+        }
         return await buildArticlePage(found.url, abbr);
       }
       return Response.redirect(found.url, 302);
@@ -360,21 +452,46 @@ async function handler(req: Request): Promise<Response> {
   // /api/wx —— 抓取并返回 JSON
   if (pathname === "/api/wx") {
     try {
-      if (cache.data && Date.now() - cache.timestamp < CACHE_TTL) {
-        return json(cache.data);
+      if (wxCache.data && Date.now() - wxCache.timestamp < CACHE_TTL) {
+        return json(wxCache.data);
       }
 
-      const results = await Promise.allSettled(articles.map(scrape));
+      const wxArticles = articles.filter((a) => a.url.includes("mp.weixin.qq.com"));
+      const results = await Promise.allSettled(wxArticles.map(scrape));
       const merged: Record<string, unknown> = {};
       results.forEach((r, i) => {
         if (r.status === "fulfilled") {
           Object.assign(merged, r.value);
         } else {
-          merged[`(抓取失败) ${articles[i].url}`] = { error: String(r.reason) };
+          merged[`(抓取失败) ${wxArticles[i].url}`] = { error: String(r.reason) };
         }
       });
 
-      cache = { data: merged, timestamp: Date.now() };
+      wxCache = { data: merged, timestamp: Date.now() };
+      return json(merged);
+    } catch (err) {
+      return json({ error: err.message }, 500);
+    }
+  }
+
+  if (pathname === "/api/bil") {
+    try {
+      if (bilCache.data && Date.now() - bilCache.timestamp < CACHE_TTL) {
+        return json(bilCache.data);
+      }
+
+      const bilArticles = articles.filter((a) => a.url.includes("bilibili.com"));
+      const results = await Promise.allSettled(bilArticles.map(scrapeBili));
+      const merged: Record<string, unknown> = {};
+      results.forEach((r, i) => {
+        if (r.status === "fulfilled") {
+          Object.assign(merged, r.value);
+        } else {
+          merged[`(抓取失败) ${bilArticles[i].url}`] = { error: String(r.reason) };
+        }
+      });
+
+      bilCache = { data: merged, timestamp: Date.now() };
       return json(merged);
     } catch (err) {
       return json({ error: err.message }, 500);

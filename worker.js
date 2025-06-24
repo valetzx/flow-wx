@@ -43,7 +43,8 @@ function randomSentence() {
 
 let articles = [];
 let articlesInit = false;
-let cache = { data: null, timestamp: 0 };
+let wxCache = { data: null, timestamp: 0 };
+let bilCache = { data: null, timestamp: 0 };
 let dailyCache = { data: null, timestamp: 0 };
 
 function parseArticles(text) {
@@ -191,6 +192,31 @@ async function buildArticlePage(url, abbr) {
   }
 }
 
+async function buildBiliPage(url) {
+  try {
+    const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const html = await res.text();
+    const $ = cheerio.load(html, { decodeEntities: false });
+    const title = $('.opus-module-title__text').first().text().trim() || randomSentence();
+    $('.opus-module-content img').each((_, el) => {
+      const src = $(el).attr('src');
+      if (src) {
+        const clean = src.startsWith('//') ? `https:${src}` : src;
+        const imgPath = `?url=${encodeURIComponent(clean)}`;
+        const domain = imgDomains[0];
+        const full = domain ? domain.replace(/\/$/, '') + imgPath : imgPath;
+        $(el).attr('src', full);
+      }
+    });
+    const content = $('.opus-module-content').first().html() || '';
+    const page = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8" /><title>${title}</title></head><body><h1 class="text-2xl font-semibold mb-2">${title}</h1>${content}</body></html>`;
+    return new Response(page, { headers: withCors({ "Content-Type": "text/html; charset=utf-8" }) });
+  } catch (err) {
+    return json({ error: err.message }, 500);
+  }
+}
+
 async function proxyImage(imgUrl) {
   try {
     const wechatRes = await fetch(imgUrl, {
@@ -257,6 +283,30 @@ async function scrape(article) {
   }
 }
 
+async function scrapeBili(article) {
+  const { url } = article;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+  try {
+    const res = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0" },
+      signal: controller.signal,
+    });
+    const html = await res.text();
+    const $ = cheerio.load(html, { decodeEntities: false });
+    const name = article.title || $('.opus-module-title__text').first().text().trim() || randomSentence();
+    const description = article.describe || $('.opus-module-content').first().text().trim();
+    const images = [];
+    $('.opus-module-content img').each((_, el) => {
+      const src = $(el).attr('src');
+      if (src) images.push(src.startsWith('//') ? `https:${src}` : src);
+    });
+    return { [name]: { description, images, url, tags: article.tags, abbrlink: article.abbrlink, date: article.date } };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -278,6 +328,9 @@ export default {
       const found = articles.find((a) => a.abbrlink === abbr);
       if (found) {
         if (searchParams.get("view") === "1") {
+          if (found.url.includes('bilibili.com')) {
+            return await buildBiliPage(found.url);
+          }
           return await buildArticlePage(found.url, abbr);
         }
         return Response.redirect(found.url, 302);
@@ -302,19 +355,42 @@ export default {
 
     if (pathname === "/api/wx") {
       try {
-        if (cache.data && Date.now() - cache.timestamp < CACHE_TTL) {
-          return json(cache.data);
+        if (wxCache.data && Date.now() - wxCache.timestamp < CACHE_TTL) {
+          return json(wxCache.data);
         }
-        const results = await Promise.allSettled(articles.map(scrape));
+        const wxArticles = articles.filter((a) => a.url.includes("mp.weixin.qq.com"));
+        const results = await Promise.allSettled(wxArticles.map(scrape));
         const merged = {};
         results.forEach((r, i) => {
           if (r.status === "fulfilled") {
             Object.assign(merged, r.value);
           } else {
-            merged[`(抓取失败) ${articles[i].url}`] = { error: String(r.reason) };
+            merged[`(抓取失败) ${wxArticles[i].url}`] = { error: String(r.reason) };
           }
         });
-        cache = { data: merged, timestamp: Date.now() };
+        wxCache = { data: merged, timestamp: Date.now() };
+        return json(merged);
+      } catch (err) {
+        return json({ error: err.message }, 500);
+      }
+    }
+
+    if (pathname === "/api/bil") {
+      try {
+        if (bilCache.data && Date.now() - bilCache.timestamp < CACHE_TTL) {
+          return json(bilCache.data);
+        }
+        const bilArticles = articles.filter((a) => a.url.includes("bilibili.com"));
+        const results = await Promise.allSettled(bilArticles.map(scrapeBili));
+        const merged = {};
+        results.forEach((r, i) => {
+          if (r.status === "fulfilled") {
+            Object.assign(merged, r.value);
+          } else {
+            merged[`(抓取失败) ${bilArticles[i].url}`] = { error: String(r.reason) };
+          }
+        });
+        bilCache = { data: merged, timestamp: Date.now() };
         return json(merged);
       } catch (err) {
         return json({ error: err.message }, 500);
@@ -406,7 +482,7 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
-  if (url.pathname === "/api/wx" || url.pathname === "/api/daily") {
+  if (url.pathname === "/api/wx" || url.pathname === "/api/bil" || url.pathname === "/api/daily") {
     if (event.request.headers.get("x-skip-cache")) {
       event.respondWith(fetchAndCache(event.request));
     } else {

@@ -19,7 +19,7 @@ self.addEventListener("activate", (event) => {
 });
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
-  if (url.pathname === "/api/wx" || url.pathname === "/api/daily") {
+  if (url.pathname === "/api/wx" || url.pathname === "/api/bil" || url.pathname === "/api/daily") {
     if (event.request.headers.get("x-skip-cache")) {
       event.respondWith(fetchAndCache(event.request));
     } else {
