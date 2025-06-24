@@ -153,6 +153,44 @@ function proxifyHtml(html) {
   return $.html();
 }
 
+async function buildArticlePage(url, abbr) {
+  try {
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0",
+        Referer: "https://mp.weixin.qq.com/",
+      },
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const html = await res.text();
+    const $ = cheerio.load(html, { decodeEntities: false });
+    let title = $('#activity-name').text().trim() ||
+      $('.rich_media_title').text().trim() ||
+      randomSentence();
+    if (abbr) {
+      const found = articles.find((a) => a.abbrlink === abbr);
+      if (found && found.title) title = found.title;
+    }
+    $('#js_content img').each((_, el) => {
+      const src = $(el).attr('data-src') || $(el).attr('src');
+      if (src) {
+        const imgPath = `?url=${encodeURIComponent(src)}`;
+        const domain = imgDomains[0];
+        const full = domain ? domain.replace(/\/$/, '') + imgPath : imgPath;
+        $(el).attr('src', full);
+        $(el).removeAttr('data-src');
+      }
+    });
+    const content = proxifyHtml($('#js_content').html() || "");
+    const page = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8" /><title>${title}</title></head><body><h1 class="text-2xl font-semibold mb-2">${title}</h1>${content}</body></html>`;
+    return new Response(page, {
+      headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
+    });
+  } catch (err) {
+    return json({ error: err.message }, 500);
+  }
+}
+
 async function proxyImage(imgUrl) {
   try {
     const wechatRes = await fetch(imgUrl, {
@@ -236,8 +274,12 @@ export default {
 
     const abbrMatch = pathname.match(/^\/a\/([\w-]+)$/);
     if (abbrMatch) {
-      const found = articles.find((a) => a.abbrlink === abbrMatch[1]);
+      const abbr = abbrMatch[1];
+      const found = articles.find((a) => a.abbrlink === abbr);
       if (found) {
+        if (searchParams.get("view") === "1") {
+          return await buildArticlePage(found.url, abbr);
+        }
         return Response.redirect(found.url, 302);
       }
       return new Response("not found", { status: 404, headers: withCors() });
@@ -294,48 +336,48 @@ export default {
       }
     }
 
-    if (pathname === "/api/article") {
-      const abbr = searchParams.get("abbr");
-      let url = searchParams.get("url");
-      if (abbr) {
-        const found = articles.find((a) => a.abbrlink === abbr);
-        if (found) url = found.url;
-      }
-      if (!url) url = articles[0]?.url;
-      if (!url) return json({ error: "missing url" }, 400);
-      try {
-        const res = await fetch(url, {
-          headers: {
-            "User-Agent": "Mozilla/5.0",
-            Referer: "https://mp.weixin.qq.com/",
-          },
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const html = await res.text();
-        const $ = cheerio.load(html, { decodeEntities: false });
-        let title = $('#activity-name').text().trim() ||
-          $('.rich_media_title').text().trim() ||
-          randomSentence();
-        if (abbr) {
-          const found = articles.find((a) => a.abbrlink === abbr);
-          if (found && found.title) title = found.title;
-        }
-        $('#js_content img').each((_, el) => {
-          const src = $(el).attr('data-src') || $(el).attr('src');
-          if (src) {
-            $(el).attr('src', `/img?url=${encodeURIComponent(src)}`);
-            $(el).removeAttr('data-src');
-          }
-        });
-        const content = proxifyHtml($('#js_content').html() || "");
-        const page = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8" /><title>${title}</title></head><body><h1 class="text-2xl font-semibold mb-2">${title}</h1>${content}</body></html>`;
-        return new Response(page, {
-          headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
-        });
-      } catch (err) {
-        return json({ error: err.message }, 500);
-      }
-    }
+//     if (pathname === "/api/article") {
+//       const abbr = searchParams.get("abbr");
+//       let url = searchParams.get("url");
+//       if (abbr) {
+//         const found = articles.find((a) => a.abbrlink === abbr);
+//         if (found) url = found.url;
+//       }
+//       if (!url) url = articles[0]?.url;
+//       if (!url) return json({ error: "missing url" }, 400);
+//       try {
+//         const res = await fetch(url, {
+//           headers: {
+//             "User-Agent": "Mozilla/5.0",
+//             Referer: "https://mp.weixin.qq.com/",
+//           },
+//         });
+//         if (!res.ok) throw new Error(`HTTP ${res.status}`);
+//         const html = await res.text();
+//         const $ = cheerio.load(html, { decodeEntities: false });
+//         let title = $('#activity-name').text().trim() ||
+//           $('.rich_media_title').text().trim() ||
+//           randomSentence();
+//         if (abbr) {
+//           const found = articles.find((a) => a.abbrlink === abbr);
+//           if (found && found.title) title = found.title;
+//         }
+//         $('#js_content img').each((_, el) => {
+//           const src = $(el).attr('data-src') || $(el).attr('src');
+//           if (src) {
+//             $(el).attr('src', `/img?url=${encodeURIComponent(src)}`);
+//             $(el).removeAttr('data-src');
+//           }
+//         });
+//         const content = proxifyHtml($('#js_content').html() || "");
+//         const page = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8" /><title>${title}</title></head><body><h1 class="text-2xl font-semibold mb-2">${title}</h1>${content}</body></html>`;
+//         return new Response(page, {
+//           headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
+//         });
+//       } catch (err) {
+//         return json({ error: err.message }, 500);
+//       }
+//     }
 
     if (pathname === "/sw.js") {
         const swHtml = `
@@ -377,8 +419,10 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(cacheThenNetwork(event.request));
   } else if (url.pathname.startsWith("/img")) {
     event.respondWith(cacheThenNetwork(event.request));
-  } else if (url.pathname === "/api/article") {
+  } else if (url.pathname.startsWith("/a/") && url.searchParams.get("view") === "1") {
     event.respondWith(cacheThenNetwork(event.request));
+  // } else if (url.pathname === "/api/article") {
+  //   event.respondWith(cacheThenNetwork(event.request));
   } else if (url.pathname === "/") {
     event.respondWith(cacheThenNetwork(event.request));
   } else if (url.pathname === "/ideas") {
