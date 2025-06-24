@@ -565,6 +565,7 @@
       function createBannerCard() {
         const wrapper = document.createElement("div");
         wrapper.className = "masonry-item rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer banner-card";
+        wrapper.dataset.tag = '';
         wrapper.style.height = "280px";
         const carousel = document.createElement("div");
         carousel.className = "banner-carousel";
@@ -602,6 +603,13 @@
         button.textContent = "点击添加内容";
         content.appendChild(h2);
         content.appendChild(p);
+        const tagsEl = document.createElement("div");
+        tagsEl.className = "flex overflow-x-auto whitespace-nowrap gap-1 no-scrollbar";
+        const span = document.createElement("span");
+        span.className = "text-xs text-gray-400 hover:text-primary transition-colors";
+        span.textContent = "";
+        tagsEl.appendChild(span);
+        content.appendChild(tagsEl);
         //  content.appendChild(source);
         wrapper.appendChild(carousel);
         wrapper.appendChild(content);
@@ -782,6 +790,7 @@
         let perPage = savedPerPage;
         let selectedTag = '';
         let searchTerm = '';
+        const EXTRA_TAGS = ['电影'];
       const observer = new IntersectionObserver(
         (entries, obs) => {
           entries.forEach((entry) => {
@@ -891,6 +900,7 @@
       function createDailyCard(item) {
         const wrapper = document.createElement("div");
         wrapper.className = "masonry-item rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer";
+        wrapper.dataset.tag = '电影';
         if (item.mov_pic) {
           const img = document.createElement("img");
           img.className = "w-full object-cover";
@@ -906,15 +916,25 @@
         p.className = "text-sm text-gray-600 leading-relaxed";
         p.textContent = item.mov_text;
         const source = document.createElement("a");
-        source.className = "text-xs text-gray-400 hover:underline self-end";
+        source.className = "text-xs text-gray-400 hover:underline";
         source.textContent = "来自此刻电影";
         source.href = "https://www.cikeee.cc/";
         source.target = "_blank";
         source.rel = "noopener noreferrer";
         source.addEventListener("click", (e) => e.stopPropagation());
+        const bottom = document.createElement("div");
+        bottom.className = "flex items-end mt-auto gap-2";
+        const tagsEl = document.createElement("div");
+        tagsEl.className = "flex-1 min-w-0 flex overflow-x-auto whitespace-nowrap gap-1 no-scrollbar";
+        const span = document.createElement("span");
+        span.className = "text-xs text-gray-400 hover:text-primary transition-colors";
+        span.textContent = "#电影";
+        tagsEl.appendChild(span);
+        bottom.appendChild(tagsEl);
+        bottom.appendChild(source);
         text.appendChild(h2);
         text.appendChild(p);
-        text.appendChild(source);
+        text.appendChild(bottom);
         wrapper.appendChild(text);
         wrapper.addEventListener("click", () => showMovie(item));
         return wrapper;
@@ -946,7 +966,8 @@
           searchBtn.textContent = '🔍︎';
           searchBtn.className = 'px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary bg-card';
           tagList.appendChild(searchBtn);
-          tags.forEach((t) => {
+          const allTags = Array.from(new Set([...tags, ...EXTRA_TAGS]));
+          allTags.forEach((t) => {
             const btn = document.createElement('button');
             btn.dataset.tag = t;
             btn.textContent = t;
@@ -973,6 +994,12 @@
           return filtered;
         }
 
+        function extraItemVisible(tags) {
+          if (searchTerm) return false;
+          if (!selectedTag) return true;
+          return tags.includes(selectedTag);
+        }
+
         function applyFilter() {
           const data = filterData(rawData);
           allItems = buildItems(data);
@@ -996,8 +1023,10 @@
 
         function renderPage() {
         gallery.innerHTML = "";
-        gallery.appendChild(createBannerCard());
-        if (dailyData) {
+        if (extraItemVisible([''])) {
+          gallery.appendChild(createBannerCard());
+        }
+        if (dailyData && extraItemVisible(['电影'])) {
           gallery.appendChild(createDailyCard(dailyData));
         }
         const end = (currentPage + 1) * perPage;
