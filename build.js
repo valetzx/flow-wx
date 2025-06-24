@@ -161,7 +161,7 @@ try {
 }
 
 await fs.writeFile(
-  path.join(outDir, 'api', 'wx.json'),
+  path.join(outDir, 'api', 'wx'),
   JSON.stringify(wxData, null, 2)
 );
 
@@ -175,7 +175,7 @@ try {
   dailyData = { error: e.message };
 }
 await fs.writeFile(
-  path.join(outDir, 'api', 'daily.json'),
+  path.join(outDir, 'api', 'daily'),
   JSON.stringify(dailyData, null, 2)
 );
 
