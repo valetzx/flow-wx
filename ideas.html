@@ -702,7 +702,7 @@
         attempt();
       }
       async function fetchWithFallback(path, options = {}) {
-        const isApi = path.startsWith('/api/wx') || path.startsWith('/api/article') || path.startsWith('/api/daily') || path.startsWith('/a/');
+        const isApi = path.startsWith('/api/wx') || path.startsWith('/api/bil') || path.startsWith('/api/article') || path.startsWith('/api/daily') || path.startsWith('/a/');
         const domains = isApi ? apiDomains : imgDomains;
         for (const d of domains) {
           try {
@@ -1018,13 +1018,20 @@
           applyFilter();
         }
       async function fetchLatest() {
-        const res = await fetchWithFallback("/api/wx", {
-          headers: {
-            "x-skip-cache": "1"
-          },
+        const resWx = await fetchWithFallback("/api/wx", {
+          headers: { "x-skip-cache": "1" },
         });
-        if (!res.ok) throw new Error("Network response was not ok");
-        return await res.json();
+        const dataWx = resWx.ok ? await resWx.json() : {};
+        let dataBil = {};
+        try {
+          const resBil = await fetchWithFallback("/api/bil", {
+            headers: { "x-skip-cache": "1" },
+          });
+          if (resBil.ok) dataBil = await resBil.json();
+        } catch (e) {
+          console.error("加载 bilibili 失败:", e);
+        }
+        return Object.assign({}, dataWx, dataBil);
       }
       async function fetchDaily() {
         const res = await fetchWithFallback("/api/daily", {
