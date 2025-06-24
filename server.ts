@@ -286,6 +286,49 @@ async function proxyImage(imgUrl: string): Promise<Response> {
   }
 }
 
+// ---------- 抓取文章并生成离线 HTML ----------
+async function fetchArticlePage(url: string, abbr?: string): Promise<string> {
+  const res = await fetch(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (Deno)",
+      Referer: "https://mp.weixin.qq.com/",
+    },
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const html = await res.text();
+  const $ = cheerio.load(html, { decodeEntities: false });
+  let title = $("#activity-name").text().trim() ||
+    $(".rich_media_title").text().trim() ||
+    randomSentence();
+  if (abbr) {
+    const found = articles.find((a) => a.abbrlink === abbr);
+    if (found?.title) title = found.title;
+  }
+  $("#js_content img").each((_, el) => {
+    const src = $(el).attr("data-src") || $(el).attr("src");
+    if (src) {
+      const imgPath = `?url=${encodeURIComponent(src)}`;
+      const domain = imgDomains[0];
+      const full = domain ? domain.replace(/\/$/, "") + imgPath : imgPath;
+      $(el).attr("src", full);
+      $(el).removeAttr("data-src");
+    }
+  });
+  const content = proxifyHtml($("#js_content").html() || "");
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>${title}</title>
+  </head>
+  <body>
+    <h1 class="text-2xl font-semibold mb-2">${title}</h1>
+    <p><a href="${url}" target="_blank" rel="noopener noreferrer">查看原文</a></p>
+    ${content}
+  </body>
+</html>`;
+}
+
 // ---------- HTTP 路由 ----------
 async function handler(req: Request): Promise<Response> {
   if (req.method === "OPTIONS") {
@@ -294,12 +337,22 @@ async function handler(req: Request): Promise<Response> {
 
   const { pathname, searchParams } = new URL(req.url);
 
-  // /a/{abbr} —— 短链接跳转
+  // /a/{abbr} —— 短链接跳转或离线阅读
   const abbrMatch = pathname.match(/^\/a\/([\w-]+)$/);
   if (abbrMatch) {
     const abbr = abbrMatch[1];
     const found = articles.find((a) => a.abbrlink === abbr);
     if (found) {
+      if (searchParams.has("view")) {
+        try {
+          const page = await fetchArticlePage(found.url, abbr);
+          return new Response(page, {
+            headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
+          });
+        } catch (err) {
+          return json({ error: err.message }, 500);
+        }
+      }
       return Response.redirect(found.url, 302);
     }
     return new Response("not found", { status: 404, headers: withCors() });
@@ -345,63 +398,63 @@ async function handler(req: Request): Promise<Response> {
     }
   }
 
-  // /api/article —— 抓取单篇文章并返回 HTML
-  if (pathname === "/api/article") {
-    const abbr = searchParams.get("abbr");
-    let url = searchParams.get("url");
-    if (abbr) {
-      const found = articles.find((a) => a.abbrlink === abbr);
-      if (found) url = found.url;
-    }
-    if (!url) url = articles[0]?.url;
-    if (!url) return json({ error: "missing url" }, 400);
-    try {
-      const res = await fetch(url, {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Deno)",
-          Referer: "https://mp.weixin.qq.com/",
-        },
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const html = await res.text();
-      const $ = cheerio.load(html, { decodeEntities: false });
-      let title = $("#activity-name").text().trim() ||
-        $(".rich_media_title").text().trim() ||
-        randomSentence();
-      if (abbr) {
-        const found = articles.find((a) => a.abbrlink === abbr);
-        if (found?.title) title = found.title;
-      }
-      // 将微信文章中的 data-src 替换为 src，方便直接展示图片
-      $("#js_content img").each((_, el) => {
-        const src = $(el).attr("data-src") || $(el).attr("src");
-        if (src) {
-          const imgPath = `?url=${encodeURIComponent(src)}`;
-          const domain = imgDomains[0];
-          const full = domain ? domain.replace(/\/$/, "") + imgPath : imgPath;
-          $(el).attr("src", full);
-          $(el).removeAttr("data-src");
-        }
-      });
-      const content = proxifyHtml($("#js_content").html() || "");
-      const page = `<!DOCTYPE html>
-<html lang="zh-CN">
-  <head>
-    <meta charset="utf-8" />
-    <title>${title}</title>
-  </head>
-  <body>
-    <h1 class="text-2xl font-semibold mb-2">${title}</h1>
-    ${content}
-  </body>
-</html>`;
-      return new Response(page, {
-        headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
-      });
-    } catch (err) {
-      return json({ error: err.message }, 500);
-    }
-  }
+  // // /api/article —— 抓取单篇文章并返回 HTML
+  // if (pathname === "/api/article") {
+  //   const abbr = searchParams.get("abbr");
+  //   let url = searchParams.get("url");
+  //   if (abbr) {
+  //     const found = articles.find((a) => a.abbrlink === abbr);
+  //     if (found) url = found.url;
+  //   }
+  //   if (!url) url = articles[0]?.url;
+  //   if (!url) return json({ error: "missing url" }, 400);
+  //   try {
+  //     const res = await fetch(url, {
+  //       headers: {
+  //         "User-Agent": "Mozilla/5.0 (Deno)",
+  //         Referer: "https://mp.weixin.qq.com/",
+  //       },
+  //     });
+  //     if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  //     const html = await res.text();
+  //     const $ = cheerio.load(html, { decodeEntities: false });
+  //     let title = $("#activity-name").text().trim() ||
+  //       $(".rich_media_title").text().trim() ||
+  //       randomSentence();
+  //     if (abbr) {
+  //       const found = articles.find((a) => a.abbrlink === abbr);
+  //       if (found?.title) title = found.title;
+  //     }
+  //     // 将微信文章中的 data-src 替换为 src，方便直接展示图片
+  //     $("#js_content img").each((_, el) => {
+  //       const src = $(el).attr("data-src") || $(el).attr("src");
+  //       if (src) {
+  //         const imgPath = `?url=${encodeURIComponent(src)}`;
+  //         const domain = imgDomains[0];
+  //         const full = domain ? domain.replace(/\/$/, "") + imgPath : imgPath;
+  //         $(el).attr("src", full);
+  //         $(el).removeAttr("data-src");
+  //       }
+  //     });
+  //     const content = proxifyHtml($("#js_content").html() || "");
+  //     const page = `<!DOCTYPE html>
+  // <html lang="zh-CN">
+  //   <head>
+  //     <meta charset="utf-8" />
+  //     <title>${title}</title>
+  //   </head>
+  //   <body>
+  //     <h1 class="text-2xl font-semibold mb-2">${title}</h1>
+  //     ${content}
+  //   </body>
+  // </html>`;
+  //     return new Response(page, {
+  //       headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
+  //     });
+  //   } catch (err) {
+  //     return json({ error: err.message }, 500);
+  //   }
+  // }
 
   if (pathname === "/sw.js") {
     return new Response(swHtml, {

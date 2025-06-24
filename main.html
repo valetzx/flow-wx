@@ -452,7 +452,7 @@
         attempt();
       }
       async function fetchWithFallback(path, options = {}) {
-        const isApi = path.startsWith('/api/wx') || path.startsWith('/api/article') || path.startsWith('/api/daily');
+        const isApi = path.startsWith('/api/wx') || path.startsWith('/api/daily') || path.startsWith('/a/');
         const domains = isApi ? apiDomains : imgDomains;
         for (const d of domains) {
           try {

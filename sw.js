@@ -32,7 +32,7 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(cacheThenNetwork(event.request));
   } else if (url.pathname.startsWith("/img")) {
     event.respondWith(cacheThenNetwork(event.request));
-  } else if (url.pathname === "/api/article") {
+  } else if (url.pathname.match(/^\/a\/[^/]+$/) && url.searchParams.has("view")) {
     event.respondWith(cacheThenNetwork(event.request));
   } else if (url.pathname === "/") {
     event.respondWith(cacheThenNetwork(event.request));

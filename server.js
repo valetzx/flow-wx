@@ -217,6 +217,35 @@ async function proxyImage(imgUrl, res) {
   }
 }
 
+async function fetchArticlePage(url, abbr) {
+  const r = await fetch(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Node)',
+      Referer: 'https://mp.weixin.qq.com/',
+    },
+  });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const html = await r.text();
+  const $ = cheerio.load(html, { decodeEntities: false });
+  let title = $('#activity-name').text().trim() || $('.rich_media_title').text().trim() || randomSentence();
+  if (abbr) {
+    const found = articles.find(a => a.abbrlink === abbr);
+    if (found && found.title) title = found.title;
+  }
+  $('#js_content img').each((_, el) => {
+    const src = $(el).attr('data-src') || $(el).attr('src');
+    if (src) {
+      const imgPath = `?url=${encodeURIComponent(src)}`;
+      const domain = imgDomains[0];
+      const full = domain ? domain.replace(/\/$/, '') + imgPath : imgPath;
+      $(el).attr('src', full);
+      $(el).removeAttr('data-src');
+    }
+  });
+  const content = proxifyHtml($('#js_content').html() || '');
+  return `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8" /><title>${title}</title></head><body><h1 class="text-2xl font-semibold mb-2">${title}</h1><p><a href="${url}" target="_blank" rel="noopener noreferrer">查看原文</a></p>${content}</body></html>`;
+}
+
 app.get('/api/wx', async (req, res) => {
   try {
     if (cache.data && Date.now() - cache.timestamp < CACHE_TTL) {
@@ -253,47 +282,64 @@ app.get('/api/daily', async (req, res) => {
   }
 });
 
-app.get('/api/article', async (req, res) => {
-  let { abbr, url } = req.query;
-  if (abbr) {
-    const found = articles.find(a => a.abbrlink === abbr);
-    if (found) url = found.url;
-  }
-  if (!url) url = articles[0]?.url;
-  if (!url) return res.status(400).json({ error: 'missing url' });
-  try {
-    const r = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Node)',
-        Referer: 'https://mp.weixin.qq.com/',
-      },
-    });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const html = await r.text();
-    const $ = cheerio.load(html, { decodeEntities: false });
-    let title = $('#activity-name').text().trim() || $('.rich_media_title').text().trim() || randomSentence();
-    if (abbr) {
-      const found = articles.find(a => a.abbrlink === abbr);
-      if (found && found.title) title = found.title;
+app.get('/a/:abbr', async (req, res) => {
+  const { abbr } = req.params;
+  const found = articles.find(a => a.abbrlink === abbr);
+  if (!found) return res.status(404).send('not found');
+  if (req.query.view != null) {
+    try {
+      const page = await fetchArticlePage(found.url, abbr);
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.send(page);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
     }
-    $('#js_content img').each((_, el) => {
-      const src = $(el).attr('data-src') || $(el).attr('src');
-      if (src) {
-        const imgPath = `?url=${encodeURIComponent(src)}`;
-        const domain = imgDomains[0];
-        const full = domain ? domain.replace(/\/$/, '') + imgPath : imgPath;
-        $(el).attr('src', full);
-        $(el).removeAttr('data-src');
-      }
-    });
-    const content = proxifyHtml($('#js_content').html() || '');
-    const page = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8" /><title>${title}</title></head><body><h1 class="text-2xl font-semibold mb-2">${title}</h1>${content}</body></html>`;
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.send(page);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } else {
+    res.redirect(found.url);
   }
 });
+
+// app.get('/api/article', async (req, res) => {
+//   let { abbr, url } = req.query;
+//   if (abbr) {
+//     const found = articles.find(a => a.abbrlink === abbr);
+//     if (found) url = found.url;
+//   }
+//   if (!url) url = articles[0]?.url;
+//   if (!url) return res.status(400).json({ error: 'missing url' });
+//   try {
+//     const r = await fetch(url, {
+//       headers: {
+//         'User-Agent': 'Mozilla/5.0 (Node)',
+//         Referer: 'https://mp.weixin.qq.com/',
+//       },
+//     });
+//     if (!r.ok) throw new Error(`HTTP ${r.status}`);
+//     const html = await r.text();
+//     const $ = cheerio.load(html, { decodeEntities: false });
+//     let title = $('#activity-name').text().trim() || $('.rich_media_title').text().trim() || randomSentence();
+//     if (abbr) {
+//       const found = articles.find(a => a.abbrlink === abbr);
+//       if (found && found.title) title = found.title;
+//     }
+//     $('#js_content img').each((_, el) => {
+//       const src = $(el).attr('data-src') || $(el).attr('src');
+//       if (src) {
+//         const imgPath = `?url=${encodeURIComponent(src)}`;
+//         const domain = imgDomains[0];
+//         const full = domain ? domain.replace(/\/$/, '') + imgPath : imgPath;
+//         $(el).attr('src', full);
+//         $(el).removeAttr('data-src');
+//       }
+//     });
+//     const content = proxifyHtml($('#js_content').html() || '');
+//     const page = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8" /><title>${title}</title></head><body><h1 class="text-2xl font-semibold mb-2">${title}</h1>${content}</body></html>`;
+//     res.setHeader('Content-Type', 'text/html; charset=utf-8');
+//     res.send(page);
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// });
 
 app.get('/sw.js', (req, res) => {
   res.type('application/javascript').send(swHtml);

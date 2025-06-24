@@ -702,7 +702,7 @@
         attempt();
       }
       async function fetchWithFallback(path, options = {}) {
-        const isApi = path.startsWith('/api/wx') || path.startsWith('/api/article') || path.startsWith('/api/daily');
+        const isApi = path.startsWith('/api/wx') || path.startsWith('/api/daily') || path.startsWith('/a/');
         const domains = isApi ? apiDomains : imgDomains;
         for (const d of domains) {
           try {
@@ -824,6 +824,7 @@
         const wrapper = document.createElement("div");
         wrapper.className = "masonry-item rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer";
         wrapper.dataset.url = item.url;
+        if (item.abbr) wrapper.dataset.abbr = item.abbr;
         if (item.imgSrc) {
           const img = createImage(item.imgSrc, item.title);
           wrapper.appendChild(img);
@@ -862,14 +863,14 @@
         text.appendChild(bottom);
         wrapper.appendChild(text);
         wrapper.addEventListener("click", async () => {
-          const url = wrapper.dataset.url;
-          if (!url) return;
-          const key = "article:" + url;
+          const abbr = wrapper.dataset.abbr;
+          if (!abbr) return;
+          const key = "article:" + abbr;
           let html = localStorage.getItem(key);
           if (!html) {
             showLoading();
             try {
-              const res = await fetchWithFallback(`/api/article?url=${encodeURIComponent(url)}`, );
+              const res = await fetchWithFallback(`/a/${abbr}?view=1`);
               html = await res.text();
               if (res.ok) {
                 localStorage.setItem(key, html);
@@ -918,9 +919,9 @@
 
         function buildItems(data) {
           const items = [];
-          for (const [title, { description, images, url, tags }] of Object.entries(data)) {
+          for (const [title, { description, images, url, tags, abbrlink }] of Object.entries(data)) {
             const imgSrc = Array.isArray(images) && images.length > 0 ? images[Math.floor(Math.random() * images.length)] : null;
-            items.push({ title, description, imgSrc, url, tags });
+            items.push({ title, description, imgSrc, url, tags, abbr: abbrlink });
           }
           return items;
         }
