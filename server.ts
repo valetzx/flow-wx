@@ -6,6 +6,9 @@ import {
   join,
 } from "https://deno.land/std@0.224.0/path/mod.ts";
 import cheerio from "npm:cheerio@1.0.0-rc.12";
+import { parseArticles, randomSentence } from "./lib/articleUtils.js";
+import { fetchWxTitle, scrapeWx } from "./lib/wx.js";
+import { fetchBiliTitle, scrapeBili } from "./lib/bil.js";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -49,28 +52,10 @@ const swHtml = `const IMG_CACHE = ${JSON.stringify(cacheImgDomain)};\n${swRaw}`;
 const adminHtml = injectConfig(
   await Deno.readTextFile(join(__dirname, "admin.html")),
 );
-const fallbackSentences = [
-  "小荷才露尖尖角",
-  "早有蜻蜓立上头",
-  "采菊东篱下",
-  "悠然见南山",
-  "看看内容吧",
-  "日长篱落无人过", 
-  "惟有蜻蜓蛱蝶飞",
-  "小娃撑小艇",
-  "日长篱落无人过", 
-  "惟有蜻蜓蛱蝶飞",
-  "偷采白莲回",
-  "不解藏踪迹", 
-  "浮萍一道开",
-];
-function randomSentence() {
-  return fallbackSentences[
-    Math.floor(Math.random() * fallbackSentences.length)
-  ];
-}
 // 微信文章列表
 const WX_URL = Deno.env.get("WX_URL") || "article.txt";
+// B站文章列表
+const BIL_URL = Deno.env.get("BIL_URL") || "bili.txt";
 const DAILY_URL = "https://www.cikeee.com/api?app_key=pub_23020990025";
 const DAILY_TTL = 60 * 60 * 8000;
 let dailyCache: { data: unknown; timestamp: number } = { data: null, timestamp: 0 };
@@ -84,47 +69,6 @@ interface ArticleMeta {
   date?: string;
 }
 
-function parseArticles(text: string): ArticleMeta[] {
-  const trimmed = text.trim();
-  if (!trimmed.startsWith("---")) {
-    return trimmed
-      .split(/\r?\n/)
-      .map((l) => ({ url: l.trim() }))
-      .filter((a) => a.url);
-  }
-
-  const parts = trimmed.split(/^---\s*$/m).map((p) => p.trim()).filter(Boolean);
-  const articles: ArticleMeta[] = [];
-  for (const part of parts) {
-    const lines = part.split(/\r?\n/);
-    const meta: any = {};
-    let current: string | null = null;
-    for (const line of lines) {
-      const kv = line.match(/^([\w]+):\s*(.*)$/);
-      if (kv) {
-        current = kv[1];
-        const value = kv[2];
-        if (value === "") {
-          if (current === "tags") {
-            meta[current] = [];
-          } else {
-            meta[current] = "";
-          }
-        } else {
-          meta[current] = value;
-        }
-        continue;
-      }
-      const m = line.match(/^\s*-\s*(.+)$/);
-      if (m && current) {
-        if (!Array.isArray(meta[current])) meta[current] = [];
-        meta[current].push(m[1]);
-      }
-    }
-    if (meta.url) articles.push(meta as ArticleMeta);
-  }
-  return articles;
-}
 
 let articles: ArticleMeta[] = [];
 try {
@@ -137,99 +81,43 @@ try {
   articles = parseArticles(localText);
 }
 
-async function fetchTitle(url: string): Promise<string> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 15_000);
+let bilArticles: ArticleMeta[] = [];
+try {
+  const res = await fetch(BIL_URL);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const text = await res.text();
+  bilArticles = parseArticles(text);
+} catch {
   try {
-    const res = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (Deno)" },
-      signal: controller.signal,
-    });
-    const html = await res.text();
-    const $ = cheerio.load(html, { decodeEntities: false });
-    const title = $("#activity-name").text().trim() ||
-      $(".rich_media_title").text().trim();
-    return title || randomSentence();
-  } catch {
-    return randomSentence();
-  } finally {
-    clearTimeout(timer);
-  }
+    const localText = await Deno.readTextFile(join(__dirname, "bili.txt"));
+    bilArticles = parseArticles(localText);
+  } catch {}
 }
+
 
 for (const art of articles) {
   if (!art.title ||
     (Array.isArray(art.title) && art.title.length === 0) ||
     (typeof art.title === "string" && art.title.trim() === "")) {
-    art.title = await fetchTitle(art.url);
+    art.title = await fetchWxTitle(art.url);
+  }
+}
+
+for (const art of bilArticles) {
+  if (!art.title ||
+    (Array.isArray(art.title) && art.title.length === 0) ||
+    (typeof art.title === "string" && art.title.trim() === "")) {
+    art.title = await fetchBiliTitle(art.url);
   }
 }
 
 // 抓取结果缓存（JSON）
 const CACHE_TTL = 60 * 60 * 1000;
 let cache: { data: unknown; timestamp: number } = { data: null, timestamp: 0 };
+let bilCache: { data: unknown; timestamp: number } = { data: null, timestamp: 0 };
 
 // ---------- 业务函数 ----------
-async function scrape(article: ArticleMeta) {
-  const { url } = article;
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 15_000);
-
-  try {
-    const res = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (Deno)" },
-      signal: controller.signal,
-    });
-    const html = await res.text();
-
-    const $ = cheerio.load(html, { decodeEntities: false });
-
-    const name = article.title ||
-      $("#activity-name").text().trim() ||
-      $(".rich_media_title").text().trim() ||
-      randomSentence();
-
-    const time = article.date ||
-      $("#publish_time").text().trim() ||
-      $('meta[property="article:published_time"]').attr("content")?.trim();
-
-    const description = article.describe ||
-      $('meta[property="og:description"]').attr("content")?.trim() ||
-      $("#js_content p").first().text().trim();
-
-    const images: string[] = [];
-    $("#js_content img").each((_, el) => {
-      const src = $(el).attr("data-src") || $(el).attr("src");
-      if (src) images.push(src.split("?")[0]);
-    });
-
-    // 解析 <catch id="json-wx">
-    const jsonWxRaw = $("catch#json-wx").html()?.trim();
-    let jsonWx: unknown;
-    if (jsonWxRaw) {
-      try {
-        jsonWx = JSON.parse(jsonWxRaw.replace(/&quot;/g, '"'));
-      } catch (e) {
-        jsonWx = { parseError: e.message, raw: jsonWxRaw };
-      }
-    }
-
-    return {
-      [name]: {
-        time,
-        description,
-        images,
-        jsonWx,
-        url,
-        tags: article.tags,
-        abbrlink: article.abbrlink,
-        date: article.date,
-      },
-    };
-  } finally {
-    clearTimeout(timer);
-  }
-}
+// scraping functions moved to lib modules
 
 // ---------- 工具：把文章 HTML 里的微信图片替换成代理地址 (可选) ----------
 function proxifyHtml(html: string): string {
@@ -364,7 +252,7 @@ async function handler(req: Request): Promise<Response> {
         return json(cache.data);
       }
 
-      const results = await Promise.allSettled(articles.map(scrape));
+      const results = await Promise.allSettled(articles.map(scrapeWx));
       const merged: Record<string, unknown> = {};
       results.forEach((r, i) => {
         if (r.status === "fulfilled") {
@@ -393,6 +281,31 @@ async function handler(req: Request): Promise<Response> {
       dailyCache = { data, timestamp: Date.now() };
       return json(data);
     } catch (err) {
+      return json({ error: err.message }, 500);
+    }
+  }
+
+  // /api/bil —— 抓取并返回 B 站文章信息
+  if (pathname === "/api/bil") {
+    try {
+      if (bilCache.data && Date.now() - bilCache.timestamp < CACHE_TTL) {
+        console.log("/api/bil cache");
+        return json(bilCache.data);
+      }
+      const results = await Promise.allSettled(bilArticles.map(scrapeBili));
+      const merged: Record<string, unknown> = {};
+      results.forEach((r, i) => {
+        if (r.status === "fulfilled") {
+          Object.assign(merged, r.value);
+        } else {
+          merged[`(抓取失败) ${bilArticles[i].url}`] = { error: String(r.reason) };
+        }
+      });
+      bilCache = { data: merged, timestamp: Date.now() };
+      console.log("/api/bil success");
+      return json(merged);
+    } catch (err) {
+      console.log("/api/bil fail:", err.message);
       return json({ error: err.message }, 500);
     }
   }

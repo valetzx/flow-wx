@@ -1,0 +1,19 @@
+---
+url: https://www.bilibili.com/opus/953541215728435240
+title: 示例1
+tags:
+  - B站
+abbrlink: b1a
+describe:
+date: 2025-06-24
+---
+
+---
+url: https://www.bilibili.com/opus/953541215728435241
+title: 示例2
+tags:
+  - B站
+abbrlink: b1b
+describe:
+date: 2025-06-25
+---

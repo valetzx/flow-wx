@@ -1018,13 +1018,13 @@
           applyFilter();
         }
       async function fetchLatest() {
-        const res = await fetchWithFallback("/api/wx", {
-          headers: {
-            "x-skip-cache": "1"
-          },
-        });
-        if (!res.ok) throw new Error("Network response was not ok");
-        return await res.json();
+        const [wxRes, bilRes] = await Promise.all([
+          fetchWithFallback("/api/wx", { headers: { "x-skip-cache": "1" } }),
+          fetchWithFallback("/api/bil", { headers: { "x-skip-cache": "1" } })
+        ]);
+        const wxData = wxRes.ok ? await wxRes.json() : {};
+        const bilData = bilRes.ok ? await bilRes.json() : {};
+        return Object.assign({}, wxData, bilData);
       }
       async function fetchDaily() {
         const res = await fetchWithFallback("/api/daily", {

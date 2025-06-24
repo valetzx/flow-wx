@@ -5,6 +5,10 @@ import ideasHtml from "./ideas.html";
 import adminHtml from "./admin.html";
 // import swHtml from "./sw.js";
 import articleText from "./article.txt";
+import biliText from "./bili.txt";
+import { parseArticles, randomSentence } from "./lib/articleUtils.js";
+import { fetchWxTitle, scrapeWx } from "./lib/wx.js";
+import { fetchBiliTitle, scrapeBili } from "./lib/bil.js";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -21,72 +25,15 @@ const DAILY_URL = "https://www.cikeee.com/api?app_key=pub_23020990025";
 const DAILY_TTL = 60 * 60 * 8000;
 const CACHE_TTL = 60 * 60 * 1000;
 
-const fallbackSentences = [
-  "小荷才露尖尖角",
-  "早有蜻蜓立上头",
-  "采菊东篱下",
-  "悠然见南山",
-  "看看内容吧",
-  "日长篱落无人过",
-  "惟有蜻蜓蛱蝶飞",
-  "小娃撑小艇",
-  "日长篱落无人过",
-  "惟有蜻蜓蛱蝶飞",
-  "偷采白莲回",
-  "不解藏踪迹",
-  "浮萍一道开",
-];
-
-function randomSentence() {
-  return fallbackSentences[Math.floor(Math.random() * fallbackSentences.length)];
-}
 
 let articles = [];
 let articlesInit = false;
 let cache = { data: null, timestamp: 0 };
 let dailyCache = { data: null, timestamp: 0 };
+let biliArticles = [];
+let biliInit = false;
+let bilCache = { data: null, timestamp: 0 };
 
-function parseArticles(text) {
-  const trimmed = text.trim();
-  if (!trimmed.startsWith("---")) {
-    return trimmed
-      .split(/\r?\n/)
-      .map((l) => ({ url: l.trim() }))
-      .filter((a) => a.url);
-  }
-
-  const parts = trimmed.split(/^---\s*$/m).map((p) => p.trim()).filter(Boolean);
-  const arr = [];
-  for (const part of parts) {
-    const lines = part.split(/\r?\n/);
-    const meta = {};
-    let current = null;
-    for (const line of lines) {
-      const kv = line.match(/^([\w]+):\s*(.*)$/);
-      if (kv) {
-        current = kv[1];
-        const value = kv[2];
-        if (value === "") {
-          if (current === "tags") {
-            meta[current] = [];
-          } else {
-            meta[current] = "";
-          }
-        } else {
-          meta[current] = value;
-        }
-        continue;
-      }
-      const m = line.match(/^\s*-\s*(.+)$/);
-      if (m && current) {
-        if (!Array.isArray(meta[current])) meta[current] = [];
-        meta[current].push(m[1]);
-      }
-    }
-    if (meta.url) arr.push(meta);
-  }
-  return arr;
-}
 
 async function getArticles(env) {
   if (!articlesInit) {
@@ -104,29 +51,38 @@ async function getArticles(env) {
       articles = parseArticles(articleText);
     }
 
-    async function fetchTitle(url) {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 15000);
-      try {
-        const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" }, signal: controller.signal });
-        const html = await res.text();
-        const $ = cheerio.load(html, { decodeEntities: false });
-        const t = $('#activity-name').text().trim() || $('.rich_media_title').text().trim();
-        return t || randomSentence();
-      } catch {
-        return randomSentence();
-      } finally {
-        clearTimeout(timer);
-      }
-    }
-
     for (const art of articles) {
       if (!art.title || (Array.isArray(art.title) && art.title.length === 0) || (typeof art.title === 'string' && art.title.trim() === '')) {
-        art.title = await fetchTitle(art.url);
+        art.title = await fetchWxTitle(art.url);
       }
     }
   }
   return articles;
+}
+
+async function getBiliArticles(env) {
+  if (!biliInit) {
+    biliInit = true;
+    if (env.BIL_URL) {
+      try {
+        const res = await fetch(env.BIL_URL);
+        if (res.ok) {
+          const txt = await res.text();
+          biliArticles = parseArticles(txt);
+        }
+      } catch {}
+    }
+    if (biliArticles.length === 0) {
+      biliArticles = parseArticles(biliText);
+    }
+
+    for (const art of biliArticles) {
+      if (!art.title || (Array.isArray(art.title) && art.title.length === 0) || (typeof art.title === "string" && art.title.trim() === "")) {
+        art.title = await fetchBiliTitle(art.url);
+      }
+    }
+  }
+  return biliArticles;
 }
 
 function injectConfig(html, apiDomains, imgDomains) {
@@ -217,45 +173,7 @@ async function proxyImage(imgUrl) {
   }
 }
 
-async function scrape(article) {
-  const { url } = article;
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 15000);
-  try {
-    const res = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0" },
-      signal: controller.signal,
-    });
-    const html = await res.text();
-    const $ = cheerio.load(html, { decodeEntities: false });
-    const name = article.title ||
-      $('#activity-name').text().trim() ||
-      $('.rich_media_title').text().trim() ||
-      randomSentence();
-    const time = article.date ||
-      $('#publish_time').text().trim() ||
-      $('meta[property="article:published_time"]').attr('content')?.trim();
-    const description = article.describe || $('meta[property="og:description"]').attr('content')?.trim() ||
-      $('#js_content p').first().text().trim();
-    const images = [];
-    $('#js_content img').each((_, el) => {
-      const src = $(el).attr('data-src') || $(el).attr('src');
-      if (src) images.push(src.split('?')[0]);
-    });
-    const jsonWxRaw = $('catch#json-wx').html()?.trim();
-    let jsonWx;
-    if (jsonWxRaw) {
-      try {
-        jsonWx = JSON.parse(jsonWxRaw.replace(/&quot;/g, '"'));
-      } catch (e) {
-        jsonWx = { parseError: e.message, raw: jsonWxRaw };
-      }
-    }
-    return { [name]: { time, description, images, jsonWx, url, tags: article.tags, abbrlink: article.abbrlink, date: article.date } };
-  } finally {
-    clearTimeout(timer);
-  }
-}
+// scraping functions moved to lib modules
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -305,7 +223,7 @@ export default {
         if (cache.data && Date.now() - cache.timestamp < CACHE_TTL) {
           return json(cache.data);
         }
-        const results = await Promise.allSettled(articles.map(scrape));
+        const results = await Promise.allSettled(articles.map(scrapeWx));
         const merged = {};
         results.forEach((r, i) => {
           if (r.status === "fulfilled") {
@@ -332,6 +250,31 @@ export default {
         dailyCache = { data, timestamp: Date.now() };
         return json(data);
       } catch (err) {
+        return json({ error: err.message }, 500);
+      }
+    }
+
+    if (pathname === "/api/bil") {
+      try {
+        if (bilCache.data && Date.now() - bilCache.timestamp < CACHE_TTL) {
+          console.log("/api/bil cache");
+          return json(bilCache.data);
+        }
+        const list = await getBiliArticles(env);
+        const results = await Promise.allSettled(list.map(scrapeBili));
+        const merged = {};
+        results.forEach((r, i) => {
+          if (r.status === "fulfilled") {
+            Object.assign(merged, r.value);
+          } else {
+            merged[`(抓取失败) ${list[i].url}`] = { error: String(r.reason) };
+          }
+        });
+        bilCache = { data: merged, timestamp: Date.now() };
+        console.log("/api/bil success");
+        return json(merged);
+      } catch (err) {
+        console.log("/api/bil fail:", err.message);
         return json({ error: err.message }, 500);
       }
     }

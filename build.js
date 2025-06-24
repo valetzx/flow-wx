@@ -73,6 +73,7 @@ function parseArticles(text) {
 }
 
 const WX_URL = process.env.WX_URL || path.join(__dirname, 'article.txt');
+const BIL_URL = process.env.BIL_URL || path.join(__dirname, 'bili.txt');
 const DAILY_URL = 'https://www.cikeee.com/api?app_key=pub_23020990025';
 
 let articles = [];
@@ -84,6 +85,19 @@ try {
 } catch {
   const localText = await fs.readFile(path.join(__dirname, 'article.txt'), 'utf8');
   articles = parseArticles(localText);
+}
+
+let bilArticles = [];
+try {
+  const res = await fetch(BIL_URL);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const txt = await res.text();
+  bilArticles = parseArticles(txt);
+} catch {
+  try {
+    const localText = await fs.readFile(path.join(__dirname, 'bili.txt'), 'utf8');
+    bilArticles = parseArticles(localText);
+  } catch {}
 }
 
 await fs.mkdir(path.join(outDir, 'api'), { recursive: true });
@@ -165,6 +179,69 @@ await fs.writeFile(
   JSON.stringify(wxData, null, 2)
 );
 
+// 抓取 /api/bil 的数据
+let bilData = null;
+try {
+  const results = await Promise.allSettled(
+    bilArticles.map(async (article) => {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 15000);
+      try {
+        const res = await fetch(article.url, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (Node)' },
+          signal: controller.signal,
+        });
+        const html = await res.text();
+        const cheerio = (await import('cheerio')).default;
+        const $ = cheerio.load(html, { decodeEntities: false });
+        const name =
+          article.title ||
+          $('.opus-module-title__text').first().text().trim() ||
+          '无标题';
+        const description =
+          article.describe ||
+          $('meta[name="description"]').attr('content') ||
+          $('.opus-module-content').text().trim().slice(0, 80);
+        const images = [];
+        $('.opus-module-content img').each((_, el) => {
+          const src = $(el).attr('src');
+          if (src) images.push(src.startsWith('//') ? `https:${src}` : src);
+        });
+        const content = $('.opus-module-content').first().text().trim();
+        return {
+          [name]: {
+            description,
+            images,
+            content,
+            url: article.url,
+            tags: article.tags,
+            abbrlink: article.abbrlink,
+            date: article.date,
+          },
+        };
+      } finally {
+        clearTimeout(timer);
+      }
+    })
+  );
+  const merged = {};
+  results.forEach((r, i) => {
+    if (r.status === 'fulfilled') {
+      Object.assign(merged, r.value);
+    } else {
+      merged[`(抓取失败) ${bilArticles[i].url}`] = { error: String(r.reason) };
+    }
+  });
+  bilData = merged;
+} catch (e) {
+  bilData = { error: e.message };
+}
+
+await fs.writeFile(
+  path.join(outDir, 'api', 'bil'),
+  JSON.stringify(bilData, null, 2)
+);
+
 // 抓取 /api/daily 的数据
 let dailyData = null;
 try {
@@ -181,6 +258,14 @@ await fs.writeFile(
 
 // 生成 /a/{abbr} 的静态重定向页面
 for (const art of articles) {
+  if (!art.abbrlink) continue;
+  const dir = path.join(outDir, 'a', art.abbrlink);
+  await fs.mkdir(dir, { recursive: true });
+  const redirectHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=${art.url}"></head><body><p>Redirecting to <a href="${art.url}">${art.url}</a></p></body></html>`;
+  await fs.writeFile(path.join(dir, 'index.html'), redirectHtml);
+}
+
+for (const art of bilArticles) {
   if (!art.abbrlink) continue;
   const dir = path.join(outDir, 'a', art.abbrlink);
   await fs.mkdir(dir, { recursive: true });
