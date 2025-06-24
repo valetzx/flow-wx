@@ -296,7 +296,13 @@ async function buildBiliPage(url, res) {
     const title = $('.opus-module-title__text').first().text().trim() || randomSentence();
     $('.opus-module-content img').each((_, el) => {
       const src = $(el).attr('src');
-      if (src && src.startsWith('//')) $(el).attr('src', `https:${src}`);
+      if (src) {
+        const clean = src.startsWith('//') ? `https:${src}` : src;
+        const imgPath = `?url=${encodeURIComponent(clean)}`;
+        const domain = imgDomains[0];
+        const full = domain ? domain.replace(/\/$/, '') + imgPath : imgPath;
+        $(el).attr('src', full);
+      }
     });
     const content = $('.opus-module-content').first().html() || '';
     const page = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8" /><title>${title}</title></head><body><h1 class="text-2xl font-semibold mb-2">${title}</h1>${content}</body></html>`;
@@ -348,7 +354,7 @@ app.get('/api/wx', async (req, res) => {
     if (wxCache.data && Date.now() - wxCache.timestamp < CACHE_TTL) {
       return res.json(wxCache.data);
     }
-    const wxArticles = articles.filter(a => !a.url.includes('bilibili.com'));
+    const wxArticles = articles.filter(a => a.url.includes('mp.weixin.qq.com'));
     const results = await Promise.allSettled(wxArticles.map(scrape));
     const merged = {};
     results.forEach((r, i) => {
