@@ -788,9 +788,9 @@
         let allItems = [];
         let currentPage = 0;
         let perPage = savedPerPage;
-        let selectedTags = [];
+        let selectedTag = '';
         let searchTerm = '';
-        const EXTRA_TAGS = ['随机文章', '电影'];
+        const EXTRA_TAGS = ['', '电影'];
       const observer = new IntersectionObserver(
         (entries, obs) => {
           entries.forEach((entry) => {
@@ -983,11 +983,8 @@
             if ((selectedTag || searchTerm) && tags.length === 0) {
               continue;
             }
-            if (selectedTags.length) {
-              const tags = Array.isArray(v.tags) ? v.tags : [];
-              if (!selectedTags.some((t) => tags.includes(t))) {
-                continue;
-              }
+            if (selectedTag && !tags.includes(selectedTag)) {
+              continue;
             }
             if (searchTerm && !k.includes(searchTerm)) {
               continue;
@@ -1010,7 +1007,7 @@
           renderPage();
           Array.from(tagList.querySelectorAll('button[data-tag]')).forEach((btn) => {
             btn.classList.remove('bg-primary', 'text-white', 'border-primary');
-            if (selectedTags.includes(btn.dataset.tag)) {
+            if (btn.dataset.tag === selectedTag) {
               btn.classList.add('bg-primary', 'text-white', 'border-primary');
             }
           });
@@ -1026,7 +1023,7 @@
 
         function renderPage() {
         gallery.innerHTML = "";
-        if (extraItemVisible(['随机文章'])) {
+        if (extraItemVisible([''])) {
           gallery.appendChild(createBannerCard());
         }
         if (dailyData && extraItemVisible(['电影'])) {
@@ -1139,13 +1136,7 @@
           }
           const btn = e.target.closest('button[data-tag]');
           if (!btn) return;
-          const tag = btn.dataset.tag;
-          if (!tag) return;
-          if (selectedTags.includes(tag)) {
-            selectedTags = selectedTags.filter((t) => t !== tag);
-          } else {
-            selectedTags.push(tag);
-          }
+          selectedTag = btn.dataset.tag || '';
           applyFilter();
         });
       moreBtn.addEventListener("click", (e) => {
