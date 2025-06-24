@@ -840,7 +840,7 @@
         p.className = "text-sm text-gray-600 leading-relaxed mb-2";
         p.textContent = item.description;
         const link = document.createElement("a");
-        link.className = "text-xs text-gray-400";
+        link.className = "text-xs text-gray-400 whitespace-nowrap flex-none";
         link.textContent = "查看原文";
         link.href = item.url;
         link.target = "_blank";
@@ -849,7 +849,7 @@
         const bottom = document.createElement("div");
         bottom.className = "flex items-end mt-auto gap-2";
         const tagsEl = document.createElement("div");
-        tagsEl.className = "flex overflow-x-auto whitespace-nowrap gap-1 no-scrollbar";
+        tagsEl.className = "flex-1 min-w-0 flex overflow-x-auto whitespace-nowrap gap-1 no-scrollbar";
         if (Array.isArray(item.tags) && item.tags.length > 0) {
           for (const tag of item.tags) {
             const span = document.createElement("span");
