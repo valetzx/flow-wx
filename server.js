@@ -179,7 +179,9 @@ app.get('/api/wx', async (req, res) => {
     if (cache.data && Date.now() - cache.timestamp < CACHE_TTL) {
       return res.json(cache.data);
     }
-    const results = await Promise.allSettled(articles.map(scrapeWx));
+    const results = await Promise.allSettled(
+      articles.map((article) => scrapeWx(article)),
+    );
     const merged = {};
     results.forEach((r, i) => {
       if (r.status === 'fulfilled') {
@@ -216,7 +218,9 @@ app.get('/api/bil', async (_req, res) => {
       console.log('/api/bil cache');
       return res.json(bilCache.data);
     }
-    const results = await Promise.allSettled(bilArticles.map(scrapeBili));
+    const results = await Promise.allSettled(
+      bilArticles.map((article) => scrapeBili(article)),
+    );
     const merged = {};
     results.forEach((r, i) => {
       if (r.status === 'fulfilled') {

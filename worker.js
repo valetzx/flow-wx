@@ -223,7 +223,9 @@ export default {
         if (cache.data && Date.now() - cache.timestamp < CACHE_TTL) {
           return json(cache.data);
         }
-        const results = await Promise.allSettled(articles.map(scrapeWx));
+        const results = await Promise.allSettled(
+          articles.map((article) => scrapeWx(article)),
+        );
         const merged = {};
         results.forEach((r, i) => {
           if (r.status === "fulfilled") {
@@ -261,7 +263,9 @@ export default {
           return json(bilCache.data);
         }
         const list = await getBiliArticles(env);
-        const results = await Promise.allSettled(list.map(scrapeBili));
+        const results = await Promise.allSettled(
+          list.map((article) => scrapeBili(article)),
+        );
         const merged = {};
         results.forEach((r, i) => {
           if (r.status === "fulfilled") {
