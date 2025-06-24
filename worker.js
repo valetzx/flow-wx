@@ -6,9 +6,9 @@ import adminHtml from "./admin.html";
 // import swHtml from "./sw.js";
 import articleText from "./article.txt";
 import biliText from "./bili.txt";
-import { parseArticles, randomSentence } from "./lib/articleUtils.js";
-import { fetchWxTitle, scrapeWx } from "./lib/wx.js";
-import { fetchBiliTitle, scrapeBili } from "./lib/bil.js";
+import { parseArticles, randomSentence } from "./lib/articleUtils.js?raw";
+import { fetchWxTitle, scrapeWx } from "./lib/wx.js?raw";
+import { fetchBiliTitle, scrapeBili } from "./lib/bil.js?raw";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
