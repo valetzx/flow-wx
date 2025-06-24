@@ -1,0 +1,54 @@
+export async function scrapeWx(article, cheerio, randomSentence) {
+  const { url } = article;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+  try {
+    const res = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0" },
+      signal: controller.signal,
+    });
+    const html = await res.text();
+    const $ = cheerio.load(html, { decodeEntities: false });
+    const name =
+      article.title ||
+      $("#activity-name").text().trim() ||
+      $(".rich_media_title").text().trim() ||
+      randomSentence();
+    const time =
+      article.date ||
+      $("#publish_time").text().trim() ||
+      $('meta[property="article:published_time"]').attr("content")?.trim();
+    const description =
+      article.describe ||
+      $('meta[property="og:description"]').attr("content")?.trim() ||
+      $("#js_content p").first().text().trim();
+    const images = [];
+    $("#js_content img").each((_, el) => {
+      const src = $(el).attr("data-src") || $(el).attr("src");
+      if (src) images.push(src.split("?")[0]);
+    });
+    const jsonWxRaw = $("catch#json-wx").html()?.trim();
+    let jsonWx;
+    if (jsonWxRaw) {
+      try {
+        jsonWx = JSON.parse(jsonWxRaw.replace(/&quot;/g, '"'));
+      } catch (e) {
+        jsonWx = { parseError: e.message, raw: jsonWxRaw };
+      }
+    }
+    return {
+      [name]: {
+        time,
+        description,
+        images,
+        jsonWx,
+        url,
+        tags: article.tags,
+        abbrlink: article.abbrlink,
+        date: article.date,
+      },
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}

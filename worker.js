@@ -1,5 +1,8 @@
 // Cloudflare Worker version of server.ts
 import * as cheerio from "cheerio";
+import { parseArticles, randomSentence } from "./articleUtils.js";
+import { scrapeWx } from "./api/wx.js";
+import { scrapeBil } from "./api/bil.js";
 import mainHtml from "./main.html";
 import ideasHtml from "./ideas.html";
 import adminHtml from "./admin.html";
@@ -21,25 +24,6 @@ const DAILY_URL = "https://www.cikeee.com/api?app_key=pub_23020990025";
 const DAILY_TTL = 60 * 60 * 8000;
 const CACHE_TTL = 60 * 60 * 1000;
 
-const fallbackSentences = [
-  "小荷才露尖尖角",
-  "早有蜻蜓立上头",
-  "采菊东篱下",
-  "悠然见南山",
-  "看看内容吧",
-  "日长篱落无人过",
-  "惟有蜻蜓蛱蝶飞",
-  "小娃撑小艇",
-  "日长篱落无人过",
-  "惟有蜻蜓蛱蝶飞",
-  "偷采白莲回",
-  "不解藏踪迹",
-  "浮萍一道开",
-];
-
-function randomSentence() {
-  return fallbackSentences[Math.floor(Math.random() * fallbackSentences.length)];
-}
 
 let articles = [];
 let articlesInit = false;
@@ -47,47 +31,6 @@ let wxCache = { data: null, timestamp: 0 };
 let bilCache = { data: null, timestamp: 0 };
 let dailyCache = { data: null, timestamp: 0 };
 
-function parseArticles(text) {
-  const trimmed = text.trim();
-  if (!trimmed.startsWith("---")) {
-    return trimmed
-      .split(/\r?\n/)
-      .map((l) => ({ url: l.trim() }))
-      .filter((a) => a.url);
-  }
-
-  const parts = trimmed.split(/^---\s*$/m).map((p) => p.trim()).filter(Boolean);
-  const arr = [];
-  for (const part of parts) {
-    const lines = part.split(/\r?\n/);
-    const meta = {};
-    let current = null;
-    for (const line of lines) {
-      const kv = line.match(/^([\w]+):\s*(.*)$/);
-      if (kv) {
-        current = kv[1];
-        const value = kv[2];
-        if (value === "") {
-          if (current === "tags") {
-            meta[current] = [];
-          } else {
-            meta[current] = "";
-          }
-        } else {
-          meta[current] = value;
-        }
-        continue;
-      }
-      const m = line.match(/^\s*-\s*(.+)$/);
-      if (m && current) {
-        if (!Array.isArray(meta[current])) meta[current] = [];
-        meta[current].push(m[1]);
-      }
-    }
-    if (meta.url) arr.push(meta);
-  }
-  return arr;
-}
 
 async function getArticles(env) {
   if (!articlesInit) {
@@ -243,69 +186,6 @@ async function proxyImage(imgUrl) {
   }
 }
 
-async function scrape(article) {
-  const { url } = article;
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 15000);
-  try {
-    const res = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0" },
-      signal: controller.signal,
-    });
-    const html = await res.text();
-    const $ = cheerio.load(html, { decodeEntities: false });
-    const name = article.title ||
-      $('#activity-name').text().trim() ||
-      $('.rich_media_title').text().trim() ||
-      randomSentence();
-    const time = article.date ||
-      $('#publish_time').text().trim() ||
-      $('meta[property="article:published_time"]').attr('content')?.trim();
-    const description = article.describe || $('meta[property="og:description"]').attr('content')?.trim() ||
-      $('#js_content p').first().text().trim();
-    const images = [];
-    $('#js_content img').each((_, el) => {
-      const src = $(el).attr('data-src') || $(el).attr('src');
-      if (src) images.push(src.split('?')[0]);
-    });
-    const jsonWxRaw = $('catch#json-wx').html()?.trim();
-    let jsonWx;
-    if (jsonWxRaw) {
-      try {
-        jsonWx = JSON.parse(jsonWxRaw.replace(/&quot;/g, '"'));
-      } catch (e) {
-        jsonWx = { parseError: e.message, raw: jsonWxRaw };
-      }
-    }
-    return { [name]: { time, description, images, jsonWx, url, tags: article.tags, abbrlink: article.abbrlink, date: article.date } };
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-async function scrapeBili(article) {
-  const { url } = article;
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 15000);
-  try {
-    const res = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0" },
-      signal: controller.signal,
-    });
-    const html = await res.text();
-    const $ = cheerio.load(html, { decodeEntities: false });
-    const name = article.title || $('.opus-module-title__text').first().text().trim() || randomSentence();
-    const description = article.describe || $('.opus-module-content').first().text().trim();
-    const images = [];
-    $('.opus-module-content img').each((_, el) => {
-      const src = $(el).attr('src');
-      if (src) images.push(src.startsWith('//') ? `https:${src}` : src);
-    });
-    return { [name]: { description, images, url, tags: article.tags, abbrlink: article.abbrlink, date: article.date } };
-  } finally {
-    clearTimeout(timer);
-  }
-}
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -359,7 +239,9 @@ export default {
           return json(wxCache.data);
         }
         const wxArticles = articles.filter((a) => a.url.includes("mp.weixin.qq.com"));
-        const results = await Promise.allSettled(wxArticles.map(scrape));
+        const results = await Promise.allSettled(
+          wxArticles.map((a) => scrapeWx(a, cheerio, randomSentence))
+        );
         const merged = {};
         results.forEach((r, i) => {
           if (r.status === "fulfilled") {
@@ -381,7 +263,9 @@ export default {
           return json(bilCache.data);
         }
         const bilArticles = articles.filter((a) => a.url.includes("bilibili.com"));
-        const results = await Promise.allSettled(bilArticles.map(scrapeBili));
+        const results = await Promise.allSettled(
+          bilArticles.map((a) => scrapeBil(a, cheerio, randomSentence))
+        );
         const merged = {};
         results.forEach((r, i) => {
           if (r.status === "fulfilled") {
