@@ -252,7 +252,9 @@ async function handler(req: Request): Promise<Response> {
         return json(cache.data);
       }
 
-      const results = await Promise.allSettled(articles.map(scrapeWx));
+      const results = await Promise.allSettled(
+        articles.map((article) => scrapeWx(article)),
+      );
       const merged: Record<string, unknown> = {};
       results.forEach((r, i) => {
         if (r.status === "fulfilled") {
@@ -292,7 +294,9 @@ async function handler(req: Request): Promise<Response> {
         console.log("/api/bil cache");
         return json(bilCache.data);
       }
-      const results = await Promise.allSettled(bilArticles.map(scrapeBili));
+      const results = await Promise.allSettled(
+        bilArticles.map((article) => scrapeBili(article)),
+      );
       const merged: Record<string, unknown> = {};
       results.forEach((r, i) => {
         if (r.status === "fulfilled") {
