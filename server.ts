@@ -127,7 +127,7 @@ function proxifyHtml(html: string): string {
   $('[style]').each((_, el) => {
     let style = $(el).attr('style') ?? '';
     style = style.replace(
-      /url\((['"]?)(https?:\/\/[^'"\)]+)\1\)/g,
+      /url\((['"]?)(https?:\/\/[^'")]+)\1\)/g,
       (match, quote, url) => {
         if (url.includes('mmbiz')) {
           const clean = url.replace(/&amp;/g, '&');

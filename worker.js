@@ -97,7 +97,7 @@ function proxifyHtml(html) {
   const $ = cheerio.load(html, { decodeEntities: false });
   $('[style]').each((_, el) => {
     let style = $(el).attr('style') ?? '';
-    style = style.replace(/url\((['"]?)(https?:\/\/[^'"\)]+)\1\)/g, (match, q, url) => {
+    style = style.replace(/url\((['"]?)(https?:\/\/[^'")]+)\1\)/g, (match, q, url) => {
       if (url.includes('mmbiz')) {
         const clean = url.replace(/&amp;/g, '&');
         return `url(${q}/img?url=${encodeURIComponent(clean)}${q})`;
