@@ -1,8 +1,8 @@
 // Cloudflare Worker version of server.ts
 import * as cheerio from "cheerio";
-import { parseArticles, randomSentence } from "./articleUtils.js";
-import { scrapeWx } from "./api/wx.js";
-import { scrapeBil } from "./api/bil.js";
+import { parseArticles, randomSentence } from "./lib/articleUtils.js?raw";
+import { scrapeWx } from "./lib/wx.js?raw";
+import { scrapeBil } from "./lib/bil.js?raw";
 import mainHtml from "./main.html";
 import ideasHtml from "./ideas.html";
 import adminHtml from "./admin.html";

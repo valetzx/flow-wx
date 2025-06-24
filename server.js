@@ -4,9 +4,9 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import * as cheerio from 'cheerio';
-import { parseArticles, randomSentence } from './articleUtils.js';
-import { scrapeWx } from './api/wx.js';
-import { scrapeBil } from './api/bil.js';
+import { parseArticles, randomSentence } from './lib/articleUtils.js';
+import { scrapeWx } from './lib/wx.js';
+import { scrapeBil } from './lib/bil.js';
 
 const app = express();
 const PORT = Number(process.env.PORT || 8000);

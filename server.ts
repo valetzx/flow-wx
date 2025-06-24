@@ -6,9 +6,9 @@ import {
   join,
 } from "https://deno.land/std@0.224.0/path/mod.ts";
 import cheerio from "npm:cheerio@1.0.0-rc.12";
-import { parseArticles, randomSentence } from "./articleUtils.js";
-import { scrapeWx } from "./api/wx.js";
-import { scrapeBil } from "./api/bil.js";
+import { parseArticles, randomSentence } from "./lib/articleUtils.js";
+import { scrapeWx } from "./lib/wx.js";
+import { scrapeBil } from "./lib/bil.js";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
