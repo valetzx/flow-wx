@@ -77,11 +77,30 @@ date:
 
 ---
 url: https://www.bilibili.com/opus/953541215728435240
-title:
+title: GenP
 tags:
-  - 科技
-  - 教程
-abbrlink: 1a1h
-describe:
-date:
+  - 资源下载
+abbrlink: b1a
+describe: Adobe GenP
+date: 2025-06-24
+---
+
+---
+url: https://www.bilibili.com/opus/695602354850889746
+title: 
+tags:
+  - B站
+abbrlink: b1b
+describe: -
+date: 2025-06-25
+---
+
+---
+url: https://www.bilibili.com/opus/888383984858300436 
+title: 
+tags:
+  - B站
+abbrlink: b1c
+describe: 测试
+date: 2025-06-25
 ---
