@@ -397,6 +397,31 @@ async function handler(req: Request): Promise<Response> {
     }
   }
 
+  // /api/bil —— 抓取 B 站文章信息
+  if (pathname === "/api/bil") {
+    try {
+      const res = await fetch(
+        "https://www.bilibili.com/opus/953541215728435240",
+        { headers: { "User-Agent": "Mozilla/5.0" } },
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const html = await res.text();
+      const $ = cheerio.load(html, { decodeEntities: false });
+      const title = $(".opus-module-title__text").first().text().trim();
+      const content = $(".opus-module-content").first().text().trim();
+      const images: string[] = [];
+      $(".opus-module-content img").each((_, el) => {
+        const src = $(el).attr("src");
+        if (src) images.push(src.startsWith("//") ? `https:${src}` : src);
+      });
+      console.log("/api/bil success");
+      return json({ title, content, images });
+    } catch (err) {
+      console.log("/api/bil fail:", err.message);
+      return json({ error: err.message }, 500);
+    }
+  }
+
 //   // /api/article —— 抓取单篇文章并返回 HTML
 //   if (pathname === "/api/article") {
 //     const abbr = searchParams.get("abbr");

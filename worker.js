@@ -336,6 +336,30 @@ export default {
       }
     }
 
+    if (pathname === "/api/bil") {
+      try {
+        const r = await fetch(
+          "https://www.bilibili.com/opus/953541215728435240",
+          { headers: { "User-Agent": "Mozilla/5.0" } },
+        );
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const html = await r.text();
+        const $ = cheerio.load(html, { decodeEntities: false });
+        const title = $(".opus-module-title__text").first().text().trim();
+        const content = $(".opus-module-content").first().text().trim();
+        const images = [];
+        $(".opus-module-content img").each((_, el) => {
+          const src = $(el).attr("src");
+          if (src) images.push(src.startsWith("//") ? `https:${src}` : src);
+        });
+        console.log("/api/bil success");
+        return json({ title, content, images });
+      } catch (err) {
+        console.log("/api/bil fail:", err.message);
+        return json({ error: err.message }, 500);
+      }
+    }
+
 //     if (pathname === "/api/article") {
 //       const abbr = searchParams.get("abbr");
 //       let url = searchParams.get("url");

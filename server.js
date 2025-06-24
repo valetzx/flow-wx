@@ -300,6 +300,30 @@ app.get('/api/daily', async (req, res) => {
   }
 });
 
+app.get('/api/bil', async (_req, res) => {
+  try {
+    const r = await fetch(
+      'https://www.bilibili.com/opus/953541215728435240',
+      { headers: { 'User-Agent': 'Mozilla/5.0' } },
+    );
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const html = await r.text();
+    const $ = cheerio.load(html, { decodeEntities: false });
+    const title = $('.opus-module-title__text').first().text().trim();
+    const content = $('.opus-module-content').first().text().trim();
+    const images = [];
+    $('.opus-module-content img').each((_, el) => {
+      const src = $(el).attr('src');
+      if (src) images.push(src.startsWith('//') ? `https:${src}` : src);
+    });
+    console.log('/api/bil success');
+    res.json({ title, content, images });
+  } catch (err) {
+    console.log('/api/bil fail:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // app.get('/api/article', async (req, res) => {
 //   let { abbr, url } = req.query;
 //   if (abbr) {
