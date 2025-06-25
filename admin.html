@@ -13,7 +13,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background-color: #fff;
+      background-color: #0F172A;
       z-index: 1000;
       transition: opacity 0.4s;
     }
@@ -149,19 +149,35 @@
   sortSelect.addEventListener('change', loadCache);
   </script>
   <script>
-    const splashScreen = document.getElementById('splashScreen');
-    window.addEventListener('load', () => {
+    const splashScreen = document.getElementById("splashScreen");
+    const startTime = performance.now();
+    function hideSplash(immediate=false) {
+      const delay = immediate ? 0 : Math.max(0, 2000 - (performance.now() - startTime));
       setTimeout(() => {
-        splashScreen.style.opacity = '0';
-        splashScreen.addEventListener('transitionend', () => {
+        splashScreen.style.opacity = "0";
+        splashScreen.addEventListener("transitionend", () => {
           splashScreen.remove();
-          document.body.classList.add('loaded');
+          document.body.classList.add("loaded");
         }, { once: true });
-      }, Math.max(0, 2000 - performance.now()));
+      }, delay);
+    }
+    async function hasWxCache() {
+      if (!("caches" in window)) return false;
+      try {
+        return !!(await caches.match("/api/wx"));
+      } catch {
+        return false;
+      }
+    }
+    hasWxCache().then(found => { if (found) hideSplash(true); });
+    window.addEventListener("load", () => {
+      setTimeout(() => {
+        if (!document.body.classList.contains('loaded')) hideSplash();
+      }, 10000);
     });
-    window.addEventListener('error', () => {
+    window.addEventListener("error", () => {
       splashScreen.innerHTML = `
-        <div style="text-align:center;color:#000;padding:20px">
+        <div style="text-align:center;color:#fff;padding:20px">
           <h2>加载遇到问题</h2>
           <p>请检查网络连接</p>
           <button onclick="location.reload()">重试</button>
