@@ -346,6 +346,34 @@
       display: none;
     }
 
+    /* Loading splash screen */
+    #splashScreen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: rgb(var(--surface));
+      z-index: 1000;
+      transition: opacity 0.4s;
+    }
+    .dark #splashScreen {
+      background-color: rgb(var(--on-surface));
+    }
+    #splashScreen .loader {
+      width: 3rem;
+      height: 3rem;
+      border: 4px solid rgba(var(--on-surface), 0.2);
+      border-top-color: rgb(var(--primary));
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
     /* Banner 卡片及遮罩效果 */
 
     .banner-card {
@@ -439,6 +467,9 @@
 </head>
 
 <body class="bg-surface text-on-surface min-h-screen font-sans">
+  <div id="splashScreen">
+    <div class="loader"></div>
+  </div>
   <nav class="fixed top-0 left-0 h-screen w-[72px] border-r shadow flex flex-col items-center py-4 z-49">
     <div class="sidebar-items flex flex-col items-center gap-y-6 h-full w-full"> <a href="/#" aria-label="主页" class="sidebar-link">
           <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
@@ -1198,6 +1229,27 @@
           navigator.serviceWorker.register("/sw.js").catch(console.error);
         });
       }
+    </script>
+    <script>
+      const splashScreen = document.getElementById('splashScreen');
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          splashScreen.style.opacity = '0';
+          splashScreen.addEventListener('transitionend', () => {
+            splashScreen.remove();
+            document.body.classList.add('loaded');
+          }, { once: true });
+        }, Math.max(0, 2000 - performance.now()));
+      });
+      window.addEventListener('error', () => {
+        splashScreen.innerHTML = `
+          <div style="text-align:center;color:#fff;padding:20px">
+            <h2>加载遇到问题</h2>
+            <p>请检查网络连接</p>
+            <button onclick="location.reload()">重试</button>
+          </div>
+        `;
+      });
     </script>
   </div>
 </body>
