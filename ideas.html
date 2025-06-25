@@ -57,14 +57,6 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   window.commonReady?.then(() => {
-
-      function initServiceWorker() {
-       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch(console.error);
-        });
-        }
-      }
     
       function showToast(message) {
         const container = document.getElementById('toastContainer');
@@ -736,6 +728,11 @@ document.addEventListener('DOMContentLoaded', () => {
         initGallery();
         loadDaily();
       });
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(console.error);
+        });
+      }
       homeLink.addEventListener("click", () => {
         const newStr = localStorage.getItem("wxDataNew");
         if (newStr) {

@@ -82,15 +82,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (imgDomains.length === 0 && Array.isArray(window.IMG_DOMAINS)) {
         imgDomains = window.IMG_DOMAINS;
       }
-
-      function initServiceWorker() {
-       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch(console.error);
-        });
-        }
-      }
-
       function buildUrl(path, domain) {
         return domain ? domain.replace(/\/$/, '') + path : path;
       }
@@ -465,6 +456,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Escape') closeImage();
       });
       window.commonReady.then(initGallery);
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(console.error);
+        });
+      }
       homeLink.addEventListener('click', () => {
         const newStr = localStorage.getItem('wxDataNew');
         if (newStr) {
