@@ -1263,7 +1263,11 @@
           </div>
         `;
       });
-      window.addEventListener('load', () => hideSplash()); // fallback
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          if (!document.body.classList.contains('loaded')) hideSplash();
+        }, 10000);
+      }); // fallback after 10s
     </script>
   </div>
 </body>

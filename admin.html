@@ -170,7 +170,11 @@
       }
     }
     hasWxCache().then(found => { if (found) hideSplash(true); });
-    window.addEventListener("load", () => hideSplash());
+    window.addEventListener("load", () => {
+      setTimeout(() => {
+        if (!document.body.classList.contains('loaded')) hideSplash();
+      }, 10000);
+    });
     window.addEventListener("error", () => {
       splashScreen.innerHTML = `
         <div style="text-align:center;color:#fff;padding:20px">
