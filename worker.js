@@ -3,6 +3,11 @@ import * as cheerio from "cheerio";
 import mainHtml from "./main.html";
 import ideasHtml from "./ideas.html";
 import adminHtml from "./admin.html";
+import commonCss from "./static/common.css";
+import ideasCss from "./static/ideas.css";
+import commonJs from "./static/common.js";
+import sidebarHtml from "./static/sidebar.html";
+import settingsHtml from "./static/settings.html";
 // import swHtml from "./sw.js";
 import articleText from "./article.txt";
 
@@ -600,6 +605,29 @@ async function cacheThenNetwork(request) {
       const imgUrl = searchParams.get("url");
       if (!imgUrl) return new Response("missing url", { status: 400, headers: withCors() });
       return await proxyImage(imgUrl);
+    }
+
+    if ([
+      "/common.css",
+      "/ideas.css",
+      "/common.js",
+      "/sidebar.html",
+      "/settings.html",
+    ].includes(pathname)) {
+      const ext = pathname.split(".").pop();
+      const type =
+        ext === "css" ? "text/css" :
+        ext === "js" ? "text/javascript" :
+        "text/html";
+      const content =
+        pathname === "/common.css" ? commonCss :
+        pathname === "/ideas.css" ? ideasCss :
+        pathname === "/common.js" ? commonJs :
+        pathname === "/sidebar.html" ? sidebarHtml :
+        settingsHtml;
+      return new Response(content, {
+        headers: withCors({ "Content-Type": `${type}; charset=utf-8` }),
+      });
     }
 
     if (pathname === "/@admin") {

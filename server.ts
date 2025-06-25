@@ -549,7 +549,7 @@ async function handler(req: Request): Promise<Response> {
     } catch {
       return new Response("not found", { status: 404, headers: withCors() });
     }
-  } 
+  }
 
   // /@admin —— 管理页面
   if (pathname === "/@admin") {
