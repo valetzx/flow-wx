@@ -512,13 +512,7 @@ function setupSplash() {
     }, delay);
   };
   window.addEventListener('error', () => {
-    splashScreen.innerHTML = `
-      <div style="text-align:center;color:#fff;padding:20px">
-        <h2>加载遇到问题</h2>
-        <p>请检查网络连接</p>
-        <button onclick="location.reload()">重试</button>
-      </div>
-    `;
+    splashScreen.innerHTML = '<p class="text-red-500">加载失败，请稍后再试。</p>';
   });
   window.addEventListener('load', () => {
     setTimeout(() => {
