@@ -511,6 +511,9 @@ function setupSplash() {
       }, { once: true });
     }, delay);
   };
+  window.addEventListener('error', () => {
+   
+  });
   window.addEventListener('load', () => {
     setTimeout(() => {
       if (!document.body.classList.contains('loaded')) window.hideSplash();
