@@ -5,6 +5,32 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>我的作品集</title>
+  <style>
+    /* Loading splash screen */
+    #splashScreen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #fff;
+      z-index: 1000;
+      transition: opacity 0.4s;
+    }
+    #splashScreen .loader {
+      width: 3rem;
+      height: 3rem;
+      border: 4px solid rgba(0, 0, 0, 0.2);
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
   <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -265,6 +291,7 @@
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
+
   </style>
   <script>
     // 在tailwind配置前设置darkMode
@@ -288,6 +315,9 @@
 </head>
 
 <body class="bg-surface text-on-surface min-h-screen font-sans">
+  <div id="splashScreen">
+    <div class="loader"></div>
+  </div>
   <nav class="fixed top-0 left-0 h-screen w-[72px] border-r shadow flex flex-col items-center py-4 z-49">
     <div class="sidebar-items flex flex-col items-center gap-y-6 h-full w-full">
       <a href="#" aria-label="主页" class="sidebar-link">
@@ -705,6 +735,8 @@
           }
         } catch (err) {
           console.error('加载画廊失败:', err);
+        } finally {
+          hideSplash();
         }
       }
       loadMoreBtn.addEventListener('click', () => {
@@ -789,6 +821,30 @@
           navigator.serviceWorker.register('/sw.js').catch(console.error);
         });
       }
+    </script>
+    <script>
+      const splashScreen = document.getElementById('splashScreen');
+      const startTime = performance.now();
+      function hideSplash() {
+        const delay = Math.max(0, 2000 - (performance.now() - startTime));
+        setTimeout(() => {
+          splashScreen.style.opacity = '0';
+          splashScreen.addEventListener('transitionend', () => {
+            splashScreen.remove();
+            document.body.classList.add('loaded');
+          }, { once: true });
+        }, delay);
+      }
+      window.addEventListener('error', () => {
+        splashScreen.innerHTML = `
+          <div style="text-align:center;color:#fff;padding:20px">
+            <h2>加载遇到问题</h2>
+            <p>请检查网络连接</p>
+            <button onclick="location.reload()">重试</button>
+          </div>
+        `;
+      });
+      window.addEventListener('load', () => hideSplash()); // fallback
     </script>
   </div>
 </body>
