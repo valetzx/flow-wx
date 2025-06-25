@@ -5,7 +5,7 @@ compatibility_flags = ["nodejs_compat"]
 keep_vars = true
 
 [[rules]]
-globs = ["**/*.html", "article.txt", "sw.js", "**/static/*.css"]
+globs = ["**/*.html", "article.txt", "sw.js", "**/static/*"]
 type = "Text"
 fallthrough = true
 
