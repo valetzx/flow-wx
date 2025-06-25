@@ -526,6 +526,12 @@
         <div class="flex items-center justify-between py-1"> <label class="text-sm">深色模式</label> <label class="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" id="darkModeToggle" class="sr-only peer">
             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+          </label> </div>
+
+        <!-- 多选标签切换器 -->
+        <div class="flex items-center justify-between py-1"> <label class="text-sm">多选标签</label> <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="multiTagToggle" class="sr-only peer">
+            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
           </label> </div> <label class="block text-sm">列数
           <input
             id="columnCountInput"
@@ -703,6 +709,7 @@
       const applySettings = document.getElementById("applySettings");
       const columnCountInput = document.getElementById("columnCountInput");
       const perPageInput = document.getElementById("perPageInput");
+      const multiTagToggle = document.getElementById("multiTagToggle");
       const articleModal = document.getElementById("articleModal");
       const closeArticle = document.getElementById("closeArticle");
       const articleContent = document.getElementById("articleContent");
@@ -809,6 +816,8 @@
       const initialCols = isMobile ? 2 : savedCols;
       columnCountInput.value = String(initialCols);
       perPageInput.value = String(savedPerPage);
+      const multiTagsSaved = localStorage.getItem('multiTags') === 'true';
+      multiTagToggle.checked = multiTagsSaved;
       gallery.style.columnCount = String(initialCols);
       if (isMobile) {
         document.body.classList.add("mobile");
@@ -819,10 +828,19 @@
         let rawData = {};
         let allItems = [];
         let currentPage = 0;
-        let perPage = savedPerPage;
-        let selectedTags = [];
-        let searchTerm = '';
-        const EXTRA_TAGS = ['电影'];
+      let perPage = savedPerPage;
+      let selectedTags = [];
+      let searchTerm = '';
+      let allowMultiTags = multiTagsSaved;
+      multiTagToggle.addEventListener('change', () => {
+        allowMultiTags = multiTagToggle.checked;
+        localStorage.setItem('multiTags', allowMultiTags ? 'true' : 'false');
+        if (!allowMultiTags && selectedTags.length > 1) {
+          selectedTags = [selectedTags[0]];
+          applyFilter();
+        }
+      });
+      const EXTRA_TAGS = ['电影'];
       const observer = new IntersectionObserver(
         (entries, obs) => {
           entries.forEach((entry) => {
@@ -1183,10 +1201,18 @@
           if (!btn) return;
           const tag = btn.dataset.tag;
           if (!tag) return;
-          if (selectedTags.includes(tag)) {
-            selectedTags = selectedTags.filter((t) => t !== tag);
+          if (allowMultiTags) {
+            if (selectedTags.includes(tag)) {
+              selectedTags = selectedTags.filter((t) => t !== tag);
+            } else {
+              selectedTags.push(tag);
+            }
           } else {
-            selectedTags.push(tag);
+            if (selectedTags.length === 1 && selectedTags[0] === tag) {
+              selectedTags = [];
+            } else {
+              selectedTags = [tag];
+            }
           }
           applyFilter();
         });
