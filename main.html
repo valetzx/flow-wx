@@ -83,6 +83,14 @@ document.addEventListener('DOMContentLoaded', () => {
         imgDomains = window.IMG_DOMAINS;
       }
 
+      function initServiceWorker() {
+       if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(console.error);
+        });
+        }
+      }
+
       function buildUrl(path, domain) {
         return domain ? domain.replace(/\/$/, '') + path : path;
       }

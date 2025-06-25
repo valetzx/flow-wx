@@ -58,6 +58,14 @@
 document.addEventListener('DOMContentLoaded', () => {
   window.commonReady?.then(() => {
 
+      function initServiceWorker() {
+       if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(console.error);
+        });
+        }
+      }
+    
       function showToast(message) {
         const container = document.getElementById('toastContainer');
         if (!container) return;
@@ -74,6 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         }, 3000);
       }
+      
       // 创建空白卡片函数
       function createBannerCard() {
         const wrapper = document.createElement("div");
