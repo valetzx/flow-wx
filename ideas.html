@@ -5,8 +5,34 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>文章列表</title>
+  <style>
+    /* Loading splash screen */
+    #splashScreen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #fff;
+      z-index: 1000;
+      transition: opacity 0.4s;
+    }
+    #splashScreen .loader {
+      width: 3rem;
+      height: 3rem;
+      border: 4px solid rgba(0, 0, 0, 0.2);
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
   <!-- Tailwind CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.tailwindcss.com"></script>
   <style>
     /* 自定义主题色卡 */
 
@@ -346,33 +372,6 @@
       display: none;
     }
 
-    /* Loading splash screen */
-    #splashScreen {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background-color: rgb(var(--surface));
-      z-index: 1000;
-      transition: opacity 0.4s;
-    }
-    .dark #splashScreen {
-      background-color: rgb(var(--on-surface));
-    }
-    #splashScreen .loader {
-      width: 3rem;
-      height: 3rem;
-      border: 4px solid rgba(var(--on-surface), 0.2);
-      border-top-color: rgb(var(--primary));
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
 
     /* Banner 卡片及遮罩效果 */
 
