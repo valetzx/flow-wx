@@ -1125,6 +1125,8 @@
           }
         } catch (err) {
           console.error("加载画廊失败:", err);
+        } finally {
+          hideSplash();
         }
       }
       async function loadDaily() {
@@ -1231,15 +1233,17 @@
     </script>
     <script>
       const splashScreen = document.getElementById('splashScreen');
-      window.addEventListener('load', () => {
+      const startTime = performance.now();
+      function hideSplash() {
+        const delay = Math.max(0, 2000 - (performance.now() - startTime));
         setTimeout(() => {
           splashScreen.style.opacity = '0';
           splashScreen.addEventListener('transitionend', () => {
             splashScreen.remove();
             document.body.classList.add('loaded');
           }, { once: true });
-        }, Math.max(0, 2000 - performance.now()));
-      });
+        }, delay);
+      }
       window.addEventListener('error', () => {
         splashScreen.innerHTML = `
           <div style="text-align:center;color:#fff;padding:20px">
@@ -1249,6 +1253,7 @@
           </div>
         `;
       });
+      window.addEventListener('load', () => hideSplash()); // fallback
     </script>
   </div>
 </body>
