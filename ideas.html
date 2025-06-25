@@ -1271,6 +1271,60 @@
         }, 10000);
       }); // fallback after 10s
     </script>
+    <script>
+      (function () {
+        function showLoader() {
+          if (document.getElementById('pageLoader')) return;
+          const div = document.createElement('div');
+          div.id = 'pageLoader';
+          div.style.position = 'fixed';
+          div.style.inset = '0';
+          div.style.background = 'rgba(0,0,0,0.3)';
+          div.style.display = 'flex';
+          div.style.alignItems = 'center';
+          div.style.justifyContent = 'center';
+          div.innerHTML = '<div class="loader" style="width:3rem;height:3rem;border:4px solid rgba(0,0,0,0.2);border-top-color:#3b82f6;border-radius:50%;animation: spin 1s linear infinite;"></div>';
+          document.body.appendChild(div);
+        }
+        function hideLoader() {
+          const div = document.getElementById('pageLoader');
+          if (div) div.remove();
+        }
+        async function loadPage(url, push = true) {
+          showLoader();
+          try {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(res.status);
+            const html = await res.text();
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const newContent = doc.getElementById('content');
+            if (!newContent) throw new Error('missing content');
+            document.title = doc.title;
+            document.getElementById('content').replaceWith(newContent);
+            if (push) history.pushState(null, '', url);
+            if (typeof window.initGallery === 'function') window.initGallery();
+            if (typeof window.loadDaily === 'function') window.loadDaily();
+            if (typeof window.loadCache === 'function') window.loadCache();
+          } catch (e) {
+            location.href = url;
+          } finally {
+            hideLoader();
+          }
+        }
+        document.addEventListener('click', (e) => {
+          const link = e.target.closest('a[href]');
+          if (!link) return;
+          const url = new URL(link.href, location.href);
+          if (url.origin !== location.origin) return;
+          if (link.target || link.hasAttribute('download') || url.hash) return;
+          e.preventDefault();
+          loadPage(url.pathname + url.search);
+        });
+        window.addEventListener('popstate', () => {
+          loadPage(location.pathname + location.search, false);
+        });
+      })();
+    </script>
   </div>
 </body>
 
