@@ -642,7 +642,7 @@
         for (const [k, v] of Object.entries(data)) {
           if (selectedTags.length) {
             const tags = Array.isArray(v.tags) ? v.tags : [];
-            if (!selectedTags.some((t) => tags.includes(t))) {
+            if (!selectedTags.every((t) => tags.includes(t))) {
               continue;
             }
           }

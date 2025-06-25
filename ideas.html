@@ -1015,7 +1015,7 @@
             if ((selectedTags.length || searchTerm) && tags.length === 0) {
               continue;
             }
-            if (selectedTags.length && !selectedTags.some((t) => tags.includes(t))) {
+            if (selectedTags.length && !selectedTags.every((t) => tags.includes(t))) {
               continue;
             }
             if (searchTerm && !k.includes(searchTerm)) {
@@ -1029,7 +1029,7 @@
         function extraItemVisible(tags) {
           if (searchTerm) return false;
           if (!selectedTags.length) return true;
-          return selectedTags.some((t) => tags.includes(t));
+          return selectedTags.every((t) => tags.includes(t));
         }
 
         function applyFilter() {
