@@ -44,7 +44,7 @@ const indexHtml = injectConfig(
 const ideasHtml = injectConfig(
   await Deno.readTextFile(join(__dirname, "ideas.html")),
 );
-const swRaw = await Deno.readTextFile(join(__dirname, "sw.js"));
+const swRaw = await Deno.readTextFile(join(__dirname, "./static/sw.js"));
 const swHtml = `const IMG_CACHE = ${JSON.stringify(cacheImgDomain)};\n${swRaw}`;
 const adminHtml = injectConfig(
   await Deno.readTextFile(join(__dirname, "admin.html")),

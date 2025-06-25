@@ -456,11 +456,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Escape') closeImage();
       });
       window.commonReady.then(initGallery);
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(console.error);
-        });
-      }
       homeLink.addEventListener('click', () => {
         const newStr = localStorage.getItem('wxDataNew');
         if (newStr) {
