@@ -10,11 +10,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="common.js"></script>
   <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(console.error);
-        });
-      }
     // 在tailwind配置前设置darkMode
     tailwind.config = {
       darkMode: 'class',
@@ -475,6 +470,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
     </script>
+  <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(console.error);
+        });
+      }
+  </script>
+
   </div>
 </body>
 
