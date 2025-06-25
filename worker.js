@@ -5,7 +5,7 @@ import ideasHtml from "./ideas.html";
 import adminHtml from "./admin.html";
 import commonCss from "./static/common.css";
 import ideasCss from "./static/ideas.css";
-import commonJs from "./static/common.js";
+import commonJs from "./static/common.js?raw";
 import sidebarHtml from "./static/sidebar.html";
 import settingsHtml from "./static/settings.html";
 // import swHtml from "./sw.js";
