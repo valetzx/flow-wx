@@ -5,7 +5,7 @@ import ideasHtml from "./ideas.html";
 import adminHtml from "./admin.html";
 import commonCss from "./static/common.css";
 import ideasCss from "./static/ideas.css";
-import { commonJs } from "./static/common.js?raw";
+//import { commonJs } from "./static/common.js?raw";
 import sidebarHtml from "./static/sidebar.html";
 import settingsHtml from "./static/settings.html";
 // import swHtml from "./sw.js";
@@ -459,7 +459,88 @@ export default {
 //         return json({ error: err.message }, 500);
 //       }
 //     }
+    if (pathname === "/main.js") {
+        const mainJS = `
+function includeHTML() {
+  const includes = document.querySelectorAll('[data-include]');
+  return Promise.all(Array.from(includes).map(async el => {
+    const file = el.getAttribute('data-include');
+    if (file) {
+      try {
+        const res = await fetch(file);
+        if (res.ok) {
+          el.innerHTML = await res.text();
+        }
+      } catch {}
+    }
+  }));
+}
 
+function initDarkMode() {
+  const darkModeToggle = document.getElementById('darkModeToggle');
+  if (!darkModeToggle) return;
+  const isDarkMode = localStorage.getItem('darkMode') === 'true' ||
+    (window.matchMedia('(prefers-color-scheme: dark)').matches &&
+      localStorage.getItem('darkMode') !== 'false');
+  if (isDarkMode) {
+    document.documentElement.classList.add('dark');
+    darkModeToggle.checked = true;
+  }
+  darkModeToggle.addEventListener('change', () => {
+    if (darkModeToggle.checked) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('darkMode', 'true');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('darkMode', 'false');
+    }
+  });
+}
+
+function setupSplash() {
+  const splashScreen = document.getElementById('splashScreen');
+  if (!splashScreen) return;
+  const startTime = performance.now();
+  window.hideSplash = function(immediate=false) {
+    const delay = immediate ? 0 : Math.max(0, 2000 - (performance.now() - startTime));
+    setTimeout(() => {
+      splashScreen.style.opacity = '0';
+      splashScreen.addEventListener('transitionend', () => {
+        splashScreen.remove();
+        document.body.classList.add('loaded');
+      }, { once: true });
+    }, delay);
+  };
+  window.addEventListener('error', () => {
+    splashScreen.innerHTML = `
+      <div style="text-align:center;color:#fff;padding:20px">
+        <h2>加载遇到问题</h2>
+        <p>请检查网络连接</p>
+        <button onclick="location.reload()">重试</button>
+      </div>
+    `;
+  });
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      if (!document.body.classList.contains('loaded')) window.hideSplash();
+    }, 10000);
+  });
+}
+
+window.commonReady = new Promise(resolve => {
+  document.addEventListener('DOMContentLoaded', async () => {
+    await includeHTML();
+    initDarkMode();
+    setupSplash();
+    resolve();
+  });
+});
+        `;
+        return new Response(mainJS, {
+          headers: withCors({ "Content-Type": "application/javascript" })
+      });
+    }
+    
     if (pathname === "/sw.js") {
         const swHtml = `
 const IMG_CACHE = ${JSON.stringify(cacheImgDomain)};
