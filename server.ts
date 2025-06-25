@@ -514,64 +514,6 @@ async function handler(req: Request): Promise<Response> {
     }
   }
 
-//   // /api/article —— 抓取单篇文章并返回 HTML
-//   if (pathname === "/api/article") {
-//     const abbr = searchParams.get("abbr");
-//     let url = searchParams.get("url");
-//     if (abbr) {
-//       const found = articles.find((a) => a.abbrlink === abbr);
-//       if (found) url = found.url;
-//     }
-//     if (!url) url = articles[0]?.url;
-//     if (!url) return json({ error: "missing url" }, 400);
-//     try {
-//       const res = await fetch(url, {
-//         headers: {
-//           "User-Agent": "Mozilla/5.0 (Deno)",
-//           Referer: "https://mp.weixin.qq.com/",
-//         },
-//       });
-//       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-//       const html = await res.text();
-//       const $ = cheerio.load(html, { decodeEntities: false });
-//       let title = $("#activity-name").text().trim() ||
-//         $(".rich_media_title").text().trim() ||
-//         randomSentence();
-//       if (abbr) {
-//         const found = articles.find((a) => a.abbrlink === abbr);
-//         if (found?.title) title = found.title;
-//       }
-//       // 将微信文章中的 data-src 替换为 src，方便直接展示图片
-//       $("#js_content img").each((_, el) => {
-//         const src = $(el).attr("data-src") || $(el).attr("src");
-//         if (src) {
-//           const imgPath = `?url=${encodeURIComponent(src)}`;
-//           const domain = imgDomains[0];
-//           const full = domain ? domain.replace(/\/$/, "") + imgPath : imgPath;
-//           $(el).attr("src", full);
-//           $(el).removeAttr("data-src");
-//         }
-//       });
-//       const content = proxifyHtml($("#js_content").html() || "");
-//       const page = `<!DOCTYPE html>
-// <html lang="zh-CN">
-//   <head>
-//     <meta charset="utf-8" />
-//     <title>${title}</title>
-//   </head>
-//   <body>
-//     <h1 class="text-2xl font-semibold mb-2">${title}</h1>
-//     ${content}
-//   </body>
-// </html>`;
-//       return new Response(page, {
-//         headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
-//       });
-//     } catch (err) {
-//       return json({ error: err.message }, 500);
-//     }
-//   }
-
   if (pathname === "/sw.js") {
     return new Response(swHtml, {
       headers: withCors({ "Content-Type": "text/javascript; charset=utf-8" }),
@@ -584,6 +526,30 @@ async function handler(req: Request): Promise<Response> {
     if (!imgUrl) return new Response("missing url", { status: 400, headers: withCors() });
     return await proxyImage(imgUrl);
   }
+
+  // static asset files
+  if ([
+    "/common.css",
+    "/ideas.css",
+    "/common.js",
+    "/sidebar.html",
+    "/settings.html",
+  ].includes(pathname)) {
+    try {
+      const filePath = join(__dirname, "static", pathname.slice(1));
+      const ext = pathname.split(".").pop();
+      const type =
+        ext === "css" ? "text/css" :
+        ext === "js" ? "text/javascript" :
+        "text/html";
+      const content = await Deno.readTextFile(filePath);
+      return new Response(content, {
+        headers: withCors({ "Content-Type": `${type}; charset=utf-8` }),
+      });
+    } catch {
+      return new Response("not found", { status: 404, headers: withCors() });
+    }
+  } 
 
   // /@admin —— 管理页面
   if (pathname === "/@admin") {
