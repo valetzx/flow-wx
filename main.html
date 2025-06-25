@@ -861,6 +861,48 @@
         }, 10000);
       }); // fallback after 10s
     </script>
+    <script>
+      // 简易的异步页面加载与局部更新
+      function loadPage(url, replace = false) {
+        fetch(url)
+          .then((res) => res.text())
+          .then((html) => {
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const newContent = doc.getElementById('content');
+            const newTitle = doc.querySelector('title');
+            if (newContent) {
+              document.getElementById('content').innerHTML = newContent.innerHTML;
+            }
+            if (newTitle) {
+              document.title = newTitle.textContent;
+            }
+            history[replace ? 'replaceState' : 'pushState']({}, '', url);
+            window.scrollTo(0, 0);
+          })
+          .catch(console.error);
+      }
+
+      document.querySelectorAll('nav a[href^="/"]').forEach((a) => {
+        a.addEventListener('click', (e) => {
+          const href = a.getAttribute('href');
+          if (
+            href &&
+            !a.hasAttribute('target') &&
+            !e.ctrlKey &&
+            !e.metaKey &&
+            !e.shiftKey &&
+            !e.altKey
+          ) {
+            e.preventDefault();
+            loadPage(href);
+          }
+        });
+      });
+
+      window.addEventListener('popstate', () => {
+        loadPage(location.pathname, true);
+      });
+    </script>
   </div>
 </body>
 
