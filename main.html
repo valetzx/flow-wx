@@ -9,6 +9,7 @@
   <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="common.js"></script>
+  <script>
     // 在tailwind配置前设置darkMode
     tailwind.config = {
       darkMode: 'class',
@@ -54,7 +55,8 @@
     </div>
 
 <script>
-window.commonReady.then(() => {
+document.addEventListener('DOMContentLoaded', () => {
+  window.commonReady?.then(() => {
       const tagList = document.getElementById('tagList');
       const loadMoreBtn = document.getElementById('loadMore');
       const settingsPanel = document.getElementById('settingsPanel');
@@ -466,7 +468,8 @@ window.commonReady.then(() => {
           } catch (e) {}
         }
       });
-});
+    });
+  });
     </script>
   </div>
 </body>
