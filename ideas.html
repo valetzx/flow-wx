@@ -55,7 +55,8 @@
     </div>
     <div id="toastContainer"></div>
 <script>
-window.commonReady.then(() => {
+document.addEventListener('DOMContentLoaded', () => {
+  window.commonReady?.then(() => {
 
       function showToast(message) {
         const container = document.getElementById('toastContainer');
@@ -737,7 +738,8 @@ window.commonReady.then(() => {
           } catch (e) {}
         }
       });
-});
+    });
+  });
     </script>
   </div>
 </body>
