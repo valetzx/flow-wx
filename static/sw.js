@@ -22,6 +22,8 @@ self.addEventListener("fetch", (event) => {
   if (url.pathname === "/api/wx" || url.pathname === "/api/bil" || url.pathname === "/api/daily") {
     if (event.request.headers.get("x-skip-cache")) {
       event.respondWith(fetchAndCache(event.request));
+    } else   if (url.pathname === "/common.css" || url.pathname === "/common.js" || url.pathname === "/ideas.css" || url.pathname === "/settings.html " || url.pathname === "/sidebar.html") {
+    event.respondWith(cacheThenNetwork(event.request));
     } else {
       event.respondWith(cacheThenNetwork(event.request));
     }
