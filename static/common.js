@@ -34,14 +34,6 @@ function initDarkMode() {
   });
 }
 
-function initServiceWorker() {
-  if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-  navigator.serviceWorker.register('sw.js').catch(console.error);
-  });
-  }
-}
-
 function setupSplash() {
   const splashScreen = document.getElementById('splashScreen');
   if (!splashScreen) return;
@@ -76,7 +68,6 @@ window.commonReady = new Promise(resolve => {
   document.addEventListener('DOMContentLoaded', async () => {
     await includeHTML();
     initDarkMode();
-    initServiceWorker();
     setupSplash();
     resolve();
   });
