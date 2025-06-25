@@ -13,7 +13,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background-color: #fff;
+      background-color: #0F172A;
       z-index: 1000;
       transition: opacity 0.4s;
     }
@@ -1234,8 +1234,11 @@
     <script>
       const splashScreen = document.getElementById('splashScreen');
       const startTime = performance.now();
-      function hideSplash() {
-        const delay = Math.max(0, 2000 - (performance.now() - startTime));
+      let splashHidden = false;
+      function hideSplash(immediate = false) {
+        if (splashHidden) return;
+        splashHidden = true;
+        const delay = immediate ? 0 : Math.max(0, 2000 - (performance.now() - startTime));
         setTimeout(() => {
           splashScreen.style.opacity = '0';
           splashScreen.addEventListener('transitionend', () => {
@@ -1243,6 +1246,13 @@
             document.body.classList.add('loaded');
           }, { once: true });
         }, delay);
+      }
+      if ('caches' in window) {
+        caches.match('/api/wx').then((res) => {
+          if (res) hideSplash(true);
+        }).catch(() => {});
+      } else if (localStorage.getItem('wxData')) {
+        hideSplash(true);
       }
       window.addEventListener('error', () => {
         splashScreen.innerHTML = `
