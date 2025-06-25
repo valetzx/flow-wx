@@ -3,8 +3,8 @@ import * as cheerio from "cheerio";
 import mainHtml from "./main.html";
 import ideasHtml from "./ideas.html";
 import adminHtml from "./admin.html";
-import commonCss from "./static/common.css";
-import ideasCss from "./static/ideas.css";
+import commonCss from "./static/common.css?raw";
+import ideasCss from "./static/ideas.css?raw";
 //import { commonJs } from "./static/common.js?raw";
 import sidebarHtml from "./static/sidebar.html";
 import settingsHtml from "./static/settings.html";
@@ -460,7 +460,7 @@ export default {
 //       }
 //     }
     if (pathname === "/common.js") {
-        const mainJS = `
+        const commonJS = `
 function includeHTML() {
   const includes = document.querySelectorAll('[data-include]');
   return Promise.all(Array.from(includes).map(async el => {
@@ -530,7 +530,7 @@ window.commonReady = new Promise(resolve => {
   });
 });
         `;
-        return new Response(mainJS, {
+        return new Response(commonJS, {
           headers: withCors({ "Content-Type": "application/javascript" })
       });
     }
