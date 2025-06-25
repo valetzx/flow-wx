@@ -21,6 +21,9 @@ app.use((req, res, next) => {
   next();
 });
 
+// serve static assets
+app.use(express.static(__dirname));
+
 const apiDomains = (process.env.API_DOMAINS || '').split(/[\s,]+/).filter(Boolean);
 const imgDomains = (process.env.IMG_DOMAINS || '').split(/[\s,]+/).filter(Boolean);
 const cacheImgDomain = process.env.IMG_CACHE || '';

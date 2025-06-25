@@ -1,0 +1,685 @@
+      function showToast(message) {
+        const container = document.getElementById('toastContainer');
+        if (!container) return;
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = message;
+        container.appendChild(toast);
+        // trigger enter
+        requestAnimationFrame(() => toast.classList.add('show'));
+        setTimeout(() => {
+          toast.classList.remove('show');
+          toast.addEventListener('transitionend', () => toast.remove(), {
+            once: true
+          });
+        }, 3000);
+      }
+      // 创建空白卡片函数
+      function createBannerCard() {
+        const wrapper = document.createElement("div");
+        wrapper.className = "masonry-item rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer banner-card";
+        wrapper.dataset.tag = '';
+        wrapper.style.height = "280px";
+        const carousel = document.createElement("div");
+        carousel.className = "banner-carousel";
+        const slotWidth = 60;
+        const slotGap = 12; // spacing between images
+        const count = 7;
+        const slots = [];
+        const loopDistance = (slotWidth + slotGap) * count;
+        const startOffset = -1; 
+        for (let i = 0; i < count; i++) {
+          const slot = document.createElement("div");
+          slot.className = "carousel-slot";
+          carousel.appendChild(slot);
+          slots.push({
+            el: slot,
+            x: i * (slotWidth + slotGap) + startOffset
+          });
+        }
+        const mask = document.createElement("div");
+        mask.className = "banner-mask";
+        mask.textContent = "随机文章 ➡︎";
+        const content = document.createElement("div");
+        content.className = "card-content p-5 flex flex-col gap-2";
+        const h2 = document.createElement("h2");
+        h2.className = "text-xl font-semibold text-slate-900";
+        h2.textContent = "设计与科技";
+        const p = document.createElement("p");
+        p.className = "text-sm text-gray-600 leading-relaxed";
+        p.textContent = "这里是我的设计合集📘以及部分网络中的设计内容";
+        //  const source = document.createElement("a");
+        //  source.className = "text-xs text-gray-400 hover:underline self-end";
+        //  source.textContent = "可以点击查看原文详情哦";
+        const button = document.createElement("button");
+        button.className = "mt-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition";
+        button.textContent = "点击添加内容";
+        content.appendChild(h2);
+        content.appendChild(p);
+        const tagsEl = document.createElement("div");
+        tagsEl.className = "flex overflow-x-auto whitespace-nowrap gap-1 no-scrollbar";
+        const span = document.createElement("span");
+        span.className = "text-xs text-gray-400 hover:text-primary transition-colors";
+        span.textContent = "";
+        tagsEl.appendChild(span);
+        content.appendChild(tagsEl);
+        //  content.appendChild(source);
+        wrapper.appendChild(carousel);
+        wrapper.appendChild(content);
+        wrapper.appendChild(mask);
+
+        function getCachedImageUrls() {
+          try {
+            const data = JSON.parse(localStorage.getItem("wxData") || "null");
+            if (!data) return [];
+            const urls = [];
+            Object.values(data).forEach((item) => {
+              if (Array.isArray(item.images)) urls.push(...item.images);
+            });
+            return urls;
+          } catch {
+            return [];
+          }
+        }
+
+        function assignImage(slot) {
+          const urls = getCachedImageUrls();
+          if (urls.length > 0) {
+            const src = urls[Math.floor(Math.random() * urls.length)];
+            const path = `?url=${encodeURIComponent(src)}`;
+            slot.style.backgroundImage = `url(${buildUrl(path, imgDomains[0])})`;
+            slot.style.backgroundColor = "";
+          } else {
+            slot.style.backgroundImage = "";
+            slot.style.backgroundColor = getRandomColor();
+          }
+        }
+        slots.forEach((s) => assignImage(s.el));
+
+        function animate() {
+          const width = carousel.clientWidth;
+          slots.forEach((s) => {
+            s.x += 0.5; // speed
+            if (s.x > width) {
+              s.x -= loopDistance;
+              assignImage(s.el);
+            }
+            s.el.style.transform = `translate(${s.x}px, -50%)`;
+          });
+          requestAnimationFrame(animate);
+        }
+        requestAnimationFrame(animate);
+        // 添加点击事件
+        wrapper.addEventListener("click", () => {
+          showToast("这个还没做好捏嘻嘻");
+        });
+        return wrapper;
+      }
+        const gallery = document.getElementById("gallery");
+        const tagList = document.getElementById("tagList");
+      const loadMoreBtn = document.getElementById("loadMore");
+      const settingsPanel = document.getElementById("settingsPanel");
+      const moreBtn = document.getElementById("moreBtn");
+      const closeSettings = document.getElementById("closeSettings");
+      const applySettings = document.getElementById("applySettings");
+      const columnCountInput = document.getElementById("columnCountInput");
+      const perPageInput = document.getElementById("perPageInput");
+      const multiTagToggle = document.getElementById("multiTagToggle");
+      const articleModal = document.getElementById("articleModal");
+      const closeArticle = document.getElementById("closeArticle");
+      const articleContent = document.getElementById("articleContent");
+      const clearCacheBtn = document.getElementById('clearCache');
+      let dailyData = null;
+      const apiStored = localStorage.getItem('apiDomains') || localStorage.getItem('apiDomain') || '';
+      const imgStored = localStorage.getItem('imgDomains') || '';
+      let apiDomains = apiStored ? apiStored.split(/\r?\n|,/).map((s) => s.trim()).filter(Boolean) : [];
+      let imgDomains = imgStored ? imgStored.split(/\r?\n|,/).map((s) => s.trim()).filter(Boolean) : [];
+      if (apiDomains.length === 0 && Array.isArray(window.API_DOMAINS)) {
+        apiDomains = window.API_DOMAINS;
+      }
+      if (imgDomains.length === 0 && Array.isArray(window.IMG_DOMAINS)) {
+        imgDomains = window.IMG_DOMAINS;
+      }
+
+      function buildUrl(path, domain) {
+        return domain ? domain.replace(/\/$/, '') + path : path;
+      }
+
+      function withDomain(path) {
+        return buildUrl(path, imgDomains[0]);
+      }
+
+      function loadImgWithFallback(img) {
+        const path = img.dataset.path;
+        if (!path) return;
+        let index = 0;
+
+        function attempt() {
+          img.src = buildUrl(path, imgDomains[index] || '');
+        }
+        img.onerror = () => {
+          index++;
+          if (index < imgDomains.length) attempt();
+        };
+        attempt();
+      }
+      async function fetchWithFallback(path, options = {}) {
+        const isApi = path.startsWith('/api/wx') || path.startsWith('/api/bil') || path.startsWith('/api/article') || path.startsWith('/api/daily') || path.startsWith('/a/');
+        const domains = isApi ? apiDomains : imgDomains;
+        for (const d of domains) {
+          try {
+            const res = await fetch(buildUrl(path, d), options);
+            if (res.ok) return res;
+          } catch {}
+        }
+        return fetch(path, options);
+      }
+      const homeLink = document.querySelector('a[aria-label="\u4e3b\u9875"]');
+      let notifyDot = null;
+
+      function showDot() {
+        if (!notifyDot) {
+          notifyDot = document.createElement("span");
+          notifyDot.className = "notify-dot";
+          homeLink.classList.add("relative");
+          homeLink.appendChild(notifyDot);
+        }
+      }
+
+      function hideDot() {
+        if (notifyDot) {
+          notifyDot.remove();
+          notifyDot = null;
+        }
+      }
+
+      function showArticle(html) {
+        articleContent.innerHTML = html;
+        articleModal.classList.remove("hidden");
+        articleModal.classList.add("flex", "show");
+        // 添加深色模式样式类到文章内容
+        const content = document.getElementById('articleContent');
+        content.classList.add('dark:prose-invert');
+      }
+
+      function showLoading() {
+        articleContent.innerHTML = '<div class="h-40 flex items-center justify-center"><div class="spinner"></div></div>';
+        articleModal.classList.remove("hidden");
+        articleModal.classList.add("flex", "show");
+      }
+
+      function showMovie(data) {
+        articleContent.innerHTML = `
+            <h2 class="text-2xl font-semibold mb-2">${data.mov_title}</h2>
+            <p class="text-sm text-gray-500 mb-4">${data.mov_rating}分 ${Array.isArray(data.mov_type) ? data.mov_type.join(" ") : data.mov_type} ${data.mov_year} ${data.mov_area}</p>
+            <p>${data.mov_intro}</p>
+          `;
+        articleModal.classList.remove("hidden");
+        articleModal.classList.add("flex", "show");
+      }
+
+      function hideArticle() {
+        articleModal.classList.add("hidden");
+        articleModal.classList.remove("flex", "show");
+        articleContent.innerHTML = "";
+      }
+      const savedCols = parseInt(localStorage.getItem("columnCount")) || 4;
+      const savedPerPage = parseInt(localStorage.getItem("perPage")) || 30;
+      const navEl = document.querySelector("nav");
+      const contentEl = document.getElementById("content");
+      const isMobile = /Mobi|Android|iPhone|Windows Phone/i.test(navigator.userAgent, );
+      const initialCols = isMobile ? 2 : savedCols;
+      columnCountInput.value = String(initialCols);
+      perPageInput.value = String(savedPerPage);
+      const multiTagsSaved = localStorage.getItem('multiTags') === 'true';
+      multiTagToggle.checked = multiTagsSaved;
+      gallery.style.columnCount = String(initialCols);
+      if (isMobile) {
+        document.body.classList.add("mobile");
+        navEl.classList.add("mobile");
+        contentEl.classList.remove("ml-[72px]");
+        contentEl.classList.add("mb-[72px]");
+      }
+        let rawData = {};
+        let allItems = [];
+        let currentPage = 0;
+      let perPage = savedPerPage;
+      let selectedTags = [];
+      let searchTerm = '';
+      let allowMultiTags = multiTagsSaved;
+      multiTagToggle.addEventListener('change', () => {
+        allowMultiTags = multiTagToggle.checked;
+        localStorage.setItem('multiTags', allowMultiTags ? 'true' : 'false');
+        if (!allowMultiTags && selectedTags.length > 1) {
+          selectedTags = [selectedTags[0]];
+          applyFilter();
+        }
+      });
+      const EXTRA_TAGS = ['电影'];
+      const observer = new IntersectionObserver(
+        (entries, obs) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const img = entry.target;
+              loadImgWithFallback(img);
+              obs.unobserve(img);
+            }
+          });
+        }, {
+          rootMargin: "100px"
+        }, );
+
+      function getRandomColor() {
+        return ("#" + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, "0"));
+      }
+
+      function createImage(src, alt) {
+        const img = document.createElement("img");
+        img.className = "w-full rounded-t-2xl object-cover hover:opacity-90 transition-opacity aspect-video";
+        img.dataset.path = `?url=${src}`;
+        img.alt = alt;
+        img.loading = "lazy";
+        const randomHeight = 180 + Math.random() * 120; // 180 - 300px
+        img.style.height = `${randomHeight}px`;
+        img.style.backgroundColor = getRandomColor();
+        img.style.minHeight = "120px";
+        img.style.opacity = "0";
+        img.style.transition = "opacity 0.5s";
+        img.addEventListener("load", () => {
+          img.style.opacity = "1";
+          img.style.backgroundColor = "";
+          img.style.minHeight = "";
+        });
+        observer.observe(img);
+        return img;
+      }
+
+      function createCard(item) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "masonry-item rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer";
+        wrapper.dataset.url = item.url;
+        if (item.abbrlink) {
+          wrapper.dataset.abbr = item.abbrlink;
+        }
+        if (item.imgSrc) {
+          const img = createImage(item.imgSrc, item.title);
+          wrapper.appendChild(img);
+        }
+        const text = document.createElement("div");
+        text.className = "card-content p-5 flex flex-col gap-2";
+        const h2 = document.createElement("h2");
+        h2.className = "text-xl font-semibold text-slate-900 tracking-tight mb-1";
+        h2.textContent = item.title;
+        const p = document.createElement("p");
+        p.className = "text-sm text-gray-600 leading-relaxed mb-2";
+        p.textContent = item.description;
+        const link = document.createElement("a");
+        link.className = "text-xs text-gray-400 whitespace-nowrap flex-none";
+        link.textContent = "查看原文";
+        link.href = item.url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.addEventListener("click", (e) => e.stopPropagation());
+        const bottom = document.createElement("div");
+        bottom.className = "flex items-end mt-auto gap-2";
+        const tagsEl = document.createElement("div");
+        tagsEl.className = "flex-1 min-w-0 flex overflow-x-auto whitespace-nowrap gap-1 no-scrollbar";
+        if (Array.isArray(item.tags) && item.tags.length > 0) {
+          for (const tag of item.tags) {
+            const span = document.createElement("span");
+            span.className = "text-xs text-gray-400 hover:text-primary transition-colors";
+            span.textContent = "#" + tag;
+            tagsEl.appendChild(span);
+          }
+          bottom.appendChild(tagsEl);
+        }
+        bottom.appendChild(link);
+        text.appendChild(h2);
+        text.appendChild(p);
+        text.appendChild(bottom);
+        wrapper.appendChild(text);
+        wrapper.addEventListener("click", async () => {
+          const url = wrapper.dataset.url;
+          const abbr = wrapper.dataset.abbr;
+          if (!url || !abbr) return;
+          const key = "article:" + url;
+          let html = localStorage.getItem(key);
+          if (!html) {
+            showLoading();
+            try {
+              const res = await fetchWithFallback(`/a/${abbr}?view=1`, );
+              html = await res.text();
+              if (res.ok) {
+                localStorage.setItem(key, html);
+              }
+            } catch (err) {
+              html = "<p>加载失败</p>";
+            }
+            await new Promise((r) => setTimeout(r, 300));
+          }
+          showArticle(html);
+        });
+        return wrapper;
+      }
+
+      function createDailyCard(item) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "masonry-item rounded-2xl shadow overflow-hidden flex flex-col cursor-pointer";
+        wrapper.dataset.tag = '电影';
+        if (item.mov_pic) {
+          const img = document.createElement("img");
+          img.className = "w-full object-cover";
+          img.src = item.mov_pic;
+          wrapper.appendChild(img);
+        }
+        const text = document.createElement("div");
+        text.className = "card-content p-5 flex flex-col gap-2";
+        const h2 = document.createElement("h2");
+        h2.className = "text-xl font-semibold text-slate-900";
+        h2.textContent = item.mov_title;
+        const p = document.createElement("p");
+        p.className = "text-sm text-gray-600 leading-relaxed";
+        p.textContent = item.mov_text;
+        const source = document.createElement("a");
+        source.className = "text-xs text-gray-400 hover:underline";
+        source.textContent = "来自此刻电影";
+        source.href = "https://www.cikeee.cc/";
+        source.target = "_blank";
+        source.rel = "noopener noreferrer";
+        source.addEventListener("click", (e) => e.stopPropagation());
+        const bottom = document.createElement("div");
+        bottom.className = "flex items-end mt-auto gap-2";
+        const tagsEl = document.createElement("div");
+        tagsEl.className = "flex-1 min-w-0 flex overflow-x-auto whitespace-nowrap gap-1 no-scrollbar";
+        const span = document.createElement("span");
+        span.className = "text-xs text-gray-400 hover:text-primary transition-colors";
+        span.textContent = "#电影";
+        tagsEl.appendChild(span);
+        bottom.appendChild(tagsEl);
+        bottom.appendChild(source);
+        text.appendChild(h2);
+        text.appendChild(p);
+        text.appendChild(bottom);
+        wrapper.appendChild(text);
+        wrapper.addEventListener("click", () => showMovie(item));
+        return wrapper;
+      }
+
+        function buildItems(data) {
+          const items = [];
+          for (const [title, { description, images, url, tags, abbrlink }] of Object.entries(data)) {
+            const imgSrc = Array.isArray(images) && images.length > 0 ? images[Math.floor(Math.random() * images.length)] : null;
+            items.push({ title, description, imgSrc, url, tags, abbrlink });
+          }
+          return items;
+        }
+
+        function collectTags(data) {
+          const set = new Set();
+          Object.values(data).forEach((v) => {
+            if (Array.isArray(v.tags)) {
+              v.tags.forEach((t) => set.add(t));
+            }
+          });
+          return Array.from(set);
+        }
+
+        function renderTags(tags) {
+          tagList.innerHTML = '';
+          const searchBtn = document.createElement('button');
+          searchBtn.id = 'searchBtn';
+          searchBtn.textContent = '🔍︎';
+          searchBtn.className = 'px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary bg-card';
+          tagList.appendChild(searchBtn);
+          const allTags = Array.from(new Set([...tags, ...EXTRA_TAGS]));
+          allTags.forEach((t) => {
+            const btn = document.createElement('button');
+            btn.dataset.tag = t;
+            btn.textContent = t;
+            btn.className = 'px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary bg-card';
+            tagList.appendChild(btn);
+          });
+        }
+
+        function filterData(data) {
+          const filtered = {};
+          for (const [k, v] of Object.entries(data)) {
+            const tags = Array.isArray(v.tags) ? v.tags : [];
+            if ((selectedTags.length || searchTerm) && tags.length === 0) {
+              continue;
+            }
+            if (selectedTags.length && !selectedTags.every((t) => tags.includes(t))) {
+              continue;
+            }
+            if (searchTerm && !k.includes(searchTerm)) {
+              continue;
+            }
+            filtered[k] = v;
+          }
+          return filtered;
+        }
+
+        function extraItemVisible(tags) {
+          if (searchTerm) return false;
+          if (!selectedTags.length) return true;
+          return selectedTags.every((t) => tags.includes(t));
+        }
+
+        function applyFilter() {
+          const data = filterData(rawData);
+          allItems = buildItems(data);
+          currentPage = 0;
+          renderPage();
+          Array.from(tagList.querySelectorAll('button[data-tag]')).forEach((btn) => {
+            btn.classList.remove('bg-primary', 'text-white', 'border-primary');
+            const tag = btn.dataset.tag;
+            if (tag && selectedTags.includes(tag)) {
+              btn.classList.add('bg-primary', 'text-white', 'border-primary');
+            }
+          });
+          const sBtn = document.getElementById('searchBtn');
+          if (sBtn) {
+            if (searchTerm) {
+              sBtn.classList.add('bg-primary', 'text-white', 'border-primary');
+            } else {
+              sBtn.classList.remove('bg-primary', 'text-white', 'border-primary');
+            }
+          }
+        }
+
+        function renderPage() {
+        gallery.innerHTML = "";
+        if (extraItemVisible([''])) {
+          gallery.appendChild(createBannerCard());
+        }
+        if (dailyData && extraItemVisible(['电影'])) {
+          gallery.appendChild(createDailyCard(dailyData));
+        }
+        const end = (currentPage + 1) * perPage;
+        const items = allItems.slice(0, end);
+        items.forEach((item) => {
+          gallery.appendChild(createCard(item));
+        });
+        if (end >= allItems.length) {
+          loadMoreBtn.classList.add("hidden");
+        } else {
+          loadMoreBtn.classList.remove("hidden");
+        }
+      }
+
+        function applyData(data) {
+          rawData = data;
+          renderTags(collectTags(data));
+          applyFilter();
+        }
+      async function fetchLatest() {
+        const resWx = await fetchWithFallback("/api/wx", {
+          headers: { "x-skip-cache": "1" },
+        });
+        const dataWx = resWx.ok ? await resWx.json() : {};
+        let dataBil = {};
+        try {
+          const resBil = await fetchWithFallback("/api/bil", {
+            headers: { "x-skip-cache": "1" },
+          });
+          if (resBil.ok) dataBil = await resBil.json();
+        } catch (e) {
+          console.error("加载 bilibili 失败:", e);
+        }
+        return Object.assign({}, dataWx, dataBil);
+      }
+      async function fetchDaily() {
+        const res = await fetchWithFallback("/api/daily", {
+          headers: {
+            "x-skip-cache": "1"
+          },
+        });
+        if (!res.ok) throw new Error("Network response was not ok");
+        return await res.json();
+      }
+      async function hasWxCache() {
+        if (!("caches" in window)) return false;
+        try {
+          return !!(await caches.match("/api/wx"));
+        } catch {
+          return false;
+        }
+      }
+
+      async function initGallery() {
+        if (await hasWxCache()) hideSplash(true);
+        const cachedStr = localStorage.getItem("wxData");
+        let cached;
+        if (cachedStr) {
+          try {
+            cached = JSON.parse(cachedStr);
+          } catch {}
+        }
+        if (cached) {
+          applyData(cached);
+        }
+        try {
+          const latest = await fetchLatest();
+          const latestStr = JSON.stringify(latest);
+          if (!cachedStr) {
+            localStorage.setItem("wxData", latestStr);
+            applyData(latest);
+          } else if (latestStr !== cachedStr) {
+            localStorage.setItem("wxDataNew", latestStr);
+            showDot();
+          }
+        } catch (err) {
+          console.error("加载画廊失败:", err);
+        } finally {
+          hideSplash();
+        }
+      }
+      async function loadDaily() {
+        const cachedStr = localStorage.getItem("dailyData");
+        let cached;
+        if (cachedStr) {
+          try {
+            cached = JSON.parse(cachedStr);
+          } catch {}
+        }
+        if (cached) {
+          dailyData = cached;
+          renderPage();
+        }
+        try {
+          const latest = await fetchDaily();
+          const latestStr = JSON.stringify(latest);
+          if (!cachedStr || latestStr !== cachedStr) {
+            localStorage.setItem("dailyData", latestStr);
+            dailyData = latest;
+            renderPage();
+          }
+        } catch (err) {
+          console.error("加载每日电影失败:", err);
+        }
+      }
+        loadMoreBtn.addEventListener("click", () => {
+          currentPage++;
+          renderPage();
+        });
+        tagList.addEventListener('click', (e) => {
+          const searchBtn = e.target.closest('#searchBtn');
+          if (searchBtn) {
+            const term = prompt('请输入标题关键词');
+            if (term !== null) {
+              searchTerm = term.trim();
+              applyFilter();
+            }
+            return;
+          }
+          const btn = e.target.closest('button[data-tag]');
+          if (!btn) return;
+          const tag = btn.dataset.tag;
+          if (!tag) return;
+          if (allowMultiTags) {
+            if (selectedTags.includes(tag)) {
+              selectedTags = selectedTags.filter((t) => t !== tag);
+            } else {
+              selectedTags.push(tag);
+            }
+          } else {
+            if (selectedTags.length === 1 && selectedTags[0] === tag) {
+              selectedTags = [];
+            } else {
+              selectedTags = [tag];
+            }
+          }
+          applyFilter();
+        });
+      moreBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        settingsPanel.classList.remove("hidden");
+        settingsPanel.classList.add("flex", "show");
+      });
+      closeSettings.addEventListener("click", () => {
+        settingsPanel.classList.add("hidden");
+        settingsPanel.classList.remove("flex", "show");
+      });
+      closeArticle.addEventListener("click", hideArticle);
+      articleModal.addEventListener("click", (e) => {
+        if (e.target === articleModal) hideArticle();
+      });
+      applySettings.addEventListener('click', () => {
+        const cols = Math.max(1, parseInt(columnCountInput.value) || 1);
+        perPage = Math.max(1, parseInt(perPageInput.value) || 1);
+        gallery.style.columnCount = String(cols);
+        localStorage.setItem('columnCount', String(cols));
+        localStorage.setItem('perPage', String(perPage));
+        currentPage = 0;
+        renderPage();
+        settingsPanel.classList.add('hidden');
+        settingsPanel.classList.remove('flex', 'show');
+      });
+      clearCacheBtn.addEventListener('click', async () => {
+        ['wxData', 'wxDataNew', 'columnCount', 'perPage'].forEach((k) => localStorage.removeItem(k));
+        if ('caches' in window) {
+          const names = await caches.keys();
+          await Promise.all(names.map((n) => caches.delete(n)));
+        }
+        location.reload();
+      });
+      document.addEventListener("DOMContentLoaded", () => {
+        initGallery();
+        loadDaily();
+      });
+      homeLink.addEventListener("click", () => {
+        const newStr = localStorage.getItem("wxDataNew");
+        if (newStr) {
+          localStorage.setItem("wxData", newStr);
+          localStorage.removeItem("wxDataNew");
+          hideDot();
+          try {
+            applyData(JSON.parse(newStr));
+          } catch (e) {}
+        }
+      });
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("/sw.js").catch(console.error);
+        });
+      }

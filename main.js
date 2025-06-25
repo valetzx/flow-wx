@@ -1,0 +1,419 @@
+        });
+      });
+      const gallery = document.getElementById('gallery');
+      const tagList = document.getElementById('tagList');
+      const loadMoreBtn = document.getElementById('loadMore');
+      const settingsPanel = document.getElementById('settingsPanel');
+      const moreBtn = document.getElementById('moreBtn');
+      const closeSettings = document.getElementById('closeSettings');
+      const applySettings = document.getElementById('applySettings');
+      const columnCountInput = document.getElementById('columnCountInput');
+      const perPageInput = document.getElementById('perPageInput');
+      const multiTagToggle = document.getElementById('multiTagToggle');
+      const clearCacheBtn = document.getElementById('clearCache');
+      const imageModal = document.getElementById('imageModal');
+      const modalImg = document.getElementById('modalImg');
+      let imgScale = 1;
+      const apiStored = localStorage.getItem('apiDomains') || localStorage.getItem('apiDomain') || '';
+      const imgStored = localStorage.getItem('imgDomains') || '';
+      let apiDomains = apiStored ?
+        apiStored.split(/\r?\n|,/).map((s) => s.trim()).filter(Boolean) : [];
+      let imgDomains = imgStored ?
+        imgStored.split(/\r?\n|,/).map((s) => s.trim()).filter(Boolean) : [];
+      if (apiDomains.length === 0 && Array.isArray(window.API_DOMAINS)) {
+        apiDomains = window.API_DOMAINS;
+      }
+      if (imgDomains.length === 0 && Array.isArray(window.IMG_DOMAINS)) {
+        imgDomains = window.IMG_DOMAINS;
+      }
+
+      function buildUrl(path, domain) {
+        return domain ? domain.replace(/\/$/, '') + path : path;
+      }
+
+      function withDomain(path) {
+        return buildUrl(path, imgDomains[0]);
+      }
+
+      function loadImgWithFallback(img) {
+        const path = img.dataset.path;
+        if (!path) return;
+        let index = 0;
+
+        function attempt() {
+          img.src = buildUrl(path, imgDomains[index] || '');
+        }
+        img.onerror = () => {
+          index++;
+          if (index < imgDomains.length) attempt();
+        };
+        attempt();
+      }
+      async function fetchWithFallback(path, options = {}) {
+        const isApi = path.startsWith('/api/wx') || path.startsWith('/api/bil') || path.startsWith('/api/wx.json') || path.startsWith('/api/daily') || path.startsWith('/a/');
+        const domains = isApi ? apiDomains : imgDomains;
+        for (const d of domains) {
+          try {
+            const res = await fetch(buildUrl(path, d), options);
+            if (res.ok) return res;
+          } catch {}
+        }
+        return fetch(path, options);
+      }
+      const homeLink = document.querySelector('a[aria-label="\u4e3b\u9875"]');
+      let notifyDot = null;
+
+      function showDot() {
+        if (!notifyDot) {
+          notifyDot = document.createElement('span');
+          notifyDot.className = 'notify-dot';
+          homeLink.classList.add('relative');
+          homeLink.appendChild(notifyDot);
+        }
+      }
+
+      function hideDot() {
+        if (notifyDot) {
+          notifyDot.remove();
+          notifyDot = null;
+        }
+      }
+
+      function openImage(src) {
+        imgScale = 1;
+        modalImg.src = src;
+        imageModal.classList.remove('hidden');
+        imageModal.classList.add('flex', 'show');
+      }
+
+      function closeImage() {
+        imageModal.classList.add('hidden');
+        imageModal.classList.remove('flex', 'show');
+        modalImg.src = '';
+      }
+      const savedCols = parseInt(localStorage.getItem('columnCount')) || 4;
+      const savedPerPage = parseInt(localStorage.getItem('perPage')) || 30;
+      const navEl = document.querySelector('nav');
+      const contentEl = document.getElementById('content');
+      const isMobile = /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
+      const initialCols = isMobile ? 2 : savedCols;
+      columnCountInput.value = String(initialCols);
+      perPageInput.value = String(savedPerPage);
+      const multiTagsSaved = localStorage.getItem('multiTags') === 'true';
+      multiTagToggle.checked = multiTagsSaved;
+      gallery.style.columnCount = String(initialCols);
+      if (isMobile) {
+        document.body.classList.add('mobile');
+        navEl.classList.add('mobile');
+        contentEl.classList.remove('ml-[72px]');
+        contentEl.classList.add('mb-[72px]');
+      }
+      let rawData = {};
+      let allItems = [];
+      let currentPage = 0;
+      let perPage = savedPerPage;
+      let selectedTags = [];
+      let searchTerm = '';
+      let allowMultiTags = multiTagsSaved;
+      multiTagToggle.addEventListener('change', () => {
+        allowMultiTags = multiTagToggle.checked;
+        localStorage.setItem('multiTags', allowMultiTags ? 'true' : 'false');
+        if (!allowMultiTags && selectedTags.length > 1) {
+          selectedTags = [selectedTags[0]];
+          applyFilter();
+        }
+      });
+      const observer = new IntersectionObserver((entries, obs) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            loadImgWithFallback(img);
+            obs.unobserve(img);
+          }
+        });
+      }, {
+        rootMargin: '100px'
+      });
+
+      function getRandomColor() {
+        return '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0');
+      }
+
+      function createImage(src, alt) {
+        const img = document.createElement('img');
+        img.className = 'masonry-item w-full rounded-2xl shadow object-cover hover:opacity-90 transition-opacity';
+        img.dataset.path = `?url=${src}`;
+        img.alt = alt;
+        img.loading = 'lazy';
+        // 随机高度以增强瀑布流效果
+        const randomHeight = 180 + Math.random() * 120; // 180 - 300px
+        img.style.height = `${randomHeight}px`;
+        img.style.backgroundColor = getRandomColor();
+        img.style.minHeight = '120px';
+        img.style.opacity = '0';
+        img.style.transition = 'opacity 0.5s';
+        img.addEventListener('load', () => {
+          img.style.opacity = '1';
+          img.style.backgroundColor = '';
+          img.style.minHeight = '';
+        });
+        observer.observe(img);
+        img.addEventListener('click', () => openImage(img.src || buildUrl(img.dataset.path, imgDomains[0])));
+        return img;
+      }
+
+      function buildItems(data) {
+        const items = [];
+        for (const [title, {
+            description,
+            images
+          }] of Object.entries(data)) {
+          items.push({
+            type: 'title',
+            html: `<div class="masonry-item">
+              <div class="card-content p-5 flex flex-col gap-2">
+                <h2 class="text-xl font-semibold">${title}</h2>
+                <p class="text-sm leading-relaxed">${description}</p>
+              </div>
+            </div>`
+          });
+          images.forEach((src) => {
+            items.push({
+              type: 'image',
+              src,
+              alt: title
+            });
+          });
+        }
+        return items;
+      }
+
+      function collectTags(data) {
+        const set = new Set();
+        Object.values(data).forEach((v) => {
+          if (Array.isArray(v.tags)) {
+            v.tags.forEach((t) => set.add(t));
+          }
+        });
+        return Array.from(set);
+      }
+
+      function renderTags(tags) {
+        tagList.innerHTML = '';
+        const searchBtn = document.createElement('button');
+        searchBtn.id = 'searchBtn';
+        searchBtn.textContent = '🔍︎';
+        searchBtn.className = 'px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary bg-card';
+        tagList.appendChild(searchBtn);
+        tags.forEach((t) => {
+          const btn = document.createElement('button');
+          btn.dataset.tag = t;
+          btn.textContent = t;
+          btn.className = 'px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary bg-card';
+          tagList.appendChild(btn);
+        });
+      }
+
+      function filterData(data) {
+        const filtered = {};
+        for (const [k, v] of Object.entries(data)) {
+          if (selectedTags.length) {
+            const tags = Array.isArray(v.tags) ? v.tags : [];
+            if (!selectedTags.every((t) => tags.includes(t))) {
+              continue;
+            }
+          }
+          if (searchTerm && !k.includes(searchTerm)) {
+            continue;
+          }
+          filtered[k] = v;
+        }
+        return filtered;
+      }
+
+      function applyFilter() {
+        const data = filterData(rawData);
+        allItems = buildItems(data);
+        currentPage = 0;
+        renderPage();
+        Array.from(tagList.querySelectorAll('button[data-tag]')).forEach((btn) => {
+          btn.classList.remove('bg-primary', 'text-white', 'border-primary');
+          if (selectedTags.includes(btn.dataset.tag)) {
+            btn.classList.add('bg-primary', 'text-white', 'border-primary');
+          }
+        });
+        const sBtn = document.getElementById('searchBtn');
+        if (sBtn) {
+          if (searchTerm) {
+            sBtn.classList.add('bg-primary', 'text-white', 'border-primary');
+          } else {
+            sBtn.classList.remove('bg-primary', 'text-white', 'border-primary');
+          }
+        }
+      }
+
+      function renderPage() {
+        gallery.innerHTML = '';
+        const end = (currentPage + 1) * perPage;
+        const items = allItems.slice(0, end);
+        items.forEach((item) => {
+          if (item.type === 'title') {
+            gallery.insertAdjacentHTML('beforeend', item.html);
+          } else if (item.type === 'image') {
+            gallery.appendChild(createImage(item.src, item.alt));
+          }
+        });
+        if (end >= allItems.length) {
+          loadMoreBtn.classList.add('hidden');
+        } else {
+          loadMoreBtn.classList.remove('hidden');
+        }
+      }
+
+      function applyData(data) {
+        rawData = data;
+        renderTags(collectTags(data));
+        applyFilter();
+      }
+      async function fetchLatest() {
+        const resWx = await fetchWithFallback('/api/wx', {
+          headers: { 'x-skip-cache': '1' },
+        });
+        const dataWx = resWx.ok ? await resWx.json() : {};
+        let dataBil = {};
+        try {
+          const resBil = await fetchWithFallback('/api/bil', {
+            headers: { 'x-skip-cache': '1' },
+          });
+          if (resBil.ok) dataBil = await resBil.json();
+        } catch (e) {
+          console.error('加载 bilibili 失败:', e);
+        }
+        return Object.assign({}, dataWx, dataBil);
+      }
+      async function hasWxCache() {
+        if (!("caches" in window)) return false;
+        try {
+          return !!(await caches.match("/api/wx"));
+        } catch {
+          return false;
+        }
+      }
+      async function initGallery() {
+        if (await hasWxCache()) hideSplash(true);
+        const cachedStr = localStorage.getItem('wxData');
+        let cached;
+        if (cachedStr) {
+          try {
+            cached = JSON.parse(cachedStr);
+          } catch {}
+        }
+        if (cached) {
+          applyData(cached);
+        }
+        try {
+          const latest = await fetchLatest();
+          const latestStr = JSON.stringify(latest);
+          if (!cachedStr) {
+            localStorage.setItem('wxData', latestStr);
+            applyData(latest);
+          } else if (latestStr !== cachedStr) {
+            localStorage.setItem('wxDataNew', latestStr);
+            showDot();
+          }
+        } catch (err) {
+          console.error('加载画廊失败:', err);
+        } finally {
+          hideSplash();
+        }
+      }
+      loadMoreBtn.addEventListener('click', () => {
+        currentPage++;
+        renderPage();
+      });
+      tagList.addEventListener('click', (e) => {
+        const searchBtn = e.target.closest('#searchBtn');
+        if (searchBtn) {
+          const term = prompt('请输入标题关键词');
+          if (term !== null) {
+            searchTerm = term.trim();
+            applyFilter();
+          }
+          return;
+        }
+        const btn = e.target.closest('button[data-tag]');
+        if (!btn) return;
+        const tag = btn.dataset.tag;
+        if (!tag) return;
+        if (allowMultiTags) {
+          if (selectedTags.includes(tag)) {
+            selectedTags = selectedTags.filter((t) => t !== tag);
+          } else {
+            selectedTags.push(tag);
+          }
+        } else {
+          if (selectedTags.length === 1 && selectedTags[0] === tag) {
+            selectedTags = [];
+          } else {
+            selectedTags = [tag];
+          }
+        }
+        applyFilter();
+      });
+      moreBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        settingsPanel.classList.remove('hidden');
+        settingsPanel.classList.add('flex', 'show');
+      });
+      closeSettings.addEventListener('click', () => {
+        settingsPanel.classList.add('hidden');
+        settingsPanel.classList.remove('flex', 'show');
+      });
+      applySettings.addEventListener('click', () => {
+        const cols = Math.max(1, parseInt(columnCountInput.value) || 1);
+        perPage = Math.max(1, parseInt(perPageInput.value) || 1);
+        gallery.style.columnCount = String(cols);
+        localStorage.setItem('columnCount', String(cols));
+        localStorage.setItem('perPage', String(perPage));
+        currentPage = 0;
+        renderPage();
+        settingsPanel.classList.add('hidden');
+        settingsPanel.classList.remove('flex', 'show');
+      });
+      clearCacheBtn.addEventListener('click', async () => {
+        ['wxData', 'wxDataNew', 'columnCount', 'perPage'].forEach((k) => localStorage.removeItem(k));
+        if ('caches' in window) {
+          const names = await caches.keys();
+          await Promise.all(names.map((n) => caches.delete(n)));
+        }
+        location.reload();
+      });
+      imageModal.addEventListener('click', (e) => {
+        if (e.target === imageModal) closeImage();
+      });
+      imageModal.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const factor = e.deltaY < 0 ? 1.1 : 0.9;
+        imgScale = Math.min(5, Math.max(1, imgScale * factor));
+        modalImg.style.transform = `scale(${imgScale})`;
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeImage();
+      });
+      document.addEventListener('DOMContentLoaded', initGallery);
+      homeLink.addEventListener('click', () => {
+        const newStr = localStorage.getItem('wxDataNew');
+        if (newStr) {
+          localStorage.setItem('wxData', newStr);
+          localStorage.removeItem('wxDataNew');
+          hideDot();
+          try {
+            applyData(JSON.parse(newStr));
+          } catch (e) {}
+        }
+      });
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(console.error);
+        });
+      }

@@ -432,6 +432,16 @@ async function handler(req: Request): Promise<Response> {
 
   const { pathname, searchParams } = new URL(req.url);
 
+  if (/\.(css|js)$/.test(pathname)) {
+    try {
+      const file = await Deno.readTextFile(join(__dirname, pathname));
+      const type = pathname.endsWith('.css') ? 'text/css' : 'text/javascript';
+      return new Response(file, {
+        headers: withCors({ 'Content-Type': `${type}; charset=utf-8` }),
+      });
+    } catch {}
+  }
+
   // /a/{abbr} —— 短链接跳转
   const abbrMatch = pathname.match(/^\/a\/([\w-]+)$/);
   if (abbrMatch) {

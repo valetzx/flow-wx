@@ -28,6 +28,11 @@ await buildHtml('main.html');
 await buildHtml('ideas.html');
 await buildHtml('admin.html');
 
+// copy static assets
+for (const file of ['common.css', 'ideas.css', 'common.js', 'main.js', 'ideas.js']) {
+  await fs.copyFile(path.join(__dirname, file), path.join(outDir, file));
+}
+
 const swRaw = await fs.readFile(path.join(__dirname, 'sw.js'), 'utf8');
 const swOut = `const IMG_CACHE = ${JSON.stringify(cacheImgDomain)};\n${swRaw}`;
 await fs.writeFile(path.join(outDir, 'sw.js'), swOut);
