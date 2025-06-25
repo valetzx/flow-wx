@@ -7,128 +7,8 @@
   <title>文章列表</title>
   <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="common.css">
   <style>
-    /* 自定义主题色卡 */
-
-    :root {
-      --primary: 79, 70, 229;
-      --secondary: 139, 92, 246;
-      --accent: 236, 72, 153;
-      --surface: 241, 245, 249;
-      --on-surface: 15, 23, 42;
-      --card: 255, 255, 255;
-      --border: 229, 231, 235;
-    }
-
-    .dark {
-      --primary: 129, 140, 248;
-      --secondary: 167, 139, 250;
-      --accent: 244, 114, 182;
-      --surface: 15, 23, 42;
-      --on-surface: 241, 245, 249;
-      --card: 30, 41, 59;
-      --border: 55, 65, 81;
-    }
-
-    /* Masonry 布局 */
-
-    .masonry {
-      column-count: 4;
-      column-gap: 1rem;
-    }
-
-    @media (max-width: 1024px) {
-      .masonry {
-        column-count: 2;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .masonry {
-        column-count: 1;
-      }
-    }
-
-    .masonry-item {
-      break-inside: avoid;
-      margin-bottom: 1rem;
-    }
-
-    .sidebar-link {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0.5rem;
-      border-radius: 0.375rem;
-      color: #6b7280;
-      transition: background-color 0.2s, color 0.2s;
-    }
-
-    .sidebar-link:hover {
-      background-color: #f1f5f9;
-      color: #111827;
-    }
-
-    nav.mobile #homeBtn {
-      display: none;
-    }
-
-    nav.mobile {
-      top: auto;
-      bottom: 0;
-      left: 0;
-      height: 72px;
-      width: 100%;
-      flex-direction: row;
-      border-right: none;
-      border-top: 1px solid #e5e7eb;
-    }
-
-    nav.mobile .sidebar-link {
-      flex: 1;
-      margin-top: 5px;
-    }
-
-    nav.mobile .sidebar-items {
-      flex-direction: row;
-      width: 100%;
-    }
-
-    nav.mobile .sidebar-items>* {
-      margin: 0;
-      flex: 1;
-      --tw-space-y-reverse: 0;
-      margin-top: 0;
-      margin-bottom: calc(1.5rem * var(--tw-space-y-reverse));
-    }
-
-    nav.mobile #moreBtn #addBtn #idealBtn {
-      margin-top: 0;
-    }
-
-    nav.mobile .space-y-6> :not([hidden])~ :not([hidden]) {
-      margin-top: 0;
-    }
-
-    body.mobile #content {
-      margin-left: 0;
-      margin-bottom: 72px;
-    }
-
-    .notify-dot {
-      position: absolute;
-      top: 4px;
-      right: 4px;
-      width: 0.5rem;
-      height: 0.5rem;
-      background-color: #ef4444;
-      border-radius: 9999px;
-    }
-
-    nav.mobile .notify-dot {
-      right: 2rem;
-    }
-
     #toastContainer {
       position: fixed;
       top: 1rem;
@@ -461,12 +341,6 @@
         </a> <a href="/add" aria-label="创建" id="addBtn" class="sidebar-link">
           <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
             <path
-              d="M11 11H6v2h5v5h2v-5h5v-2h-5V6h-2zM5 1a4 4 0 0 0-4 4v14a4 4 0 0 0 4 4h14a4 4 0 0 0 4-4V5a4 4 0 0 0-4-4zm16 4v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h14a2 2 0 0 1 2 2"
-            />
-          </svg>
-        </a> <a href="#" aria-label="更多" id="moreBtn" class="sidebar-link mt-auto">
-          <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
-            <path
               d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10m3 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0"
             />
             <path
@@ -524,26 +398,8 @@
       </div>
     </div>
     <div id="toastContainer"></div>
-    <script>
-      // 在DOMContentLoaded中添加深色模式初始化
-      document.addEventListener("DOMContentLoaded", () => {
-        // 初始化深色模式
-        const darkModeToggle = document.getElementById('darkModeToggle');
-        const isDarkMode = localStorage.getItem('darkMode') === 'true' || (window.matchMedia('(prefers-color-scheme: dark)').matches && localStorage.getItem('darkMode') !== 'false');
-        if (isDarkMode) {
-          document.documentElement.classList.add('dark');
-          darkModeToggle.checked = true;
-        }
-        darkModeToggle.addEventListener('change', () => {
-          if (darkModeToggle.checked) {
-            document.documentElement.classList.add('dark');
-            localStorage.setItem('darkMode', 'true');
-          } else {
-            document.documentElement.classList.remove('dark');
-            localStorage.setItem('darkMode', 'false');
-          }
-        });
-      });
+<script src="common.js"></script>
+<script>
 
       function showToast(message) {
         const container = document.getElementById('toastContainer');
@@ -676,70 +532,6 @@
       const articleContent = document.getElementById("articleContent");
       const clearCacheBtn = document.getElementById('clearCache');
       let dailyData = null;
-      const apiStored = localStorage.getItem('apiDomains') || localStorage.getItem('apiDomain') || '';
-      const imgStored = localStorage.getItem('imgDomains') || '';
-      let apiDomains = apiStored ? apiStored.split(/\r?\n|,/).map((s) => s.trim()).filter(Boolean) : [];
-      let imgDomains = imgStored ? imgStored.split(/\r?\n|,/).map((s) => s.trim()).filter(Boolean) : [];
-      if (apiDomains.length === 0 && Array.isArray(window.API_DOMAINS)) {
-        apiDomains = window.API_DOMAINS;
-      }
-      if (imgDomains.length === 0 && Array.isArray(window.IMG_DOMAINS)) {
-        imgDomains = window.IMG_DOMAINS;
-      }
-
-      function buildUrl(path, domain) {
-        return domain ? domain.replace(/\/$/, '') + path : path;
-      }
-
-      function withDomain(path) {
-        return buildUrl(path, imgDomains[0]);
-      }
-
-      function loadImgWithFallback(img) {
-        const path = img.dataset.path;
-        if (!path) return;
-        let index = 0;
-
-        function attempt() {
-          img.src = buildUrl(path, imgDomains[index] || '');
-        }
-        img.onerror = () => {
-          index++;
-          if (index < imgDomains.length) attempt();
-        };
-        attempt();
-      }
-      async function fetchWithFallback(path, options = {}) {
-        const isApi = path.startsWith('/api/wx') || path.startsWith('/api/bil') || path.startsWith('/api/article') || path.startsWith('/api/daily') || path.startsWith('/a/');
-        const domains = isApi ? apiDomains : imgDomains;
-        for (const d of domains) {
-          try {
-            const res = await fetch(buildUrl(path, d), options);
-            if (res.ok) return res;
-          } catch {}
-        }
-        return fetch(path, options);
-      }
-      const homeLink = document.querySelector('a[aria-label="\u4e3b\u9875"]');
-      let notifyDot = null;
-
-      function showDot() {
-        if (!notifyDot) {
-          notifyDot = document.createElement("span");
-          notifyDot.className = "notify-dot";
-          homeLink.classList.add("relative");
-          homeLink.appendChild(notifyDot);
-        }
-      }
-
-      function hideDot() {
-        if (notifyDot) {
-          notifyDot.remove();
-          notifyDot = null;
-        }
-      }
-
-      function showArticle(html) {
         articleContent.innerHTML = html;
         articleModal.classList.remove("hidden");
         articleModal.classList.add("flex", "show");
