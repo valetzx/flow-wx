@@ -459,7 +459,7 @@ export default {
 //         return json({ error: err.message }, 500);
 //       }
 //     }
-    if (pathname === "/main.js") {
+    if (pathname === "/common.js") {
         const mainJS = `
 function includeHTML() {
   const includes = document.querySelectorAll('[data-include]');
