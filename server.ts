@@ -585,6 +585,30 @@ async function handler(req: Request): Promise<Response> {
     return await proxyImage(imgUrl);
   }
 
+  // static asset files
+  if ([
+    "/common.css",
+    "/ideas.css",
+    "/common.js",
+    "/sidebar.html",
+    "/settings.html",
+  ].includes(pathname)) {
+    try {
+      const filePath = join(__dirname, "static", pathname.slice(1));
+      const ext = pathname.split(".").pop();
+      const type =
+        ext === "css" ? "text/css" :
+        ext === "js" ? "text/javascript" :
+        "text/html";
+      const content = await Deno.readTextFile(filePath);
+      return new Response(content, {
+        headers: withCors({ "Content-Type": `${type}; charset=utf-8` }),
+      });
+    } catch {
+      return new Response("not found", { status: 404, headers: withCors() });
+    }
+  }
+
   // /@admin —— 管理页面
   if (pathname === "/@admin") {
     return new Response(adminHtml, {
