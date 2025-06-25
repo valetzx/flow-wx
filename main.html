@@ -294,6 +294,14 @@
       display: none;
     }
 
+    body {
+      transition: opacity 0.2s ease-in-out;
+    }
+
+    body.page-transition {
+      opacity: 0;
+    }
+
   </style>
   <script>
     // 在tailwind配置前设置darkMode
@@ -860,7 +868,29 @@
           if (!document.body.classList.contains('loaded')) hideSplash();
         }, 10000);
       }); // fallback after 10s
-    </script>
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const body = document.body;
+      function isInternal(a) {
+        if (!a.href) return false;
+        const url = new URL(a.href, location.href);
+        return url.origin === location.origin && !a.target && !url.hash;
+      }
+      document.querySelectorAll('a[href]').forEach(a => {
+        if (isInternal(a)) {
+          a.addEventListener('click', e => {
+            e.preventDefault();
+            body.classList.add('page-transition');
+            setTimeout(() => { location.href = a.href; }, 150);
+          });
+        }
+      });
+    });
+    window.addEventListener('pageshow', () => {
+      document.body.classList.remove('page-transition');
+    });
+  </script>
   </div>
 </body>
 
