@@ -5,6 +5,8 @@ import ideasHtml from "./ideas.html";
 import adminHtml from "./admin.html";
 // import swHtml from "./sw.js";
 import articleText from "./article.txt";
+import commonCss from "./common.css";
+import commonJs from "./common.js";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -593,6 +595,18 @@ async function cacheThenNetwork(request) {
         `;
         return new Response(swHtml, {
           headers: withCors({ "Content-Type": "application/javascript" })
+      });
+    }
+
+    if (pathname === "/common.css") {
+      return new Response(commonCss, {
+        headers: withCors({ "Content-Type": "text/css; charset=utf-8" }),
+      });
+    }
+
+    if (pathname === "/common.js") {
+      return new Response(commonJs, {
+        headers: withCors({ "Content-Type": "application/javascript" }),
       });
     }
 

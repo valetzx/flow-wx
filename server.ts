@@ -46,6 +46,8 @@ const ideasHtml = injectConfig(
 );
 const swRaw = await Deno.readTextFile(join(__dirname, "sw.js"));
 const swHtml = `const IMG_CACHE = ${JSON.stringify(cacheImgDomain)};\n${swRaw}`;
+const commonCss = await Deno.readTextFile(join(__dirname, "common.css"));
+const commonJs = await Deno.readTextFile(join(__dirname, "common.js"));
 const adminHtml = injectConfig(
   await Deno.readTextFile(join(__dirname, "admin.html")),
 );
@@ -575,6 +577,18 @@ async function handler(req: Request): Promise<Response> {
   if (pathname === "/sw.js") {
     return new Response(swHtml, {
       headers: withCors({ "Content-Type": "text/javascript; charset=utf-8" }),
+    });
+  }
+
+  if (pathname === "/common.css") {
+    return new Response(commonCss, {
+      headers: withCors({ "Content-Type": "text/css; charset=utf-8" }),
+    });
+  }
+
+  if (pathname === "/common.js") {
+    return new Response(commonJs, {
+      headers: withCors({ "Content-Type": "application/javascript; charset=utf-8" }),
     });
   }
 

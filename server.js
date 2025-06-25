@@ -36,6 +36,8 @@ const ideasHtml = injectConfig(await fs.readFile(path.join(__dirname, 'ideas.htm
 const adminHtml = injectConfig(await fs.readFile(path.join(__dirname, 'admin.html'), 'utf8'));
 const swRaw = await fs.readFile(path.join(__dirname, 'sw.js'), 'utf8');
 const swHtml = `const IMG_CACHE = ${JSON.stringify(cacheImgDomain)};\n${swRaw}`;
+const commonCss = await fs.readFile(path.join(__dirname, 'common.css'), 'utf8');
+const commonJs = await fs.readFile(path.join(__dirname, 'common.js'), 'utf8');
 
 const fallbackSentences = [
   '小荷才露尖尖角',
@@ -452,6 +454,14 @@ app.get('/api/daily', async (req, res) => {
 
 app.get('/sw.js', (req, res) => {
   res.type('application/javascript').send(swHtml);
+});
+
+app.get('/common.css', (req, res) => {
+  res.type('text/css').send(commonCss);
+});
+
+app.get('/common.js', (req, res) => {
+  res.type('application/javascript').send(commonJs);
 });
 
 app.get('/img', async (req, res) => {
