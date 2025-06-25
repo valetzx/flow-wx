@@ -685,7 +685,7 @@ async function cacheThenNetwork(request) {
     if ([
       "/common.css",
       "/ideas.css",
-      "/common.js",
+//      "/common.js",
       "/sidebar.html",
       "/settings.html",
     ].includes(pathname)) {
@@ -697,7 +697,7 @@ async function cacheThenNetwork(request) {
       const content =
         pathname === "/common.css" ? commonCss :
         pathname === "/ideas.css" ? ideasCss :
-        pathname === "/common.js" ? commonJs :
+//        pathname === "/common.js" ? commonJs :
         pathname === "/sidebar.html" ? sidebarHtml :
         settingsHtml;
       return new Response(content, {
