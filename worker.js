@@ -5,8 +5,8 @@ import ideasHtml from "./ideas.html";
 import adminHtml from "./admin.html";
 // import swHtml from "./sw.js";
 import articleText from "./article.txt";
-import commonCss from "./common.css";
-import commonJs from "./common.js";
+import commonCss from "./common.css?raw";
+import commonJs from "./common.js?raw";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
