@@ -511,9 +511,6 @@ function setupSplash() {
       }, { once: true });
     }, delay);
   };
-  window.addEventListener('error', () => {
-    splashScreen.innerHTML = '<p class="text-red-500">加载失败，请稍后再试。</p>';
-  });
   window.addEventListener('load', () => {
     setTimeout(() => {
       if (!document.body.classList.contains('loaded')) window.hideSplash();
