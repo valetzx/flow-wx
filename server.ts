@@ -49,6 +49,9 @@ const swHtml = `const IMG_CACHE = ${JSON.stringify(cacheImgDomain)};\n${swRaw}`;
 const adminHtml = injectConfig(
   await Deno.readTextFile(join(__dirname, "admin.html")),
 );
+const addHtml = injectConfig(
+  await Deno.readTextFile(join(__dirname, "add.html")),
+);
 const fallbackSentences = [
   "小荷才露尖尖角",
   "早有蜻蜓立上头",
@@ -561,6 +564,13 @@ async function handler(req: Request): Promise<Response> {
   // /ideas —— 灵感瀑布流页面
   if (pathname === "/ideas") {
     return new Response(ideasHtml, {
+      headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
+    });
+  }
+
+  // /add —— 海报墙页面
+  if (pathname === "/add") {
+    return new Response(addHtml, {
       headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
     });
   }
