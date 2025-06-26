@@ -37,6 +37,7 @@ function injectConfig(html) {
 const indexHtml = injectConfig(await fs.readFile(path.join(__dirname, 'main.html'), 'utf8'));
 const ideasHtml = injectConfig(await fs.readFile(path.join(__dirname, 'ideas.html'), 'utf8'));
 const adminHtml = injectConfig(await fs.readFile(path.join(__dirname, 'admin.html'), 'utf8'));
+const addHtml = injectConfig(await fs.readFile(path.join(__dirname, 'add.html'), 'utf8'));
 const swRaw = await fs.readFile(path.join(__dirname, 'static', 'sw.js'), 'utf8');
 const swHtml = `const IMG_CACHE = ${JSON.stringify(cacheImgDomain)};\n${swRaw}`;
 
@@ -465,6 +466,10 @@ app.get('/img', async (req, res) => {
 
 app.get('/@admin', (req, res) => {
   res.type('html').send(adminHtml);
+});
+
+app.get('/add', (req, res) => {
+  res.type('html').send(addHtml);
 });
 
 app.get('/ideas', (req, res) => {

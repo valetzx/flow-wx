@@ -3,6 +3,7 @@ import * as cheerio from "cheerio";
 import mainHtml from "./main.html";
 import ideasHtml from "./ideas.html";
 import adminHtml from "./admin.html";
+import addHtml from "./add.html";
 import commonCss from "./static/common.css";
 import ideasCss from "./static/ideas.css";
 //import { commonJs } from "./static/common.js?raw";
@@ -355,6 +356,7 @@ export default {
     const indexHtml = injectConfig(mainHtml, apiDomains, imgDomains);
     const ideasPage = injectConfig(ideasHtml, apiDomains, imgDomains);
     const adminPage = injectConfig(adminHtml, apiDomains, imgDomains);
+    const addPage = injectConfig(addHtml, apiDomains, imgDomains);
 
     const articles = await getArticles(env);
 
@@ -669,6 +671,12 @@ async function cacheThenNetwork(request) {
 
     if (pathname === "/@admin") {
       return new Response(adminPage, {
+        headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
+      });
+    }
+
+    if (pathname === "/add") {
+      return new Response(addPage, {
         headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
       });
     }

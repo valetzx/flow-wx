@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>海报墙</title>
+  <link rel="stylesheet" href="common.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="common.js"></script>
+  <style>
+    #mainPoster {
+      width: 100%;
+      max-height: calc(100vh - 160px);
+      object-fit: contain;
+    }
+    #thumbList {
+      display: flex;
+      overflow-x: auto;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(4px);
+    }
+    .dark #thumbList {
+      background-color: rgba(30, 41, 59, 0.8);
+    }
+    #thumbList img {
+      width: 72px;
+      height: 108px;
+      flex-shrink: 0;
+      object-fit: cover;
+      border-radius: 0.375rem;
+      cursor: pointer;
+      opacity: 0.7;
+    }
+    #thumbList img.selected {
+      outline: 2px solid rgb(var(--accent));
+      opacity: 1;
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen font-sans flex flex-col items-center justify-center pb-32">
+  <div id="splashScreen"><div class="loader"></div></div>
+  <div data-include="sidebar.html"></div>
+  <div id="content" class="ml-[72px] w-full flex flex-col items-center">
+    <h1 class="text-xl font-bold mb-4">海报墙</h1>
+    <img id="mainPoster" class="rounded max-w-full" alt="海报">
+  </div>
+  <div id="thumbList" class="no-scrollbar ml-[72px]"></div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  window.commonReady?.then(async () => {
+    const mainImg = document.getElementById('mainPoster');
+    const list = document.getElementById('thumbList');
+    const navEl = document.querySelector('nav');
+    const contentEl = document.getElementById('content');
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
+    if (isMobile) {
+      document.body.classList.add('mobile');
+      navEl.classList.add('mobile');
+      contentEl.classList.remove('ml-[72px]');
+      contentEl.classList.add('mb-[72px]');
+      list.classList.remove('ml-[72px]');
+    }
+    const CACHE_NAME = 'wx-cache-v2';
+    if (!('caches' in window)) { mainImg.alt = '此浏览器不支持缓存'; window.hideSplash(); return; }
+    try {
+      const cache = await caches.open(CACHE_NAME);
+      const keys = await cache.keys();
+      const imgs = [];
+      for (const req of keys) {
+        const res = await cache.match(req);
+        if (!res) continue;
+        const type = res.headers.get('Content-Type') || '';
+        if (!type.startsWith('image')) continue;
+        imgs.push(req.url);
+      }
+      if (imgs.length === 0) {
+        mainImg.alt = '没有缓存图片';
+      } else {
+        mainImg.src = imgs[0];
+        for (const url of imgs) {
+          const thumb = document.createElement('img');
+          thumb.src = url;
+          thumb.loading = 'lazy';
+          thumb.addEventListener('click', () => {
+            document.querySelector('#thumbList img.selected')?.classList.remove('selected');
+            mainImg.src = url;
+            thumb.classList.add('selected');
+          });
+          list.appendChild(thumb);
+        }
+        list.firstChild.classList.add('selected');
+      }
+    } catch (e) {
+      mainImg.alt = '读取缓存失败';
+      console.error(e);
+    } finally {
+      window.hideSplash();
+    }
+  });
+});
+</script>
+</body>
+</html>
