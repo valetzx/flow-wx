@@ -19,16 +19,7 @@ self.addEventListener("activate", (event) => {
 });
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
-  if (url.pathname === "/api/wx" || 
-    url.pathname === "/api/bil" || 
-    url.pathname === "/api/daily" ||
-    url.pathname === "/api/bil" ||
-    url.pathname === "/sw.js" ||
-    url.pathname === "/common.css" ||
-    url.pathname === "/common.js" ||
-    url.pathname === "/ideas.css" ||
-    url.pathname === "/settings.html" ||
-    url.pathname === "/sidebar.html" ) {
+  if (url.pathname === "/api/wx" || url.pathname === "/api/bil" || url.pathname === "/api/daily") {
     if (event.request.headers.get("x-skip-cache")) {
       event.respondWith(fetchAndCache(event.request));
     } else {
@@ -46,6 +37,8 @@ self.addEventListener("fetch", (event) => {
   // } else if (url.pathname === "/api/article") {
   //   event.respondWith(cacheThenNetwork(event.request));
   } else if (url.pathname === "/") {
+    event.respondWith(cacheThenNetwork(event.request));
+  } else if (url.pathname === "/common.css" || url.pathname === "/common.js" || url.pathname === "/ideas.css" || url.pathname === "/settings.html" || url.pathname === "/sidebar.html") {
     event.respondWith(cacheThenNetwork(event.request));
   } else if (url.pathname === "/ideas") {
     event.respondWith(cacheThenNetwork(event.request));
