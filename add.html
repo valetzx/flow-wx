@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>金桔猪的博客·更多</title>
+  <link rel="stylesheet" href="common.css">
+  <link rel="stylesheet" href="ideas.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="common.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: 'rgb(var(--primary))',
+            secondary: 'rgb(var(--secondary))',
+            accent: 'rgb(var(--accent))',
+            surface: 'rgb(var(--surface))',
+            'on-surface': 'rgb(var(--on-surface))',
+            card: 'rgb(var(--card))',
+            border: 'rgb(var(--border))'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-surface text-on-surface min-h-screen font-sans">
+  <div id="splashScreen">
+    <div class="loader"></div>
+  </div>
+  <div data-include="sidebar.html"></div>
+  <div id="content" class="ml-[72px]">
+    <header class="py-2 text-center">
+      <button id="addCardBtn" class="px-4 py-2 bg-primary text-white rounded hidden">新增卡片</button>
+    </header>
+    <main class="px-4 max-w-screen-xl mx-auto pb-8">
+      <div class="masonry" id="gallery"></div>
+    </main>
+    <div data-include="settings.html"></div>
+  </div>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    window.commonReady?.then(() => {
+      const gallery = document.getElementById('gallery');
+      const addCardBtn = document.getElementById('addCardBtn');
+      const sidebarAddBtn = document.getElementById('addBtn');
+      const settingsPanel = document.getElementById('settingsPanel');
+      const moreBtn = document.getElementById('moreBtn');
+      const closeSettings = document.getElementById('closeSettings');
+      const applySettings = document.getElementById('applySettings');
+      const columnCountInput = document.getElementById('columnCountInput');
+      const perPageInput = document.getElementById('perPageInput');
+      const multiTagToggle = document.getElementById('multiTagToggle');
+      const clearCacheBtn = document.getElementById('clearCache');
+      const navEl = document.querySelector('nav');
+      const contentEl = document.getElementById('content');
+      const isMobile = /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
+
+      const savedCols = parseInt(localStorage.getItem('columnCount')) || 4;
+      const savedPerPage = parseInt(localStorage.getItem('perPage')) || 30;
+      const multiTagsSaved = localStorage.getItem('multiTags') === 'true';
+      const initialCols = isMobile ? 2 : savedCols;
+      columnCountInput.value = String(initialCols);
+      perPageInput.value = String(savedPerPage);
+      multiTagToggle.checked = multiTagsSaved;
+      gallery.style.columnCount = String(initialCols);
+      if (isMobile) {
+        document.body.classList.add('mobile');
+        navEl.classList.add('mobile');
+        contentEl.classList.remove('ml-[72px]');
+        contentEl.classList.add('mb-[72px]');
+      }
+      let cards = [];
+      load();
+      render();
+
+      function save() {
+        localStorage.setItem('customCards', JSON.stringify(cards));
+      }
+      function load() {
+        try {
+          const stored = localStorage.getItem('customCards');
+          if (stored) cards = JSON.parse(stored) || [];
+        } catch {}
+        if (cards.length === 0) {
+          cards.push({
+            title: '关于本站',
+            description: '你好！这里是金桔猪，博客记录了我的部分设计，以及可能会有一些“代码”相关的内容。你可以在当前页面添加一些自定义卡片（我不知道有啥用，可以作为我一个note吧可能），它们会保存在你的浏览器本地。',
+            url: '',
+            tags: ['博客介绍']
+          });
+          save();
+        }
+      }
+      function createCard(item, index) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'masonry-item rounded-2xl shadow overflow-hidden flex flex-col';
+        const text = document.createElement('div');
+        text.className = 'card-content p-5 flex flex-col gap-2';
+        const h2 = document.createElement('h2');
+        h2.className = 'text-xl font-semibold mb-1';
+        h2.textContent = item.title;
+        const p = document.createElement('p');
+        p.className = 'text-sm leading-relaxed';
+        p.textContent = item.description || '';
+        const bottom = document.createElement('div');
+        bottom.className = 'flex items-end mt-auto gap-2';
+        const tagsEl = document.createElement('div');
+        tagsEl.className = 'flex-1 flex overflow-x-auto whitespace-nowrap gap-1 no-scrollbar';
+        if (Array.isArray(item.tags)) {
+          item.tags.forEach(tag => {
+            const span = document.createElement('span');
+            span.className = 'text-xs text-gray-400';
+            span.textContent = '#' + tag;
+            tagsEl.appendChild(span);
+          });
+        }
+        bottom.appendChild(tagsEl);
+        let link;
+        if (item.url) {
+          link = document.createElement('a');
+          link.className = 'text-xs text-gray-400 flex-none self-end';
+          link.textContent = '查看链接';
+          link.href = item.url;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+        }
+        const delBtn = document.createElement('button');
+        delBtn.className = 'text-xs text-[rgb(var(--card))] flex-none';
+        delBtn.textContent = '·';
+        delBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          if (confirm('确定删除？')) {
+            cards.splice(index, 1);
+            save();
+            render();
+          }
+        });
+        
+        text.appendChild(h2);
+        text.appendChild(p);
+        text.appendChild(bottom);
+        bottom.appendChild(delBtn);
+        if (link) bottom.appendChild(link);
+        wrapper.appendChild(text);
+        return wrapper;
+      }
+      function render() {
+        gallery.innerHTML = '';
+        cards.forEach((item, idx) => {
+          gallery.appendChild(createCard(item, idx));
+        });
+      }
+      function handleCreate() {
+        const title = prompt('标题');
+        if (!title) return;
+        const description = prompt('描述') || '';
+        const url = prompt('链接（可选）') || '';
+        const tags = (prompt('标签（用空格分隔，可选）') || '').split(/\s+/).filter(Boolean);
+        cards.push({ title, description, url, tags });
+        save();
+        render();
+      }
+      addCardBtn.addEventListener('click', handleCreate);
+      if (sidebarAddBtn) {
+        sidebarAddBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          handleCreate();
+        });
+      }
+      moreBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        settingsPanel.classList.remove('hidden');
+        settingsPanel.classList.add('flex', 'show');
+      });
+      closeSettings.addEventListener('click', () => {
+        settingsPanel.classList.add('hidden');
+        settingsPanel.classList.remove('flex', 'show');
+      });
+      multiTagToggle.addEventListener('change', () => {
+        localStorage.setItem('multiTags', multiTagToggle.checked ? 'true' : 'false');
+      });
+      applySettings.addEventListener('click', () => {
+        const cols = Math.max(1, parseInt(columnCountInput.value) || 1);
+        const perPage = Math.max(1, parseInt(perPageInput.value) || 1);
+        gallery.style.columnCount = String(cols);
+        localStorage.setItem('columnCount', String(cols));
+        localStorage.setItem('perPage', String(perPage));
+        settingsPanel.classList.add('hidden');
+        settingsPanel.classList.remove('flex', 'show');
+      });
+      clearCacheBtn.addEventListener('click', async () => {
+        ['customCards', 'wxData', 'wxDataNew', 'columnCount', 'perPage'].forEach((k) => localStorage.removeItem(k));
+        if ('caches' in window) {
+          const names = await caches.keys();
+          await Promise.all(names.map((n) => caches.delete(n)));
+        }
+        location.reload();
+      });
+      
+    hideSplash(true);
+    });
+  });
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(console.error);
+    });
+  }
+</script>
+</body>
+</html>

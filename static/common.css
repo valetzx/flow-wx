@@ -76,6 +76,7 @@
 
     .masonry-item .card-content p {
       color: rgb(var(--on-surface)/0.8);
+      text-align: justify;
     }
 
     .masonry-item {
