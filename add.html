@@ -42,10 +42,25 @@
     <div data-include="settings.html"></div>
   </div>
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    window.commonReady?.then(() => {
+  window.commonReady?.then(() => {
       const gallery = document.getElementById('gallery');
       const addBtn = document.getElementById('addCardBtn');
+      const settingsPanel = document.getElementById('settingsPanel');
+      const moreBtn = document.getElementById('moreBtn');
+      const closeSettings = document.getElementById('closeSettings');
+      const applySettings = document.getElementById('applySettings');
+      const columnCountInput = document.getElementById('columnCountInput');
+      const perPageInput = document.getElementById('perPageInput');
+      const multiTagToggle = document.getElementById('multiTagToggle');
+      const clearCacheBtn = document.getElementById('clearCache');
+
+      const savedCols = parseInt(localStorage.getItem('columnCount')) || 4;
+      const savedPerPage = parseInt(localStorage.getItem('perPage')) || 30;
+      const multiTagsSaved = localStorage.getItem('multiTags') === 'true';
+      columnCountInput.value = String(savedCols);
+      perPageInput.value = String(savedPerPage);
+      multiTagToggle.checked = multiTagsSaved;
+      gallery.style.columnCount = String(savedCols);
       let cards = [];
       load();
       render();
@@ -135,9 +150,39 @@
         save();
         render();
       });
+
+      moreBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        settingsPanel.classList.remove('hidden');
+        settingsPanel.classList.add('flex', 'show');
+      });
+      closeSettings.addEventListener('click', () => {
+        settingsPanel.classList.add('hidden');
+        settingsPanel.classList.remove('flex', 'show');
+      });
+      multiTagToggle.addEventListener('change', () => {
+        localStorage.setItem('multiTags', multiTagToggle.checked ? 'true' : 'false');
+      });
+      applySettings.addEventListener('click', () => {
+        const cols = Math.max(1, parseInt(columnCountInput.value) || 1);
+        const perPage = Math.max(1, parseInt(perPageInput.value) || 1);
+        gallery.style.columnCount = String(cols);
+        localStorage.setItem('columnCount', String(cols));
+        localStorage.setItem('perPage', String(perPage));
+        settingsPanel.classList.add('hidden');
+        settingsPanel.classList.remove('flex', 'show');
+      });
+      clearCacheBtn.addEventListener('click', async () => {
+        ['customCards', 'wxData', 'wxDataNew', 'columnCount', 'perPage'].forEach((k) => localStorage.removeItem(k));
+        if ('caches' in window) {
+          const names = await caches.keys();
+          await Promise.all(names.map((n) => caches.delete(n)));
+        }
+        location.reload();
+      });
+
     hideSplash(true);
     });
-  });
 </script>
 <script>
   if ('serviceWorker' in navigator) {
