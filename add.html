@@ -6,7 +6,6 @@
   <title>添加卡片</title>
   <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="ideas.css">
-  <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="common.js"></script>
   <script>
@@ -35,96 +34,116 @@
   <div data-include="sidebar.html"></div>
   <div id="content" class="ml-[72px]">
     <header class="py-2 text-center">
-      <h2 class="text-xl font-bold">自定义卡片</h2>
+      <button id="addCardBtn" class="px-4 py-2 bg-primary text-white rounded">新增卡片</button>
     </header>
-    <form id="addForm" class="max-w-md mx-auto mb-4 p-4 bg-card rounded space-y-2">
-      <input id="titleInput" required placeholder="标题" class="w-full border p-2 rounded bg-surface text-on-surface" />
-      <input id="descInput" placeholder="描述" class="w-full border p-2 rounded bg-surface text-on-surface" />
-      <input id="imgInput" placeholder="图片 URL" class="w-full border p-2 rounded bg-surface text-on-surface" />
-      <input id="urlInput" placeholder="链接" class="w-full border p-2 rounded bg-surface text-on-surface" />
-      <button type="submit" class="w-full bg-primary text-white py-1 rounded">添加</button>
-    </form>
     <main class="px-4 max-w-screen-xl mx-auto pb-8">
       <div class="masonry" id="gallery"></div>
     </main>
-    <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        window.commonReady?.then(() => {
-          const gallery = document.getElementById('gallery');
-          const form = document.getElementById('addForm');
-          const titleInput = document.getElementById('titleInput');
-          const descInput = document.getElementById('descInput');
-          const imgInput = document.getElementById('imgInput');
-          const urlInput = document.getElementById('urlInput');
-          const cards = JSON.parse(localStorage.getItem('customCards') || '[]');
-          function save() {
-            localStorage.setItem('customCards', JSON.stringify(cards));
-          }
-          function createCard(item) {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'masonry-item rounded-2xl shadow overflow-hidden flex flex-col';
-            if (item.imgSrc) {
-              const img = document.createElement('img');
-              img.className = 'w-full object-cover';
-              img.src = item.imgSrc;
-              wrapper.appendChild(img);
-            }
-            const text = document.createElement('div');
-            text.className = 'card-content p-5 flex flex-col gap-2';
-            const h2 = document.createElement('h2');
-            h2.className = 'text-xl font-semibold text-slate-900';
-            h2.textContent = item.title;
-            const p = document.createElement('p');
-            p.className = 'text-sm text-gray-600 leading-relaxed';
-            p.textContent = item.description || '';
-            text.appendChild(h2);
-            text.appendChild(p);
-            if (item.url) {
-              const link = document.createElement('a');
-              link.className = 'text-xs text-gray-400 hover:underline self-end';
-              link.textContent = '查看链接';
-              link.href = item.url;
-              link.target = '_blank';
-              link.rel = 'noopener noreferrer';
-              text.appendChild(link);
-            }
-            wrapper.appendChild(text);
-            return wrapper;
-          }
-          function render() {
-            gallery.innerHTML = '';
-            const about = {
-              title: '关于本站',
-              description: '这是一个展示和收藏文章的站点，你可以在此添加自定义卡片。'
-            };
-            gallery.appendChild(createCard(about));
-            cards.forEach(c => gallery.appendChild(createCard(c)));
-          }
-          form.addEventListener('submit', e => {
-            e.preventDefault();
-            const item = {
-              title: titleInput.value.trim(),
-              description: descInput.value.trim(),
-              imgSrc: imgInput.value.trim(),
-              url: urlInput.value.trim()
-            };
-            if (!item.title) return;
-            cards.push(item);
+    <div data-include="settings.html"></div>
+  </div>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    window.commonReady?.then(() => {
+      const gallery = document.getElementById('gallery');
+      const addBtn = document.getElementById('addCardBtn');
+      let cards = [];
+      load();
+      render();
+
+      function save() {
+        localStorage.setItem('customCards', JSON.stringify(cards));
+      }
+      function load() {
+        try {
+          const stored = localStorage.getItem('customCards');
+          if (stored) cards = JSON.parse(stored) || [];
+        } catch {}
+        if (cards.length === 0) {
+          cards.push({
+            title: '关于本站',
+            description: '在这里可以添加自定义卡片，它们会保存在你的浏览器本地。',
+            url: '',
+            tags: ['本站']
+          });
+          save();
+        }
+      }
+      function createCard(item, index) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'masonry-item rounded-2xl shadow overflow-hidden flex flex-col';
+        const text = document.createElement('div');
+        text.className = 'card-content p-5 flex flex-col gap-2';
+        const h2 = document.createElement('h2');
+        h2.className = 'text-xl font-semibold mb-1';
+        h2.textContent = item.title;
+        const p = document.createElement('p');
+        p.className = 'text-sm leading-relaxed';
+        p.textContent = item.description || '';
+        const bottom = document.createElement('div');
+        bottom.className = 'flex items-end mt-auto gap-2';
+        const tagsEl = document.createElement('div');
+        tagsEl.className = 'flex-1 flex overflow-x-auto whitespace-nowrap gap-1 no-scrollbar';
+        if (Array.isArray(item.tags)) {
+          item.tags.forEach(tag => {
+            const span = document.createElement('span');
+            span.className = 'text-xs text-gray-400';
+            span.textContent = '#' + tag;
+            tagsEl.appendChild(span);
+          });
+        }
+        bottom.appendChild(tagsEl);
+        if (item.url) {
+          const link = document.createElement('a');
+          link.className = 'text-xs text-gray-400 flex-none';
+          link.textContent = '查看';
+          link.href = item.url;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          bottom.appendChild(link);
+        }
+        const delBtn = document.createElement('button');
+        delBtn.className = 'text-xs text-red-500 flex-none';
+        delBtn.textContent = '删除';
+        delBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          if (confirm('确定删除？')) {
+            cards.splice(index, 1);
             save();
             render();
-            form.reset();
-          });
-          render();
+          }
         });
-      });
-    </script>
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(console.error);
+        bottom.appendChild(delBtn);
+        text.appendChild(h2);
+        text.appendChild(p);
+        text.appendChild(bottom);
+        wrapper.appendChild(text);
+        return wrapper;
+      }
+      function render() {
+        gallery.innerHTML = '';
+        cards.forEach((item, idx) => {
+          gallery.appendChild(createCard(item, idx));
         });
       }
-    </script>
-  </div>
+      addBtn.addEventListener('click', () => {
+        const title = prompt('标题');
+        if (!title) return;
+        const description = prompt('描述') || '';
+        const url = prompt('链接（可选）') || '';
+        const tags = (prompt('标签（用空格分隔，可选）') || '').split(/\s+/).filter(Boolean);
+        cards.push({ title, description, url, tags });
+        save();
+        render();
+      });
+    });
+  });
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(console.error);
+    });
+  }
+</script>
 </body>
 </html>
