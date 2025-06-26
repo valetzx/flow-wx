@@ -74,10 +74,11 @@
       color: rgb(var(--on-surface));
     }
 
-    .masonry-item .card-content p {
-      color: rgb(var(--on-surface)/0.8);
-      text-align: justify;
-    }
+.masonry-item .card-content p {
+  color: rgb(var(--on-surface)/0.8);
+  text-align: justify;
+  white-space: pre-line;
+}
 
     .masonry-item {
       break-inside: avoid;
@@ -234,6 +235,7 @@
 
     .masonry-item p {
       color: rgb(var(--on-surface)/0.8);
+      white-space: pre-line;
     }
 
     .masonry-item a {
