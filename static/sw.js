@@ -18,23 +18,21 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 self.addEventListener("fetch", (event) => {
-const url = new URL(event.request.url);
-const cachePaths = [
-  "/api/wx",
-  "/api/bil",
-  "/api/daily",
-  "/common.css",
-  "/common.js",
-  "/ideas.css",
-  "/settings.html",
-  "/sidebar.html"
-];
-
-if (cachePaths.includes(url.pathname)) {
-  if (event.request.headers.get("x-skip-cache")) {
-    event.respondWith(fetchAndCache(event.request));
-  } else {
-    event.respondWith(cacheThenNetwork(event.request));
+  const url = new URL(event.request.url);
+  if (url.pathname === "/api/wx" || 
+    url.pathname === "/api/bil" || 
+    url.pathname === "/api/daily" ||
+    url.pathname === "/api/bil" ||
+    url.pathname === "/sw.js" ||
+    url.pathname === "/common.css" ||
+    url.pathname === "/common.js" ||
+    url.pathname === "/ideas.css" ||
+    url.pathname === "/settings.html" ||
+    url.pathname === "/sidebar.html" ) {
+    if (event.request.headers.get("x-skip-cache")) {
+      event.respondWith(fetchAndCache(event.request));
+    } else {
+      event.respondWith(cacheThenNetwork(event.request));
     }
   } else if (
     matchImgCache(url) &&
