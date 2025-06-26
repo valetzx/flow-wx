@@ -1,0 +1,70 @@
+    /* Banner 卡片及遮罩效果 */
+
+    .banner-card {
+      position: relative;
+      height: 280px;
+      width: 100%;
+      aspect-ratio: 16/9;
+    }
+
+    @media (max-width: 640px) {
+      .banner-card {
+        aspect-ratio: 4/3;
+      }
+    }
+
+    .banner-card .banner-mask {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(249, 115, 22, 0.95);
+      /* orange */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 1.125rem;
+      /* text-lg */
+      font-weight: 600;
+      opacity: 0;
+      transform: translateX(0);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      pointer-events: none;
+      border-radius: 0.75rem;
+      z-index: 10;
+    }
+
+    .banner-card:hover .banner-mask {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    /* Banner 图片轮播容器 */
+
+    .banner-card .banner-carousel {
+      position: absolute;
+      inset: 0;
+      padding: 8px;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .banner-card .carousel-slot {
+      position: absolute;
+      top: 75%;
+      width: 65px;
+      height: 95px;
+      background-position: center;
+      background-size: cover;
+      background-repeat: no-repeat;
+      border-radius: 0.5rem;
+      transform: translateY(-50%);
+      transition: background-image 1s ease, background-color 1s ease;
+    }
+
+    .banner-card .card-content {
+      position: relative;
+      z-index: 5;
+    }

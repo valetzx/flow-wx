@@ -38,6 +38,8 @@ self.addEventListener("fetch", (event) => {
   //   event.respondWith(cacheThenNetwork(event.request));
   } else if (url.pathname === "/") {
     event.respondWith(cacheThenNetwork(event.request));
+  } else if (url.pathname === "/common.css" || url.pathname === "/common.js" || url.pathname === "/ideas.css" || url.pathname === "/settings.html" || url.pathname === "/sidebar.html") {
+    event.respondWith(cacheThenNetwork(event.request));
   } else if (url.pathname === "/ideas") {
     event.respondWith(cacheThenNetwork(event.request));
   }
@@ -55,7 +57,14 @@ function matchImgCache(url) {
 }
 async function fetchAndCache(request) {
   const cache = await caches.open(CACHE_NAME);
-  const res = await fetch(request);
+  let res;
+  try {
+    res = await fetch(request);
+  } catch (err) {
+    const cached = await cache.match(request);
+    if (cached) return cached;
+    return new Response("fetch error", { status: 502 });
+  }
   if (res.ok || res.type === "opaque") {
     if (res.type === "opaque") {
       await cache.put(request, res.clone());

@@ -21,6 +21,9 @@ app.use((req, res, next) => {
   next();
 });
 
+// Serve files from the static directory
+app.use(express.static(path.join(__dirname, 'static')));
+
 const apiDomains = (process.env.API_DOMAINS || '').split(/[\s,]+/).filter(Boolean);
 const imgDomains = (process.env.IMG_DOMAINS || '').split(/[\s,]+/).filter(Boolean);
 const cacheImgDomain = process.env.IMG_CACHE || '';

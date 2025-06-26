@@ -3,6 +3,11 @@ import * as cheerio from "cheerio";
 import mainHtml from "./main.html";
 import ideasHtml from "./ideas.html";
 import adminHtml from "./admin.html";
+import commonCss from "./static/common.css";
+import ideasCss from "./static/ideas.css";
+//import { commonJs } from "./static/common.js?raw";
+import sidebarHtml from "./static/sidebar.html";
+import settingsHtml from "./static/settings.html";
 // import swHtml from "./sw.js";
 import articleText from "./article.txt";
 
@@ -412,74 +417,104 @@ export default {
       }
     }
 
-//     if (pathname === "/api/article") {
-//       const abbr = searchParams.get("abbr");
-//       let url = searchParams.get("url");
-//       if (abbr) {
-//         const found = articles.find((a) => a.abbrlink === abbr);
-//         if (found) url = found.url;
-//       }
-//       if (!url) url = articles[0]?.url;
-//       if (!url) return json({ error: "missing url" }, 400);
-//       try {
-//         const res = await fetch(url, {
-//           headers: {
-//             "User-Agent": "Mozilla/5.0",
-//             Referer: "https://mp.weixin.qq.com/",
-//           },
-//         });
-//         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-//         const html = await res.text();
-//         const $ = cheerio.load(html, { decodeEntities: false });
-//         let title = $('#activity-name').text().trim() ||
-//           $('.rich_media_title').text().trim() ||
-//           randomSentence();
-//         if (abbr) {
-//           const found = articles.find((a) => a.abbrlink === abbr);
-//           if (found && found.title) title = found.title;
-//         }
-//         $('#js_content img').each((_, el) => {
-//           const src = $(el).attr('data-src') || $(el).attr('src');
-//           if (src) {
-//             $(el).attr('src', `/img?url=${encodeURIComponent(src)}`);
-//             $(el).removeAttr('data-src');
-//           }
-//         });
-//         const content = proxifyHtml($('#js_content').html() || "");
-//         const page = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8" /><title>${title}</title></head><body><h1 class="text-2xl font-semibold mb-2">${title}</h1>${content}</body></html>`;
-//         return new Response(page, {
-//           headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
-//         });
-//       } catch (err) {
-//         return json({ error: err.message }, 500);
-//       }
-//     }
+    if (pathname === "/common.js") {
+        const commonJS = `
+function includeHTML() {
+  const includes = document.querySelectorAll('[data-include]');
+  return Promise.all(Array.from(includes).map(async el => {
+    const file = el.getAttribute('data-include');
+    if (file) {
+      try {
+        const res = await fetch(file);
+        if (res.ok) {
+          el.innerHTML = await res.text();
+        }
+      } catch {}
+    }
+  }));
+}
 
+function initDarkMode() {
+  const darkModeToggle = document.getElementById('darkModeToggle');
+  if (!darkModeToggle) return;
+  const isDarkMode = localStorage.getItem('darkMode') === 'true' ||
+    (window.matchMedia('(prefers-color-scheme: dark)').matches &&
+      localStorage.getItem('darkMode') !== 'false');
+  if (isDarkMode) {
+    document.documentElement.classList.add('dark');
+    darkModeToggle.checked = true;
+  }
+  darkModeToggle.addEventListener('change', () => {
+    if (darkModeToggle.checked) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('darkMode', 'true');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('darkMode', 'false');
+    }
+  });
+}
+
+function setupSplash() {
+  const splashScreen = document.getElementById('splashScreen');
+  if (!splashScreen) return;
+  const startTime = performance.now();
+  window.hideSplash = function(immediate=false) {
+    const delay = immediate ? 0 : Math.max(0, 2000 - (performance.now() - startTime));
+    setTimeout(() => {
+      splashScreen.style.opacity = '0';
+      splashScreen.addEventListener('transitionend', () => {
+        splashScreen.remove();
+        document.body.classList.add('loaded');
+      }, { once: true });
+    }, delay);
+  };
+  window.addEventListener('error', () => {
+   
+  });
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      if (!document.body.classList.contains('loaded')) window.hideSplash();
+    }, 10000);
+  });
+}
+
+window.commonReady = new Promise(resolve => {
+  document.addEventListener('DOMContentLoaded', async () => {
+    await includeHTML();
+    initDarkMode();
+    setupSplash();
+    resolve();
+  });
+});
+        `;
+        return new Response(commonJS, {
+          headers: withCors({ "Content-Type": "application/javascript" })
+      });
+    }
+    
     if (pathname === "/sw.js") {
         const swHtml = `
 const IMG_CACHE = ${JSON.stringify(cacheImgDomain)};
 const CACHE_NAME = "wx-cache-v2";
 const CACHE_AGE = 6 * 24 * 60 * 60 * 1000;
 const TS_HEADER = "X-Cache-Timestamp";
-
 self.addEventListener("install", (event) => {
   self.skipWaiting();
   event.waitUntil(caches.open(CACHE_NAME));
 });
-
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((names) =>
       Promise.all(
         names
-          .filter((n) => n !== CACHE_NAME)
-          .map((n) => caches.delete(n)),
+        .filter((n) => n !== CACHE_NAME)
+        .map((n) => caches.delete(n)),
       ),
     ),
   );
   self.clients.claim();
 });
-
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (url.pathname === "/api/wx" || url.pathname === "/api/bil" || url.pathname === "/api/daily") {
@@ -501,6 +536,8 @@ self.addEventListener("fetch", (event) => {
   //   event.respondWith(cacheThenNetwork(event.request));
   } else if (url.pathname === "/") {
     event.respondWith(cacheThenNetwork(event.request));
+  } else if (url.pathname === "/common.css" || url.pathname === "/common.js" || url.pathname === "/ideas.css" || url.pathname === "/settings.html" || url.pathname === "/sidebar.html") {
+    event.respondWith(cacheThenNetwork(event.request));
   } else if (url.pathname === "/ideas") {
     event.respondWith(cacheThenNetwork(event.request));
   }
@@ -516,10 +553,16 @@ function matchImgCache(url) {
   }
   return false;
 }
-  
 async function fetchAndCache(request) {
   const cache = await caches.open(CACHE_NAME);
-  const res = await fetch(request);
+  let res;
+  try {
+    res = await fetch(request);
+  } catch (err) {
+    const cached = await cache.match(request);
+    if (cached) return cached;
+    return new Response("fetch error", { status: 502 });
+  }
   if (res.ok || res.type === "opaque") {
     if (res.type === "opaque") {
       await cache.put(request, res.clone());
@@ -537,7 +580,6 @@ async function fetchAndCache(request) {
   }
   return res;
 }
-
 async function cacheThenNetwork(request) {
   const cache = await caches.open(CACHE_NAME);
   const cached = await cache.match(request);
@@ -600,6 +642,29 @@ async function cacheThenNetwork(request) {
       const imgUrl = searchParams.get("url");
       if (!imgUrl) return new Response("missing url", { status: 400, headers: withCors() });
       return await proxyImage(imgUrl);
+    }
+
+    if ([
+      "/common.css",
+      "/ideas.css",
+//      "/common.js",
+      "/sidebar.html",
+      "/settings.html",
+    ].includes(pathname)) {
+      const ext = pathname.split(".").pop();
+      const type =
+        ext === "css" ? "text/css" :
+        ext === "js" ? "text/javascript" :
+        "text/html";
+      const content =
+        pathname === "/common.css" ? commonCss :
+        pathname === "/ideas.css" ? ideasCss :
+//        pathname === "/common.js" ? commonJs :
+        pathname === "/sidebar.html" ? sidebarHtml :
+        settingsHtml;
+      return new Response(content, {
+        headers: withCors({ "Content-Type": `${type}; charset=utf-8` }),
+      });
     }
 
     if (pathname === "/@admin") {
