@@ -128,8 +128,8 @@
           bottom.appendChild(link);
         }
         const delBtn = document.createElement('button');
-        delBtn.className = 'text-xs text-red-500 flex-none';
-        delBtn.textContent = '删除';
+        delBtn.className = 'text-xs text-[rgb(var(--card))] flex-none';
+        delBtn.textContent = '·';
         delBtn.addEventListener('click', e => {
           e.stopPropagation();
           if (confirm('确定删除？')) {
