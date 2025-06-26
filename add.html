@@ -118,14 +118,14 @@
           });
         }
         bottom.appendChild(tagsEl);
+        let link;
         if (item.url) {
-          const link = document.createElement('a');
+          link = document.createElement('a');
           link.className = 'text-xs text-gray-400 flex-none self-end';
           link.textContent = '查看链接';
           link.href = item.url;
           link.target = '_blank';
           link.rel = 'noopener noreferrer';
-          bottom.appendChild(link);
         }
         const delBtn = document.createElement('button');
         delBtn.className = 'text-xs text-[rgb(var(--card))] flex-none';
@@ -143,6 +143,7 @@
         text.appendChild(p);
         text.appendChild(bottom);
         bottom.appendChild(delBtn);
+        if (link) bottom.appendChild(link);
         wrapper.appendChild(text);
         return wrapper;
       }
