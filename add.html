@@ -46,6 +46,22 @@
     window.commonReady?.then(() => {
       const gallery = document.getElementById('gallery');
       const addBtn = document.getElementById('addCardBtn');
+      const settingsPanel = document.getElementById('settingsPanel');
+      const moreBtn = document.getElementById('moreBtn');
+      const closeSettings = document.getElementById('closeSettings');
+      const applySettings = document.getElementById('applySettings');
+      const columnCountInput = document.getElementById('columnCountInput');
+      const perPageInput = document.getElementById('perPageInput');
+      const multiTagToggle = document.getElementById('multiTagToggle');
+      const clearCacheBtn = document.getElementById('clearCache');
+
+      const savedCols = parseInt(localStorage.getItem('columnCount')) || 4;
+      const savedPerPage = parseInt(localStorage.getItem('perPage')) || 30;
+      const multiTagsSaved = localStorage.getItem('multiTags') === 'true';
+      columnCountInput.value = String(savedCols);
+      perPageInput.value = String(savedPerPage);
+      multiTagToggle.checked = multiTagsSaved;
+      gallery.style.columnCount = String(savedCols);
       let cards = [];
       load();
       render();
