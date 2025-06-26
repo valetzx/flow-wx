@@ -7,6 +7,8 @@
 | `WX_URL` | `必填` | 获取的微信公众号文章列表，如果不填会从本地 `article.txt` 读取 |
 | `API_DOMAINS` | `可选` | 提供 `/api/wx`、`/api/article` 和 `/api/daily` 的备用域名，多个域名用逗号或空格分隔 |
 | `IMG_DOMAINS` | `可选` | 图片代理 `/img` 的备用域名，多个域名用逗号或空格分隔 |
+| `GITHUB_CLIENT_ID` | `可选` | 用于 GitHub OAuth 登录创建 Gist 的 Client ID |
+| `GITHUB_CLIENT_SECRET` | `可选` | GitHub OAuth 的 Client Secret |
 
 ## 部署到 Deno  (推荐)
 

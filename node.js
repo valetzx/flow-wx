@@ -4,6 +4,8 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import * as cheerio from 'cheerio';
+import cookieParser from 'cookie-parser';
+import fetch from 'node-fetch';
 
 const app = express();
 const PORT = Number(process.env.PORT || 8000);
@@ -21,12 +23,17 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use(cookieParser());
+app.use(express.json());
+
 // Serve files from the static directory
 app.use(express.static(path.join(__dirname, 'static')));
 
 const apiDomains = (process.env.API_DOMAINS || '').split(/[\s,]+/).filter(Boolean);
 const imgDomains = (process.env.IMG_DOMAINS || '').split(/[\s,]+/).filter(Boolean);
 const cacheImgDomain = process.env.IMG_CACHE || '';
+const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID || '';
+const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET || '';
 
 function injectConfig(html) {
   if (!apiDomains.length && !imgDomains.length) return html;
@@ -405,6 +412,83 @@ app.get('/api/daily', async (req, res) => {
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const data = await r.json();
     dailyCache = { data, timestamp: Date.now() };
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/github/login', (req, res) => {
+  const redirectUri = `${req.protocol}://${req.get('host')}/github/callback`;
+  const params = new URLSearchParams({
+    client_id: GITHUB_CLIENT_ID,
+    redirect_uri: redirectUri,
+    scope: 'gist'
+  });
+  res.redirect(`https://github.com/login/oauth/authorize?${params}`);
+});
+
+app.get('/github/callback', async (req, res) => {
+  const code = req.query.code;
+  if (!code) return res.status(400).send('missing code');
+  try {
+    const r = await fetch('https://github.com/login/oauth/access_token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        client_id: GITHUB_CLIENT_ID,
+        client_secret: GITHUB_CLIENT_SECRET,
+        code
+      })
+    });
+    const data = await r.json();
+    if (data.error) throw new Error(data.error_description || 'oauth error');
+    res.cookie('github_token', data.access_token, { httpOnly: true });
+    res.redirect('/add');
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+function requireToken(req, res, next) {
+  const token = req.cookies.github_token;
+  if (!token) return res.status(401).json({ error: 'not logged in' });
+  req.token = token;
+  next();
+}
+
+app.get('/api/gists', requireToken, async (req, res) => {
+  try {
+    const r = await fetch('https://api.github.com/gists', {
+      headers: { Authorization: `token ${req.token}`, 'User-Agent': 'flow-wx' }
+    });
+    const data = await r.json();
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/gists', requireToken, async (req, res) => {
+  const { description, content } = req.body || {};
+  try {
+    const r = await fetch('https://api.github.com/gists', {
+      method: 'POST',
+      headers: {
+        Authorization: `token ${req.token}`,
+        'User-Agent': 'flow-wx',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        description: description || '',
+        public: true,
+        files: { 'gist.txt': { content: content || '' } }
+      })
+    });
+    const data = await r.json();
     res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });

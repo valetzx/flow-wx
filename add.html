@@ -33,8 +33,10 @@
   </div>
   <div data-include="sidebar.html"></div>
   <div id="content" class="ml-[72px]">
-    <header class="py-2 text-center">
+    <header class="py-2 text-center space-x-2">
       <button id="addCardBtn" class="px-4 py-2 bg-primary text-white rounded hidden">新增卡片</button>
+      <button id="githubLogin" class="px-4 py-2 bg-primary text-white rounded hidden">GitHub 登录</button>
+      <button id="createGist" class="px-4 py-2 bg-primary text-white rounded hidden">创建 Gist</button>
     </header>
     <main class="px-4 max-w-screen-xl mx-auto pb-8">
       <div class="masonry" id="gallery"></div>
@@ -200,7 +202,49 @@
         }
         location.reload();
       });
-      
+
+      const loginBtn = document.getElementById('githubLogin');
+      const createGistBtn = document.getElementById('createGist');
+      async function loadGists() {
+        try {
+          const res = await fetch('/api/gists');
+          if (res.status === 401) {
+            loginBtn.classList.remove('hidden');
+            return;
+          }
+          const data = await res.json();
+          createGistBtn.classList.remove('hidden');
+          loginBtn.classList.add('hidden');
+          data.forEach(g => {
+            cards.push({
+              title: g.description || 'Gist',
+              description: '',
+              url: g.html_url,
+              tags: ['gist']
+            });
+          });
+          render();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+      loginBtn.addEventListener('click', () => {
+        location.href = '/github/login';
+      });
+      createGistBtn.addEventListener('click', async () => {
+        const description = prompt('描述') || '';
+        const content = prompt('内容');
+        if (!content) return;
+        await fetch('/api/gists', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ description, content })
+        });
+        loadGists();
+      });
+
+      await loadGists();
+
     hideSplash(true);
     });
   });
