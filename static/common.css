@@ -115,6 +115,11 @@
       border-top: 1px solid #e5e7eb;
     }
 
+    /* 禁用加载时的侧边栏点击穿透 */
+    body:not(.loaded) nav {
+      pointer-events: none;
+    }
+
     nav.mobile .sidebar-link {
       flex: 1;
       margin-top: 5px;
