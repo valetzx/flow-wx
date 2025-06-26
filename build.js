@@ -28,7 +28,7 @@ await buildHtml('main.html');
 await buildHtml('ideas.html');
 await buildHtml('admin.html');
 
-const swRaw = await fs.readFile(path.join(__dirname, 'sw.js'), 'utf8');
+const swRaw = await fs.readFile(path.join(__dirname, 'static', 'sw.js'), 'utf8');
 const swOut = `const IMG_CACHE = ${JSON.stringify(cacheImgDomain)};\n${swRaw}`;
 await fs.writeFile(path.join(outDir, 'sw.js'), swOut);
 await fs.copyFile(path.join(__dirname, 'static', 'common.css'), path.join(outDir, 'common.css'));
