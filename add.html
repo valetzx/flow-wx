@@ -128,6 +128,7 @@
             render();
           }
         });
+        
         bottom.appendChild(delBtn);
         text.appendChild(h2);
         text.appendChild(p);
@@ -151,6 +152,36 @@
         save();
         render();
       });
+      moreBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        settingsPanel.classList.remove('hidden');
+        settingsPanel.classList.add('flex', 'show');
+      });
+      closeSettings.addEventListener('click', () => {
+        settingsPanel.classList.add('hidden');
+        settingsPanel.classList.remove('flex', 'show');
+      });
+      multiTagToggle.addEventListener('change', () => {
+        localStorage.setItem('multiTags', multiTagToggle.checked ? 'true' : 'false');
+      });
+      applySettings.addEventListener('click', () => {
+        const cols = Math.max(1, parseInt(columnCountInput.value) || 1);
+        const perPage = Math.max(1, parseInt(perPageInput.value) || 1);
+        gallery.style.columnCount = String(cols);
+        localStorage.setItem('columnCount', String(cols));
+        localStorage.setItem('perPage', String(perPage));
+        settingsPanel.classList.add('hidden');
+        settingsPanel.classList.remove('flex', 'show');
+      });
+      clearCacheBtn.addEventListener('click', async () => {
+        ['customCards', 'wxData', 'wxDataNew', 'columnCount', 'perPage'].forEach((k) => localStorage.removeItem(k));
+        if ('caches' in window) {
+          const names = await caches.keys();
+          await Promise.all(names.map((n) => caches.delete(n)));
+        }
+        location.reload();
+      });
+      
     hideSplash(true);
     });
   });
