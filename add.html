@@ -120,8 +120,8 @@
         bottom.appendChild(tagsEl);
         if (item.url) {
           const link = document.createElement('a');
-          link.className = 'text-xs text-gray-400 flex-none';
-          link.textContent = '查看';
+          link.className = 'text-xs text-gray-400 flex-none self-end';
+          link.textContent = '查看链接';
           link.href = item.url;
           link.target = '_blank';
           link.rel = 'noopener noreferrer';
@@ -139,10 +139,10 @@
           }
         });
         
-        bottom.appendChild(delBtn);
         text.appendChild(h2);
         text.appendChild(p);
         text.appendChild(bottom);
+        bottom.appendChild(delBtn);
         wrapper.appendChild(text);
         return wrapper;
       }
