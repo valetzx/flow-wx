@@ -37,7 +37,7 @@ function injectConfig(html) {
 const indexHtml = injectConfig(await fs.readFile(path.join(__dirname, 'main.html'), 'utf8'));
 const ideasHtml = injectConfig(await fs.readFile(path.join(__dirname, 'ideas.html'), 'utf8'));
 const adminHtml = injectConfig(await fs.readFile(path.join(__dirname, 'admin.html'), 'utf8'));
-const swRaw = await fs.readFile(path.join(__dirname, 'sw.js'), 'utf8');
+const swRaw = await fs.readFile(path.join(__dirname, 'static', 'sw.js'), 'utf8');
 const swHtml = `const IMG_CACHE = ${JSON.stringify(cacheImgDomain)};\n${swRaw}`;
 
 const fallbackSentences = [
