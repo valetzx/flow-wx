@@ -57,7 +57,14 @@ function matchImgCache(url) {
 }
 async function fetchAndCache(request) {
   const cache = await caches.open(CACHE_NAME);
-  const res = await fetch(request);
+  let res;
+  try {
+    res = await fetch(request);
+  } catch (err) {
+    const cached = await cache.match(request);
+    if (cached) return cached;
+    return new Response("fetch error", { status: 502 });
+  }
   if (res.ok || res.type === "opaque") {
     if (res.type === "opaque") {
       await cache.put(request, res.clone());
