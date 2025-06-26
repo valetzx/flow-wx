@@ -54,14 +54,24 @@
       const perPageInput = document.getElementById('perPageInput');
       const multiTagToggle = document.getElementById('multiTagToggle');
       const clearCacheBtn = document.getElementById('clearCache');
+      const navEl = document.querySelector('nav');
+      const contentEl = document.getElementById('content');
+      const isMobile = /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
 
       const savedCols = parseInt(localStorage.getItem('columnCount')) || 4;
       const savedPerPage = parseInt(localStorage.getItem('perPage')) || 30;
       const multiTagsSaved = localStorage.getItem('multiTags') === 'true';
-      columnCountInput.value = String(savedCols);
+      const initialCols = isMobile ? 2 : savedCols;
+      columnCountInput.value = String(initialCols);
       perPageInput.value = String(savedPerPage);
       multiTagToggle.checked = multiTagsSaved;
-      gallery.style.columnCount = String(savedCols);
+      gallery.style.columnCount = String(initialCols);
+      if (isMobile) {
+        document.body.classList.add('mobile');
+        navEl.classList.add('mobile');
+        contentEl.classList.remove('ml-[72px]');
+        contentEl.classList.add('mb-[72px]');
+      }
       let cards = [];
       load();
       render();
