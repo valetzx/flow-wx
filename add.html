@@ -34,7 +34,7 @@
   <div data-include="sidebar.html"></div>
   <div id="content" class="ml-[72px]">
     <header class="py-2 text-center">
-      <button id="addCardBtn" class="px-4 py-2 bg-primary text-white rounded">新增卡片</button>
+      <button id="addCardBtn" class="px-4 py-2 bg-primary text-white rounded hidden">新增卡片</button>
     </header>
     <main class="px-4 max-w-screen-xl mx-auto pb-8">
       <div class="masonry" id="gallery"></div>
@@ -45,7 +45,8 @@
   document.addEventListener('DOMContentLoaded', () => {
     window.commonReady?.then(() => {
       const gallery = document.getElementById('gallery');
-      const addBtn = document.getElementById('addCardBtn');
+      const addCardBtn = document.getElementById('addCardBtn');
+      const sidebarAddBtn = document.getElementById('addBtn');
       const settingsPanel = document.getElementById('settingsPanel');
       const moreBtn = document.getElementById('moreBtn');
       const closeSettings = document.getElementById('closeSettings');
@@ -153,7 +154,7 @@
           gallery.appendChild(createCard(item, idx));
         });
       }
-      addBtn.addEventListener('click', () => {
+      function handleCreate() {
         const title = prompt('标题');
         if (!title) return;
         const description = prompt('描述') || '';
@@ -162,7 +163,14 @@
         cards.push({ title, description, url, tags });
         save();
         render();
-      });
+      }
+      addCardBtn.addEventListener('click', handleCreate);
+      if (sidebarAddBtn) {
+        sidebarAddBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          handleCreate();
+        });
+      }
       moreBtn.addEventListener('click', (e) => {
         e.preventDefault();
         settingsPanel.classList.remove('hidden');
