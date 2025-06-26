@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>添加卡片</title>
+  <link rel="stylesheet" href="common.css">
+  <link rel="stylesheet" href="ideas.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="common.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: 'rgb(var(--primary))',
+            secondary: 'rgb(var(--secondary))',
+            accent: 'rgb(var(--accent))',
+            surface: 'rgb(var(--surface))',
+            'on-surface': 'rgb(var(--on-surface))',
+            card: 'rgb(var(--card))',
+            border: 'rgb(var(--border))'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-surface text-on-surface min-h-screen font-sans">
+  <div id="splashScreen">
+    <div class="loader"></div>
+  </div>
+  <div data-include="sidebar.html"></div>
+  <div id="content" class="ml-[72px]">
+    <header class="py-2 text-center"></header>
+    <main class="px-4 max-w-screen-xl mx-auto pb-8">
+      <form id="addForm" class="mb-4 space-y-2">
+        <input id="titleInput" type="text" placeholder="标题" class="border p-1 w-full rounded" required>
+        <textarea id="descInput" placeholder="描述" class="border p-1 w-full rounded"></textarea>
+        <input id="imgInput" type="text" placeholder="图片URL(可选)" class="border p-1 w-full rounded">
+        <button type="submit" class="px-3 py-1 bg-primary text-white rounded">添加卡片</button>
+      </form>
+      <div class="masonry" id="gallery"></div>
+    </main>
+    <div data-include="settings.html"></div>
+  </div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  window.commonReady?.then(() => {
+    const gallery = document.getElementById('gallery');
+    function createCard(title, desc, img) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'masonry-item rounded-2xl shadow overflow-hidden flex flex-col';
+      if (img) {
+        const imgEl = document.createElement('img');
+        imgEl.className = 'w-full object-cover';
+        imgEl.src = img;
+        wrapper.appendChild(imgEl);
+      }
+      const content = document.createElement('div');
+      content.className = 'card-content p-5 flex flex-col gap-2';
+      const h2 = document.createElement('h2');
+      h2.className = 'text-xl font-semibold';
+      h2.textContent = title;
+      const p = document.createElement('p');
+      p.className = 'text-sm text-gray-600 leading-relaxed';
+      p.textContent = desc;
+      content.appendChild(h2);
+      content.appendChild(p);
+      wrapper.appendChild(content);
+      return wrapper;
+    }
+    gallery.appendChild(createCard('关于本站','本站用于展示和分享灵感卡片，你可以在此页面创建自己的卡片。'));
+    const form = document.getElementById('addForm');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const title = document.getElementById('titleInput').value.trim();
+      const desc = document.getElementById('descInput').value.trim();
+      const img = document.getElementById('imgInput').value.trim();
+      if (!title) return;
+      gallery.appendChild(createCard(title, desc, img));
+      form.reset();
+    });
+  });
+});
+</script>
+</body>
+</html>

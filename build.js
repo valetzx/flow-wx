@@ -26,6 +26,7 @@ async function buildHtml(name) {
 
 await buildHtml('main.html');
 await buildHtml('ideas.html');
+await buildHtml('add.html');
 await buildHtml('admin.html');
 
 const swRaw = await fs.readFile(path.join(__dirname, 'static', 'sw.js'), 'utf8');
