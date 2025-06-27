@@ -7,6 +7,7 @@
 | `WX_URL` | `必填` | 获取的微信公众号文章列表，如果不填会从本地 `article.txt` 读取 |
 | `API_DOMAINS` | `可选` | 提供 `/api/wx`、`/api/article` 和 `/api/daily` 的备用域名，多个域名用逗号或空格分隔 |
 | `IMG_DOMAINS` | `可选` | 图片代理 `/img` 的备用域名，多个域名用逗号或空格分隔 |
+| `MAIN_GIST` | `可选` | `/add` 页面默认解析的公开 Gist ID 或 URL |
 
 ## 部署到 Deno  (推荐)
 

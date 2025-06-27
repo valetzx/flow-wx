@@ -31,10 +31,11 @@ const imgDomains = imgDomainsEnv
   .map((d) => d.trim())
   .filter(Boolean);
 const cacheImgDomain = Deno.env.get("IMG_CACHE") || "";
+const mainGist = Deno.env.get("MAIN_GIST") || "";
 
 function injectConfig(html: string): string {
-  if (apiDomains.length === 0 && imgDomains.length === 0) return html;
-  const script = `<script>window.API_DOMAINS=${JSON.stringify(apiDomains)};window.IMG_DOMAINS=${JSON.stringify(imgDomains)};</script>`;
+  if (apiDomains.length === 0 && imgDomains.length === 0 && !mainGist) return html;
+  const script = `<script>window.API_DOMAINS=${JSON.stringify(apiDomains)};window.IMG_DOMAINS=${JSON.stringify(imgDomains)};window.MAIN_GIST=${JSON.stringify(mainGist)}</script>`;
   return html.replace("</head>", `${script}</head>`);
 }
 

@@ -136,11 +136,11 @@ async function getArticles(env) {
   return articles;
 }
 
-function injectConfig(html, apiDomains, imgDomains) {
-  if (!apiDomains.length && !imgDomains.length) return html;
+function injectConfig(html, apiDomains, imgDomains, mainGist) {
+  if (!apiDomains.length && !imgDomains.length && !mainGist) return html;
   const script = `<script>window.API_DOMAINS=${JSON.stringify(
     apiDomains,
-  )};window.IMG_DOMAINS=${JSON.stringify(imgDomains)};</script>`;
+  )};window.IMG_DOMAINS=${JSON.stringify(imgDomains)};window.MAIN_GIST=${JSON.stringify(mainGist)}</script>`;
   return html.replace("</head>", `${script}</head>`);
 }
 
@@ -352,11 +352,12 @@ export default {
       .map((d) => d.trim())
       .filter(Boolean);
     const cacheImgDomain = env.IMG_CACHE || "mmbiz.qpic.cn";
+    const mainGist = env.MAIN_GIST || "";
 
-    const indexHtml = injectConfig(mainHtml, apiDomains, imgDomains);
-    const ideasPage = injectConfig(ideasHtml, apiDomains, imgDomains);
-    const addPage = injectConfig(addHtml, apiDomains, imgDomains);
-    const adminPage = injectConfig(adminHtml, apiDomains, imgDomains);
+    const indexHtml = injectConfig(mainHtml, apiDomains, imgDomains, mainGist);
+    const ideasPage = injectConfig(ideasHtml, apiDomains, imgDomains, mainGist);
+    const addPage = injectConfig(addHtml, apiDomains, imgDomains, mainGist);
+    const adminPage = injectConfig(adminHtml, apiDomains, imgDomains, mainGist);
 
     const articles = await getArticles(env);
 

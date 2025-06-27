@@ -27,10 +27,11 @@ app.use(express.static(path.join(__dirname, 'static')));
 const apiDomains = (process.env.API_DOMAINS || '').split(/[\s,]+/).filter(Boolean);
 const imgDomains = (process.env.IMG_DOMAINS || '').split(/[\s,]+/).filter(Boolean);
 const cacheImgDomain = process.env.IMG_CACHE || '';
+const mainGist = process.env.MAIN_GIST || '';
 
 function injectConfig(html) {
-  if (!apiDomains.length && !imgDomains.length) return html;
-  const script = `<script>window.API_DOMAINS=${JSON.stringify(apiDomains)};window.IMG_DOMAINS=${JSON.stringify(imgDomains)};</script>`;
+  if (!apiDomains.length && !imgDomains.length && !mainGist) return html;
+  const script = `<script>window.API_DOMAINS=${JSON.stringify(apiDomains)};window.IMG_DOMAINS=${JSON.stringify(imgDomains)};window.MAIN_GIST=${JSON.stringify(mainGist)}</script>`;
   return html.replace('</head>', `${script}</head>`);
 }
 
