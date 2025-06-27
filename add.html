@@ -28,6 +28,7 @@
   </script>
 </head>
 <body class="bg-surface text-on-surface min-h-screen font-sans">
+  <div id="gistsProgress" class="fixed top-0 left-0 h-0.5 bg-[rgb(249,115,22)] w-0 opacity-0 transition-all z-50"></div>
   <div id="splashScreen">
     <div class="loader"></div>
   </div>
@@ -278,12 +279,19 @@
           alert('请在设置中填写 GitHub Token');
           return;
         }
+        const progress = document.getElementById('gistsProgress');
+        if (progress) {
+          progress.style.width = '0%';
+          progress.style.opacity = '1';
+        }
         try {
           const res = await fetch('https://api.github.com/gists', {
             headers: { Authorization: 'token ' + token }
           });
           if (!res.ok) throw new Error('network');
           const data = await res.json();
+          let done = 0;
+          const total = data.length || 1;
           for (const g of data) {
             if (g.description !== 'flow-gist') continue;
             for (const [name, f] of Object.entries(g.files)) {
@@ -313,12 +321,19 @@
                 });
               }
             }
+            done++;
+            if (progress) progress.style.width = `${Math.min(100, (done / total) * 100)}%`;
           }
             save();
             updateTagsAndRender();
         } catch (e) {
           alert('拉取失败');
           console.error(e);
+        } finally {
+          if (progress) {
+            progress.style.width = '100%';
+            setTimeout(() => { progress.style.opacity = '0'; }, 300);
+          }
         }
       }
       addCardBtn.addEventListener('click', handleCreate);
