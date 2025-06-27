@@ -286,7 +286,18 @@
       scrollbar-width: none;
       -ms-overflow-style: none;
     }
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* 取消 gist 编辑框获得焦点时的边框高亮 */
+#gistEditTextarea:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* 选中文本时不改变背景色 */
+#gistEditTextarea::selection {
+  background-color: transparent;
+}
 
