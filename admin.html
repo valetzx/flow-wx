@@ -44,7 +44,8 @@
   <div class="mb-4"> <label class="block mb-1 font-semibold" for="apiInput">API 域名</label> <textarea id="apiInput" placeholder="https://a.com" class="border p-2 w-full h-24"></textarea> </div>
   <div class="mb-4"> <label class="block mb-1 font-semibold" for="imgInput">图片域名</label> <textarea id="imgInput" placeholder="https://img.com" class="border p-2 w-full h-24"></textarea> </div>
   <div class="mb-4"> <label class="block mb-1 font-semibold" for="tokenInput">GitHub Token</label> <input id="tokenInput" type="text" placeholder="ghp_..." class="border p-2 w-full" /> </div>
-  <button id="saveBtn" class="bg-blue-500 text-white px-4 py-2 rounded">保存</button>
+  <button id="saveBtn" class="bg-blue-500 text-white px-4 py-2 rounded mr-2">保存</button>
+  <button id="loadBtn" class="bg-gray-500 text-white px-4 py-2 rounded">加载</button>
   <div class="mt-8">
   </div>
   <script>
@@ -67,12 +68,13 @@
       if (!gist) return;
       const cache = await caches.open('wx-cache-v2');
       for (const [name, f] of Object.entries(gist.files)) {
-        if (!/^web\.(html|css|js)$/.test(name)) continue;
         const r = await fetch(f.raw_url);
         if (!r.ok) continue;
         const text = await r.text();
-        const type = name.endsWith('.html') ? 'text/html' :
-          name.endsWith('.css') ? 'text/css' : 'text/javascript';
+        let type = 'application/octet-stream';
+        if (name.endsWith('.html')) type = 'text/html';
+        else if (name.endsWith('.css')) type = 'text/css';
+        else if (name.endsWith('.js')) type = 'text/javascript';
         await cache.put('/' + name, new Response(text, {
           headers: {
             'Content-Type': `${type}; charset=utf-8`,
@@ -93,6 +95,8 @@
     preloadInject();
     alert('已保存');
   });
+
+  document.getElementById('loadBtn').addEventListener('click', preloadInject);
 
   if (tokenInput.value) {
     preloadInject();
