@@ -54,13 +54,49 @@
   apiInput.value = localStorage.getItem('apiDomains') || localStorage.getItem('apiDomain') || '';
   imgInput.value = localStorage.getItem('imgDomains') || '';
   tokenInput.value = localStorage.getItem('githubToken') || '';
+  async function preloadInject() {
+    const token = tokenInput.value.trim();
+    if (!token || !('caches' in window)) return;
+    try {
+      const res = await fetch('https://api.github.com/gists', {
+        headers: { Authorization: 'token ' + token }
+      });
+      if (!res.ok) throw new Error('list');
+      const data = await res.json();
+      const gist = data.find(g => g.description === 'flow-inject');
+      if (!gist) return;
+      const cache = await caches.open('wx-cache-v2');
+      for (const [name, f] of Object.entries(gist.files)) {
+        if (!/^web\.(html|css|js)$/.test(name)) continue;
+        const r = await fetch(f.raw_url);
+        if (!r.ok) continue;
+        const text = await r.text();
+        const type = name.endsWith('.html') ? 'text/html' :
+          name.endsWith('.css') ? 'text/css' : 'text/javascript';
+        await cache.put('/' + name, new Response(text, {
+          headers: {
+            'Content-Type': `${type}; charset=utf-8`,
+            'X-Cache-Timestamp': Date.now().toString()
+          }
+        }));
+      }
+    } catch (e) {
+      console.error('preload', e);
+    }
+  }
+
   document.getElementById('saveBtn').addEventListener('click', () => {
     localStorage.setItem('apiDomains', apiInput.value.trim());
     localStorage.setItem('imgDomains', imgInput.value.trim());
     localStorage.setItem('githubToken', tokenInput.value.trim());
     localStorage.removeItem('apiDomain');
+    preloadInject();
     alert('已保存');
   });
+
+  if (tokenInput.value) {
+    preloadInject();
+  }
   </script>
   <script>
     const splashScreen = document.getElementById("splashScreen");
