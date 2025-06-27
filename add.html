@@ -57,6 +57,7 @@
         <div class="flex justify-end gap-2 mt-2">
           <button id="cancelEditGist" class="px-3 py-1 rounded bg-gray-500 text-white">取消</button>
           <button id="saveEditGist" class="px-3 py-1 rounded bg-primary text-white">保存</button>
+          <button id="deleteGist" class="px-3 py-1 rounded bg-red-500 text-white">删除</button>
         </div>
       </div>
     </div>
@@ -85,6 +86,7 @@
       const gistEditTextarea = document.getElementById('gistEditTextarea');
       const saveEditGist = document.getElementById('saveEditGist');
       const cancelEditGist = document.getElementById('cancelEditGist');
+      const deleteGistBtn = document.getElementById('deleteGist');
       const clearCacheBtn = document.getElementById('clearCache');
       const navEl = document.querySelector('nav');
       const contentEl = document.getElementById('content');
@@ -406,6 +408,38 @@
         }
       }
 
+      async function deleteGist() {
+        const index = editIndex;
+        editIndex = null;
+        gistEditModal.classList.add('hidden');
+        gistEditModal.classList.remove('flex', 'show');
+        const item = cards[index];
+        if (!item || !item.gistId) return;
+        if (!confirm('确定删除该文件？')) return;
+        const token = localStorage.getItem('githubToken');
+        if (!token) {
+          alert('请在设置中填写 GitHub Token');
+          return;
+        }
+        try {
+          const res = await fetch('https://api.github.com/gists/' + item.gistId, {
+            method: 'PATCH',
+            headers: {
+              Authorization: 'token ' + token,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ files: { [item.filename]: null } })
+          });
+          if (!res.ok) throw new Error('delete');
+          cards.splice(index, 1);
+          save();
+          updateTagsAndRender();
+        } catch (e) {
+          alert('删除失败');
+          console.error(e);
+        }
+      }
+
       async function fetchGists() {
         const token = localStorage.getItem('githubToken');
         if (!token) {
@@ -521,6 +555,7 @@
         gistEditModal.classList.remove('flex', 'show');
       });
       saveEditGist.addEventListener('click', saveEdit);
+      deleteGistBtn.addEventListener('click', deleteGist);
       gistEditModal.addEventListener('click', e => {
         if (e.target === gistEditModal) {
           editIndex = null;
