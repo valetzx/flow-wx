@@ -28,6 +28,7 @@
   </script>
 </head>
 <body class="bg-surface text-on-surface min-h-screen font-sans">
+  <div id="gistsProgress" class="fixed top-0 left-0 h-0.5 bg-[rgb(249,115,22)] w-0 opacity-0 transition-all z-50"></div>
   <div id="splashScreen">
     <div class="loader"></div>
   </div>
@@ -36,10 +37,19 @@
     <header class="py-2 text-center">
       <button id="addCardBtn" class="px-4 py-2 bg-primary text-white rounded hidden">新增卡片</button>
     </header>
+    <div id="tagList" class="flex overflow-x-auto whitespace-nowrap gap-2 px-4 mb-4 no-scrollbar max-w-screen-xl mx-auto">
+      <button id="loadGistsBtn" class="px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary bg-card hidden"> ↻ </button>
+    </div>
     <main class="px-4 max-w-screen-xl mx-auto pb-8">
       <div class="masonry" id="gallery"></div>
     </main>
     <div data-include="settings.html"></div>
+    <div id="articleModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+      <div class="bg-card text-on-surface rounded-xl w-11/12 max-w-3xl h-[80vh] overflow-auto relative p-4">
+        <button id="closeArticle" class="absolute top-2 right-4 text-2xl">&times;</button>
+        <div id="articleContent" class="prose max-w-none whitespace-pre-wrap"></div>
+      </div>
+    </div>
   </div>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
@@ -51,13 +61,23 @@
       const moreBtn = document.getElementById('moreBtn');
       const closeSettings = document.getElementById('closeSettings');
       const applySettings = document.getElementById('applySettings');
+      const loadGistsBtn = document.getElementById('loadGistsBtn');
+      const githubTokenInput = document.getElementById('githubTokenInput');
       const columnCountInput = document.getElementById('columnCountInput');
       const perPageInput = document.getElementById('perPageInput');
       const multiTagToggle = document.getElementById('multiTagToggle');
+      const tagList = document.getElementById('tagList');
+      const articleModal = document.getElementById('articleModal');
+      const closeArticle = document.getElementById('closeArticle');
+      const articleContent = document.getElementById('articleContent');
       const clearCacheBtn = document.getElementById('clearCache');
       const navEl = document.querySelector('nav');
       const contentEl = document.getElementById('content');
       const isMobile = /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
+
+      const savedToken = localStorage.getItem('githubToken') || '';
+      if (githubTokenInput) githubTokenInput.value = savedToken;
+      if (savedToken) loadGistsBtn.classList.remove('hidden');
 
       const savedCols = parseInt(localStorage.getItem('columnCount')) || 4;
       const savedPerPage = parseInt(localStorage.getItem('perPage')) || 30;
@@ -74,8 +94,10 @@
         contentEl.classList.add('mb-[72px]');
       }
       let cards = [];
+      let selectedTags = [];
+      let allowMultiTags = multiTagsSaved;
       load();
-      render();
+      updateTagsAndRender();
 
       function save() {
         localStorage.setItem('customCards', JSON.stringify(cards));
@@ -95,6 +117,45 @@
           save();
         }
       }
+
+      function parseFrontMatter(text) {
+        if (!text.startsWith('---')) return null;
+        const end = text.indexOf('---', 3);
+        if (end === -1) return null;
+        const yaml = text.slice(3, end).trim();
+        const rest = text.slice(end + 3).trimStart();
+        const result = { tags: [] };
+        const lines = yaml.split(/\n+/);
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (line.startsWith('title:')) {
+            result.title = line.slice(6).trim();
+          } else if (line.startsWith('describe:')) {
+            result.description = line.slice(9).trim();
+          } else if (line.startsWith('tags:')) {
+            result.tags = [];
+            while (++i < lines.length && lines[i].trim().startsWith('-')) {
+              result.tags.push(lines[i].trim().replace(/^-\s*/, ''));
+            }
+            i--; // compensate final increment
+          }
+        }
+        result.content = rest;
+        return result;
+      }
+
+      function showArticle(content) {
+        articleContent.textContent = content;
+        articleModal.classList.remove('hidden');
+        articleModal.classList.add('flex', 'show');
+      }
+
+      function hideArticle() {
+        articleModal.classList.add('hidden');
+        articleModal.classList.remove('flex', 'show');
+        articleContent.textContent = '';
+      }
+
       function createCard(item, index) {
         const wrapper = document.createElement('div');
         wrapper.className = 'masonry-item rounded-2xl shadow overflow-hidden flex flex-col';
@@ -127,6 +188,7 @@
           link.href = item.url;
           link.target = '_blank';
           link.rel = 'noopener noreferrer';
+          link.addEventListener('click', e => e.stopPropagation());
         }
         const delBtn = document.createElement('button');
         delBtn.className = 'text-xs text-[rgb(var(--card))] flex-none';
@@ -136,7 +198,7 @@
           if (confirm('确定删除？')) {
             cards.splice(index, 1);
             save();
-            render();
+            updateTagsAndRender();
           }
         });
         
@@ -146,11 +208,57 @@
         bottom.appendChild(delBtn);
         if (link) bottom.appendChild(link);
         wrapper.appendChild(text);
+        wrapper.addEventListener('click', () => {
+          if (item.content) {
+            showArticle(item.content);
+          } else if (item.url) {
+            window.open(item.url, '_blank');
+          }
+        });
         return wrapper;
+      }
+
+      function collectTags() {
+        const set = new Set();
+        cards.forEach(c => {
+          if (Array.isArray(c.tags)) c.tags.forEach(t => set.add(t));
+        });
+        return Array.from(set);
+      }
+
+      function renderTags(tags) {
+        tagList.innerHTML = '';
+        tagList.appendChild(loadGistsBtn);
+        tags.forEach(t => {
+          const btn = document.createElement('button');
+          btn.dataset.tag = t;
+          btn.textContent = t;
+          btn.className = 'px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary bg-card';
+          tagList.appendChild(btn);
+        });
+      }
+
+      function applyFilter() {
+        render();
+        Array.from(tagList.querySelectorAll('button[data-tag]')).forEach(btn => {
+          btn.classList.remove('bg-primary', 'text-white', 'border-primary');
+          const tag = btn.dataset.tag;
+          if (tag && selectedTags.includes(tag)) {
+            btn.classList.add('bg-primary', 'text-white', 'border-primary');
+          }
+        });
+      }
+
+      function updateTagsAndRender() {
+        renderTags(collectTags());
+        applyFilter();
       }
       function render() {
         gallery.innerHTML = '';
         cards.forEach((item, idx) => {
+          if (selectedTags.length && !selectedTags.every(t => Array.isArray(item.tags) && item.tags.includes(t))) {
+            return;
+          }
           gallery.appendChild(createCard(item, idx));
         });
       }
@@ -162,15 +270,100 @@
         const tags = (prompt('标签（用空格分隔，可选）') || '').split(/\s+/).filter(Boolean);
         cards.push({ title, description, url, tags });
         save();
-        render();
+        updateTagsAndRender();
+      }
+
+      async function fetchGists() {
+        const token = localStorage.getItem('githubToken');
+        if (!token) {
+          alert('请在设置中填写 GitHub Token');
+          return;
+        }
+        const progress = document.getElementById('gistsProgress');
+        if (progress) {
+          progress.style.width = '0%';
+          progress.style.opacity = '1';
+        }
+        try {
+          const res = await fetch('https://api.github.com/gists', {
+            headers: { Authorization: 'token ' + token }
+          });
+          if (!res.ok) throw new Error('network');
+          const data = await res.json();
+          let done = 0;
+          const total = data.length || 1;
+          for (const g of data) {
+            if (g.description !== 'flow-gist') continue;
+            for (const [name, f] of Object.entries(g.files)) {
+              const url = g.html_url + '?file=' + encodeURIComponent(name);
+              if (cards.find(c => c.url === url)) continue;
+              let text = '';
+              try {
+                const r = await fetch(f.raw_url);
+                if (r.ok) text = await r.text();
+              } catch {}
+              const fm = parseFrontMatter(text);
+              if (fm) {
+                cards.push({
+                  title: fm.title || name,
+                  description: fm.description || '',
+                  url,
+                  tags: fm.tags.length ? fm.tags : ['gist'],
+                  content: fm.content.trim()
+                });
+              } else {
+                cards.push({
+                  title: name,
+                  description: '',
+                  url,
+                  tags: ['gist'],
+                  content: text.trim()
+                });
+              }
+            }
+            done++;
+            if (progress) progress.style.width = `${Math.min(100, (done / total) * 100)}%`;
+          }
+            save();
+            updateTagsAndRender();
+        } catch (e) {
+          alert('拉取失败');
+          console.error(e);
+        } finally {
+          if (progress) {
+            progress.style.width = '100%';
+            setTimeout(() => { progress.style.opacity = '0'; }, 300);
+          }
+        }
       }
       addCardBtn.addEventListener('click', handleCreate);
+      loadGistsBtn.addEventListener('click', fetchGists);
       if (sidebarAddBtn) {
         sidebarAddBtn.addEventListener('click', (e) => {
           e.preventDefault();
           handleCreate();
         });
       }
+      tagList.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-tag]');
+        if (!btn) return;
+        const tag = btn.dataset.tag;
+        if (!tag) return;
+        if (allowMultiTags) {
+          if (selectedTags.includes(tag)) {
+            selectedTags = selectedTags.filter(t => t !== tag);
+          } else {
+            selectedTags.push(tag);
+          }
+        } else {
+          if (selectedTags.length === 1 && selectedTags[0] === tag) {
+            selectedTags = [];
+          } else {
+            selectedTags = [tag];
+          }
+        }
+        applyFilter();
+      });
       moreBtn.addEventListener('click', (e) => {
         e.preventDefault();
         settingsPanel.classList.remove('hidden');
@@ -180,8 +373,17 @@
         settingsPanel.classList.add('hidden');
         settingsPanel.classList.remove('flex', 'show');
       });
+      closeArticle.addEventListener('click', hideArticle);
+      articleModal.addEventListener('click', e => {
+        if (e.target === articleModal) hideArticle();
+      });
       multiTagToggle.addEventListener('change', () => {
-        localStorage.setItem('multiTags', multiTagToggle.checked ? 'true' : 'false');
+        allowMultiTags = multiTagToggle.checked;
+        localStorage.setItem('multiTags', allowMultiTags ? 'true' : 'false');
+        if (!allowMultiTags && selectedTags.length > 1) {
+          selectedTags = [selectedTags[0]];
+        }
+        applyFilter();
       });
       applySettings.addEventListener('click', () => {
         const cols = Math.max(1, parseInt(columnCountInput.value) || 1);
@@ -189,11 +391,17 @@
         gallery.style.columnCount = String(cols);
         localStorage.setItem('columnCount', String(cols));
         localStorage.setItem('perPage', String(perPage));
+        if (githubTokenInput) {
+          const t = githubTokenInput.value.trim();
+          localStorage.setItem('githubToken', t);
+          if (t) loadGistsBtn.classList.remove('hidden');
+          else loadGistsBtn.classList.add('hidden');
+        }
         settingsPanel.classList.add('hidden');
         settingsPanel.classList.remove('flex', 'show');
       });
       clearCacheBtn.addEventListener('click', async () => {
-        ['customCards', 'wxData', 'wxDataNew', 'columnCount', 'perPage'].forEach((k) => localStorage.removeItem(k));
+        ['customCards', 'wxData', 'wxDataNew', 'columnCount', 'perPage', 'githubToken'].forEach((k) => localStorage.removeItem(k));
         if ('caches' in window) {
           const names = await caches.keys();
           await Promise.all(names.map((n) => caches.delete(n)));
