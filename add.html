@@ -74,7 +74,6 @@
       const closeSettings = document.getElementById('closeSettings');
       const applySettings = document.getElementById('applySettings');
       const loadGistsBtn = document.getElementById('loadGistsBtn');
-      const githubTokenInput = document.getElementById('githubTokenInput');
       const columnCountInput = document.getElementById('columnCountInput');
       const perPageInput = document.getElementById('perPageInput');
       const multiTagToggle = document.getElementById('multiTagToggle');
@@ -93,7 +92,6 @@
       const isMobile = /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
 
       const savedToken = localStorage.getItem('githubToken') || '';
-      if (githubTokenInput) githubTokenInput.value = savedToken;
       if (savedToken) {
         loadGistsBtn.classList.remove('hidden');
         newGistBtn.classList.remove('hidden');
@@ -312,7 +310,7 @@
         const content = prompt('内容') || '';
         const token = localStorage.getItem('githubToken');
         if (!token) {
-          alert('请在设置中填写 GitHub Token');
+          alert('请在管理页面填写 GitHub Token');
           return;
         }
         try {
@@ -380,7 +378,7 @@
         const content = gistEditTextarea.value;
         const token = localStorage.getItem('githubToken');
         if (!token) {
-          alert('请在设置中填写 GitHub Token');
+          alert('请在管理页面填写 GitHub Token');
           return;
         }
         try {
@@ -418,7 +416,7 @@
         if (!confirm('确定删除该文件？')) return;
         const token = localStorage.getItem('githubToken');
         if (!token) {
-          alert('请在设置中填写 GitHub Token');
+          alert('请在管理页面填写 GitHub Token');
           return;
         }
         try {
@@ -443,7 +441,7 @@
       async function fetchGists() {
         const token = localStorage.getItem('githubToken');
         if (!token) {
-          alert('请在设置中填写 GitHub Token');
+          alert('请在管理页面填写 GitHub Token');
           return;
         }
         const progress = document.getElementById('gistsProgress');
@@ -578,17 +576,6 @@
         gallery.style.columnCount = String(cols);
         localStorage.setItem('columnCount', String(cols));
         localStorage.setItem('perPage', String(perPage));
-        if (githubTokenInput) {
-          const t = githubTokenInput.value.trim();
-          localStorage.setItem('githubToken', t);
-          if (t) {
-            loadGistsBtn.classList.remove('hidden');
-            newGistBtn.classList.remove('hidden');
-          } else {
-            loadGistsBtn.classList.add('hidden');
-            newGistBtn.classList.add('hidden');
-          }
-        }
         settingsPanel.classList.add('hidden');
         settingsPanel.classList.remove('flex', 'show');
       });
