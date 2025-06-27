@@ -74,6 +74,27 @@
       const closeSettings = document.getElementById('closeSettings');
       const applySettings = document.getElementById('applySettings');
       const loadGistsBtn = document.getElementById('loadGistsBtn');
+      const progressBar = document.getElementById('gistsProgress');
+      let fakeProgress = 0;
+      let fakeTimer = null;
+
+      function startFakeProgress() {
+        if (!progressBar) return;
+        fakeProgress = 0;
+        progressBar.style.width = '0%';
+        progressBar.style.opacity = '1';
+        clearInterval(fakeTimer);
+        fakeTimer = setInterval(() => {
+          fakeProgress = Math.min(fakeProgress + 1, 80);
+          progressBar.style.width = fakeProgress + '%';
+          if (fakeProgress >= 80) clearInterval(fakeTimer);
+        }, 100);
+      }
+
+      function stopFakeProgress() {
+        clearInterval(fakeTimer);
+        fakeTimer = null;
+      }
       const columnCountInput = document.getElementById('columnCountInput');
       const perPageInput = document.getElementById('perPageInput');
       const multiTagToggle = document.getElementById('multiTagToggle');
@@ -438,21 +459,17 @@
         }
       }
 
-      async function fetchGists() {
-        const token = localStorage.getItem('githubToken');
-        if (!token) {
-          alert('请在管理页面填写 GitHub Token');
-          return;
-        }
-        const progress = document.getElementById('gistsProgress');
-        if (progress) {
-          progress.style.width = '0%';
-          progress.style.opacity = '1';
-        }
-        try {
-          const res = await fetch('https://api.github.com/gists', {
-            headers: { Authorization: 'token ' + token }
-          });
+        async function fetchGists() {
+          const token = localStorage.getItem('githubToken');
+          if (!token) {
+            alert('请在管理页面填写 GitHub Token');
+            return;
+          }
+          startFakeProgress();
+          try {
+            const res = await fetch('https://api.github.com/gists', {
+              headers: { Authorization: 'token ' + token }
+            });
           if (!res.ok) throw new Error('network');
           const data = await res.json();
           let done = 0;
@@ -490,21 +507,25 @@
                 });
               }
             }
-            done++;
-            if (progress) progress.style.width = `${Math.min(100, (done / total) * 100)}%`;
-          }
-            save();
-            updateTagsAndRender();
-        } catch (e) {
+              done++;
+              if (progressBar) {
+                const real = (done / total) * 100;
+                progressBar.style.width = `${Math.min(100, Math.max(fakeProgress, real))}%`;
+              }
+            }
+              save();
+              updateTagsAndRender();
+          } catch (e) {
           alert('拉取失败');
           console.error(e);
-        } finally {
-          if (progress) {
-            progress.style.width = '100%';
-            setTimeout(() => { progress.style.opacity = '0'; }, 300);
+          } finally {
+            stopFakeProgress();
+            if (progressBar) {
+              progressBar.style.width = '100%';
+              setTimeout(() => { progressBar.style.opacity = '0'; }, 300);
+            }
           }
         }
-      }
       addCardBtn.addEventListener('click', handleCreate);
       newGistBtn.addEventListener('click', handleCreateGist);
       loadGistsBtn.addEventListener('click', fetchGists);
