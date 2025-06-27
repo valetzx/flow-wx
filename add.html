@@ -74,13 +74,12 @@
         contentEl.classList.add('mb-[72px]');
       }
       let cards = [];
-      load();
-      render();
+      load().then(render);
 
       function save() {
         localStorage.setItem('customCards', JSON.stringify(cards));
       }
-      function load() {
+      async function load() {
         try {
           const stored = localStorage.getItem('customCards');
           if (stored) cards = JSON.parse(stored) || [];
@@ -93,6 +92,66 @@
             tags: ['博客介绍']
           });
           save();
+        }
+        await loadGists();
+      }
+
+      function parseFrontMatter(text) {
+        const trimmed = text.trim();
+        if (!trimmed.startsWith('---')) return null;
+        const end = trimmed.indexOf('---', 3);
+        if (end === -1) return null;
+        const metaText = trimmed.slice(3, end).trim();
+        const lines = metaText.split(/\r?\n/);
+        const meta = {};
+        let current = null;
+        for (const line of lines) {
+          const kv = line.match(/^([\w]+):\s*(.*)$/);
+          if (kv) {
+            current = kv[1];
+            const value = kv[2];
+            if (value === '') {
+              meta[current] = current === 'tags' ? [] : '';
+            } else {
+              meta[current] = value;
+            }
+            continue;
+          }
+          const m = line.match(/^\s*-\s*(.+)$/);
+          if (m && current) {
+            if (!Array.isArray(meta[current])) meta[current] = [];
+            meta[current].push(m[1]);
+          }
+        }
+        return meta;
+      }
+
+      async function loadGists() {
+        const idsStr = localStorage.getItem('gistIds');
+        if (!idsStr) return;
+        const ids = idsStr.split(/[,\s]+/).map(s => s.trim()).filter(Boolean);
+        for (const id of ids) {
+          try {
+            const res = await fetch(`https://api.github.com/gists/${id}`);
+            if (!res.ok) continue;
+            const gist = await res.json();
+            const files = gist.files || {};
+            for (const name in files) {
+              const file = files[name];
+              let content = file.content;
+              if (!content) {
+                const fr = await fetch(file.raw_url);
+                content = await fr.text();
+              }
+              const meta = parseFrontMatter(content) || {};
+              cards.push({
+                title: meta.title || file.filename,
+                description: meta.describe || gist.description || '',
+                url: gist.html_url,
+                tags: Array.isArray(meta.tags) ? meta.tags : []
+              });
+            }
+          } catch {}
         }
       }
       function createCard(item, index) {
