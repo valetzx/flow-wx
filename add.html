@@ -36,10 +36,10 @@
   <div id="content" class="ml-[72px]">
     <header class="py-2 text-center">
       <button id="addCardBtn" class="px-4 py-2 bg-primary text-white rounded hidden">新增卡片</button>
-      <button id="newGistBtn" class="px-4 py-2 bg-primary text-white rounded ml-2 hidden">新增 Gist</button>
     </header>
     <div id="tagList" class="flex overflow-x-auto whitespace-nowrap gap-2 px-4 mb-4 no-scrollbar max-w-screen-xl mx-auto">
       <button id="loadGistsBtn" class="px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary bg-card hidden"> ↻ </button>
+      <button id="newGistBtn" class="px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary bg-card hidden">新增 Gist</button>
     </div>
     <main class="px-4 max-w-screen-xl mx-auto pb-8">
       <div class="masonry" id="gallery"></div>
@@ -49,6 +49,15 @@
       <div class="bg-card text-on-surface rounded-xl w-11/12 max-w-3xl h-[80vh] overflow-auto relative p-4">
         <button id="closeArticle" class="absolute top-2 right-4 text-2xl">&times;</button>
         <div id="articleContent" class="prose max-w-none whitespace-pre-wrap"></div>
+      </div>
+    </div>
+    <div id="editModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+      <div class="bg-card text-on-surface rounded-xl w-11/12 max-w-3xl h-[80vh] overflow-auto relative p-4 flex flex-col gap-4">
+        <button id="closeEdit" class="absolute top-2 right-4 text-2xl">&times;</button>
+        <textarea id="editContent" class="flex-1 border rounded p-2 w-full bg-surface text-on-surface"></textarea>
+        <div class="text-right">
+          <button id="saveEdit" class="px-4 py-1 bg-primary text-white rounded">保存</button>
+        </div>
       </div>
     </div>
   </div>
@@ -72,6 +81,10 @@
       const articleModal = document.getElementById('articleModal');
       const closeArticle = document.getElementById('closeArticle');
       const articleContent = document.getElementById('articleContent');
+      const editModal = document.getElementById('editModal');
+      const closeEdit = document.getElementById('closeEdit');
+      const editContent = document.getElementById('editContent');
+      const saveEdit = document.getElementById('saveEdit');
       const clearCacheBtn = document.getElementById('clearCache');
       const navEl = document.querySelector('nav');
       const contentEl = document.getElementById('content');
@@ -161,6 +174,39 @@
         articleContent.textContent = '';
       }
 
+      function editDialog(initial) {
+        return new Promise(resolve => {
+          editContent.value = initial;
+          editModal.classList.remove('hidden');
+          editModal.classList.add('flex', 'show');
+
+          function cleanup(result) {
+            editModal.classList.add('hidden');
+            editModal.classList.remove('flex', 'show');
+            saveEdit.removeEventListener('click', onSave);
+            closeEdit.removeEventListener('click', onCancel);
+            editModal.removeEventListener('click', onBackdrop);
+            resolve(result);
+          }
+
+          function onSave() {
+            cleanup(editContent.value);
+          }
+
+          function onCancel() {
+            cleanup(null);
+          }
+
+          function onBackdrop(e) {
+            if (e.target === editModal) onCancel();
+          }
+
+          saveEdit.addEventListener('click', onSave);
+          closeEdit.addEventListener('click', onCancel);
+          editModal.addEventListener('click', onBackdrop);
+        });
+      }
+
       function createCard(item, index) {
         const wrapper = document.createElement('div');
         wrapper.className = 'masonry-item rounded-2xl shadow overflow-hidden flex flex-col';
@@ -245,6 +291,7 @@
       function renderTags(tags) {
         tagList.innerHTML = '';
         tagList.appendChild(loadGistsBtn);
+        tagList.appendChild(newGistBtn);
         tags.forEach(t => {
           const btn = document.createElement('button');
           btn.dataset.tag = t;
@@ -352,7 +399,7 @@
           alert('请在设置中填写 GitHub Token');
           return;
         }
-        const content = prompt('修改内容', item.content || '');
+        const content = await editDialog(item.content || '');
         if (content === null) return;
         try {
           const res = await fetch('https://api.github.com/gists/' + item.gistId, {
