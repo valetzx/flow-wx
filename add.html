@@ -91,6 +91,11 @@
       const contentEl = document.getElementById('content');
       const isMobile = /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
 
+      const DEFAULT_GITHUB_TOKEN = 'ghp_defaulttoken';
+      if (!localStorage.getItem('githubToken')) {
+        localStorage.setItem('githubToken', DEFAULT_GITHUB_TOKEN);
+      }
+
       const savedToken = localStorage.getItem('githubToken') || '';
       if (savedToken) {
         loadGistsBtn.classList.remove('hidden');
