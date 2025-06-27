@@ -31,6 +31,7 @@
   <div id="splashScreen">
     <div class="loader"></div>
   </div>
+  <div id="gistProgress" class="fixed top-0 left-0 h-0.5 bg-[rgb(249,115,22)] w-0 z-50 hidden"></div>
   <div data-include="sidebar.html"></div>
   <div id="content" class="ml-[72px]">
     <header class="py-2 text-center">
@@ -70,6 +71,7 @@
       const closeArticle = document.getElementById('closeArticle');
       const articleContent = document.getElementById('articleContent');
       const clearCacheBtn = document.getElementById('clearCache');
+      const gistProgress = document.getElementById('gistProgress');
       const navEl = document.querySelector('nav');
       const contentEl = document.getElementById('content');
       const isMobile = /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
@@ -278,13 +280,18 @@
           alert('请在设置中填写 GitHub Token');
           return;
         }
+        gistProgress.classList.remove('hidden');
+        gistProgress.style.width = '0%';
         try {
           const res = await fetch('https://api.github.com/gists', {
             headers: { Authorization: 'token ' + token }
           });
           if (!res.ok) throw new Error('network');
           const data = await res.json();
-          for (const g of data) {
+          const gists = data.filter(g => g.description === 'flow-gist');
+          let done = 0;
+          const total = gists.length || 1;
+          for (const g of gists) {
             if (g.description !== 'flow-gist') continue;
             for (const [name, f] of Object.entries(g.files)) {
               const url = g.html_url + '?file=' + encodeURIComponent(name);
@@ -313,12 +320,21 @@
                 });
               }
             }
+            done++;
+            gistProgress.style.width = ((done / total) * 100) + '%';
           }
-            save();
-            updateTagsAndRender();
+          save();
+          updateTagsAndRender();
+          gistProgress.style.width = '100%';
+          setTimeout(() => {
+            gistProgress.classList.add('hidden');
+            gistProgress.style.width = '0%';
+          }, 300);
         } catch (e) {
           alert('拉取失败');
           console.error(e);
+          gistProgress.classList.add('hidden');
+          gistProgress.style.width = '0%';
         }
       }
       addCardBtn.addEventListener('click', handleCreate);
