@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const outDir = path.join(__dirname, 'dist');
@@ -11,6 +12,20 @@ const apiDomains = (process.env.API_DOMAINS || '').split(/[\s,]+/).filter(Boolea
 const imgDomains = (process.env.IMG_DOMAINS || '').split(/[\s,]+/).filter(Boolean);
 const cacheImgDomain = process.env.IMG_CACHE || '';
 
+// build React client using Vite
+const clientDir = path.join(__dirname, 'client');
+try {
+  execSync('npm run build', { cwd: clientDir, stdio: 'inherit' });
+  await fs.cp(path.join(clientDir, 'dist', 'assets'), path.join(outDir, 'assets'), { recursive: true });
+  let reactIndex = await fs.readFile(path.join(clientDir, 'dist', 'index.html'), 'utf8');
+  await fs.copyFile(path.join(clientDir, 'dist', 'vite.svg'), path.join(outDir, 'vite.svg'));
+  reactIndex = injectConfig(reactIndex);
+  await fs.writeFile(path.join(outDir, 'index.html'), reactIndex);
+} catch (e) {
+  console.error('Vite build failed:', e);
+  process.exit(1);
+}
+
 function injectConfig(html) {
   if (!apiDomains.length && !imgDomains.length) return html;
   const script = `<script>window.API_DOMAINS=${JSON.stringify(apiDomains)};window.IMG_DOMAINS=${JSON.stringify(imgDomains)};</script>`;
@@ -20,11 +35,9 @@ function injectConfig(html) {
 async function buildHtml(name) {
   const raw = await fs.readFile(path.join(__dirname, name), 'utf8');
   const html = injectConfig(raw);
-  const outName = name === 'main.html' ? 'index.html' : name;
-  await fs.writeFile(path.join(outDir, outName), html);
+  await fs.writeFile(path.join(outDir, name), html);
 }
 
-await buildHtml('main.html');
 await buildHtml('ideas.html');
 await buildHtml('add.html');
 await buildHtml('admin.html');

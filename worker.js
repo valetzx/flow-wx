@@ -1,6 +1,6 @@
 // Cloudflare Worker version of server.ts
 import * as cheerio from "cheerio";
-import mainHtml from "./main.html";
+import indexHtmlStr from "./index.html";
 import ideasHtml from "./ideas.html";
 import addHtml from "./add.html";
 import adminHtml from "./admin.html";
@@ -353,7 +353,7 @@ export default {
       .filter(Boolean);
     const cacheImgDomain = env.IMG_CACHE || "mmbiz.qpic.cn";
 
-    const indexHtml = injectConfig(mainHtml, apiDomains, imgDomains);
+    const indexHtml = injectConfig(indexHtmlStr, apiDomains, imgDomains);
     const ideasPage = injectConfig(ideasHtml, apiDomains, imgDomains);
     const addPage = injectConfig(addHtml, apiDomains, imgDomains);
     const adminPage = injectConfig(adminHtml, apiDomains, imgDomains);
