@@ -1,11 +1,19 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const outDir = path.join(__dirname, 'dist');
 await fs.rm(outDir, { recursive: true, force: true });
 await fs.mkdir(outDir, { recursive: true });
+
+try {
+  execSync('npm --prefix frontend run build', { stdio: 'inherit' });
+  await fs.cp(path.join(__dirname, 'frontend', 'dist'), path.join(outDir, 'app'), { recursive: true });
+} catch (e) {
+  console.error('React build failed:', e.message);
+}
 
 const apiDomains = (process.env.API_DOMAINS || '').split(/[\s,]+/).filter(Boolean);
 const imgDomains = (process.env.IMG_DOMAINS || '').split(/[\s,]+/).filter(Boolean);

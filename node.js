@@ -23,6 +23,8 @@ app.use((req, res, next) => {
 
 // Serve files from the static directory
 app.use(express.static(path.join(__dirname, 'static')));
+// Serve React frontend
+app.use('/app', express.static(path.join(__dirname, 'frontend', 'dist')));
 
 const apiDomains = (process.env.API_DOMAINS || '').split(/[\s,]+/).filter(Boolean);
 const imgDomains = (process.env.IMG_DOMAINS || '').split(/[\s,]+/).filter(Boolean);

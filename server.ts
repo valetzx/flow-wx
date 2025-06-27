@@ -530,6 +530,26 @@ async function handler(req: Request): Promise<Response> {
     return await proxyImage(imgUrl);
   }
 
+  // Serve React frontend
+  if (pathname.startsWith("/app")) {
+    const rel = pathname === "/app" ? "/index.html" : pathname.slice(4);
+    try {
+      const filePath = join(__dirname, "frontend", "dist", rel);
+      const ext = filePath.split(".").pop();
+      const type =
+        ext === "css" ? "text/css" :
+        ext === "js" ? "text/javascript" :
+        ext === "json" ? "application/json" :
+        "text/html";
+      const content = await Deno.readFile(filePath);
+      return new Response(content, {
+        headers: withCors({ "Content-Type": `${type}; charset=utf-8` }),
+      });
+    } catch {
+      return new Response("not found", { status: 404, headers: withCors() });
+    }
+  }
+
   // static asset files
   if ([
     "/common.css",

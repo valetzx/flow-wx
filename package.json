@@ -7,7 +7,8 @@
     "express": "^4.19.2"
   },
   "scripts": {
-    "build": "node build.js",
+    "build": "npm run build:frontend && node build.js",
+    "build:frontend": "npm --prefix frontend run build",
     "start": "node node.js"
   }
 }
