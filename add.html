@@ -556,13 +556,14 @@
       });
       saveEditGist.addEventListener('click', saveEdit);
       deleteGistBtn.addEventListener('click', deleteGist);
-      gistEditModal.addEventListener('click', e => {
-        if (e.target === gistEditModal) {
-          editIndex = null;
-          gistEditModal.classList.add('hidden');
-          gistEditModal.classList.remove('flex', 'show');
-        }
-      });
+      // 点击遮罩层时不再关闭编辑弹窗，避免误触
+      // gistEditModal.addEventListener('click', e => {
+      //   if (e.target === gistEditModal) {
+      //     editIndex = null;
+      //     gistEditModal.classList.add('hidden');
+      //     gistEditModal.classList.remove('flex', 'show');
+      //   }
+      // });
       multiTagToggle.addEventListener('change', () => {
         allowMultiTags = multiTagToggle.checked;
         localStorage.setItem('multiTags', allowMultiTags ? 'true' : 'false');
