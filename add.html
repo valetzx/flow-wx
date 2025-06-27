@@ -445,9 +445,16 @@
           return;
         }
         const progress = document.getElementById('gistsProgress');
+        let fakeProgress = 0;
+        let fakeTimer = null;
         if (progress) {
           progress.style.width = '0%';
           progress.style.opacity = '1';
+          fakeTimer = setInterval(() => {
+            fakeProgress = Math.min(fakeProgress + 0.5, 60);
+            progress.style.width = fakeProgress + '%';
+            if (fakeProgress >= 60) clearInterval(fakeTimer);
+          }, 100);
         }
         try {
           const res = await fetch('https://api.github.com/gists', {
@@ -455,6 +462,8 @@
           });
           if (!res.ok) throw new Error('network');
           const data = await res.json();
+          if (progress) clearInterval(fakeTimer);
+          const base = fakeProgress;
           let done = 0;
           const total = data.length || 1;
           for (const g of data) {
@@ -491,7 +500,10 @@
               }
             }
             done++;
-            if (progress) progress.style.width = `${Math.min(100, (done / total) * 100)}%`;
+            if (progress) {
+              const width = Math.min(100, base + (done / total) * (100 - base));
+              progress.style.width = width + '%';
+            }
           }
             save();
             updateTagsAndRender();
