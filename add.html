@@ -37,6 +37,7 @@
       <button id="addCardBtn" class="px-4 py-2 bg-primary text-white rounded hidden">新增卡片</button>
       <button id="loadGistsBtn" class="px-4 py-2 bg-secondary text-white rounded hidden">加载 Gist</button>
     </header>
+    <div id="tagList" class="flex overflow-x-auto whitespace-nowrap gap-2 px-4 mb-4 no-scrollbar max-w-screen-xl mx-auto"></div>
     <main class="px-4 max-w-screen-xl mx-auto pb-8">
       <div class="masonry" id="gallery"></div>
     </main>
@@ -63,6 +64,7 @@
       const columnCountInput = document.getElementById('columnCountInput');
       const perPageInput = document.getElementById('perPageInput');
       const multiTagToggle = document.getElementById('multiTagToggle');
+      const tagList = document.getElementById('tagList');
       const articleModal = document.getElementById('articleModal');
       const closeArticle = document.getElementById('closeArticle');
       const articleContent = document.getElementById('articleContent');
@@ -90,8 +92,10 @@
         contentEl.classList.add('mb-[72px]');
       }
       let cards = [];
+      let selectedTags = [];
+      let allowMultiTags = multiTagsSaved;
       load();
-      render();
+      updateTagsAndRender();
 
       function save() {
         localStorage.setItem('customCards', JSON.stringify(cards));
@@ -192,7 +196,7 @@
           if (confirm('确定删除？')) {
             cards.splice(index, 1);
             save();
-            render();
+            updateTagsAndRender();
           }
         });
         
@@ -211,9 +215,47 @@
         });
         return wrapper;
       }
+
+      function collectTags() {
+        const set = new Set();
+        cards.forEach(c => {
+          if (Array.isArray(c.tags)) c.tags.forEach(t => set.add(t));
+        });
+        return Array.from(set);
+      }
+
+      function renderTags(tags) {
+        tagList.innerHTML = '';
+        tags.forEach(t => {
+          const btn = document.createElement('button');
+          btn.dataset.tag = t;
+          btn.textContent = t;
+          btn.className = 'px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary bg-card';
+          tagList.appendChild(btn);
+        });
+      }
+
+      function applyFilter() {
+        render();
+        Array.from(tagList.querySelectorAll('button[data-tag]')).forEach(btn => {
+          btn.classList.remove('bg-primary', 'text-white', 'border-primary');
+          const tag = btn.dataset.tag;
+          if (tag && selectedTags.includes(tag)) {
+            btn.classList.add('bg-primary', 'text-white', 'border-primary');
+          }
+        });
+      }
+
+      function updateTagsAndRender() {
+        renderTags(collectTags());
+        applyFilter();
+      }
       function render() {
         gallery.innerHTML = '';
         cards.forEach((item, idx) => {
+          if (selectedTags.length && !selectedTags.every(t => Array.isArray(item.tags) && item.tags.includes(t))) {
+            return;
+          }
           gallery.appendChild(createCard(item, idx));
         });
       }
@@ -225,7 +267,7 @@
         const tags = (prompt('标签（用空格分隔，可选）') || '').split(/\s+/).filter(Boolean);
         cards.push({ title, description, url, tags });
         save();
-        render();
+        updateTagsAndRender();
       }
 
       async function fetchGists() {
@@ -270,8 +312,8 @@
               }
             }
           }
-          save();
-          render();
+            save();
+            updateTagsAndRender();
         } catch (e) {
           alert('拉取失败');
           console.error(e);
@@ -285,6 +327,26 @@
           handleCreate();
         });
       }
+      tagList.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-tag]');
+        if (!btn) return;
+        const tag = btn.dataset.tag;
+        if (!tag) return;
+        if (allowMultiTags) {
+          if (selectedTags.includes(tag)) {
+            selectedTags = selectedTags.filter(t => t !== tag);
+          } else {
+            selectedTags.push(tag);
+          }
+        } else {
+          if (selectedTags.length === 1 && selectedTags[0] === tag) {
+            selectedTags = [];
+          } else {
+            selectedTags = [tag];
+          }
+        }
+        applyFilter();
+      });
       moreBtn.addEventListener('click', (e) => {
         e.preventDefault();
         settingsPanel.classList.remove('hidden');
@@ -299,7 +361,12 @@
         if (e.target === articleModal) hideArticle();
       });
       multiTagToggle.addEventListener('change', () => {
-        localStorage.setItem('multiTags', multiTagToggle.checked ? 'true' : 'false');
+        allowMultiTags = multiTagToggle.checked;
+        localStorage.setItem('multiTags', allowMultiTags ? 'true' : 'false');
+        if (!allowMultiTags && selectedTags.length > 1) {
+          selectedTags = [selectedTags[0]];
+        }
+        applyFilter();
       });
       applySettings.addEventListener('click', () => {
         const cols = Math.max(1, parseInt(columnCountInput.value) || 1);
