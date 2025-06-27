@@ -22,7 +22,7 @@ app.use((req, res, next) => {
 });
 
 // Serve files from the static directory
-app.use(express.static(path.join(__dirname, 'static')));
+app.use(express.static(path.join(__dirname, 'dist')));
 
 const apiDomains = (process.env.API_DOMAINS || '').split(/[\s,]+/).filter(Boolean);
 const imgDomains = (process.env.IMG_DOMAINS || '').split(/[\s,]+/).filter(Boolean);
@@ -34,9 +34,10 @@ function injectConfig(html) {
   return html.replace('</head>', `${script}</head>`);
 }
 
-const indexHtml = injectConfig(await fs.readFile(path.join(__dirname, 'main.html'), 'utf8'));
-const ideasHtml = injectConfig(await fs.readFile(path.join(__dirname, 'ideas.html'), 'utf8'));
-const adminHtml = injectConfig(await fs.readFile(path.join(__dirname, 'admin.html'), 'utf8'));
+async function loadIndexHtml() {
+  const raw = await fs.readFile(path.join(__dirname, 'dist', 'index.html'), 'utf8');
+  return injectConfig(raw);
+}
 const swRaw = await fs.readFile(path.join(__dirname, 'static', 'sw.js'), 'utf8');
 const swHtml = `const IMG_CACHE = ${JSON.stringify(cacheImgDomain)};\n${swRaw}`;
 
@@ -463,16 +464,16 @@ app.get('/img', async (req, res) => {
   await proxyImage(imgUrl, res);
 });
 
-app.get('/@admin', (req, res) => {
-  res.type('html').send(adminHtml);
+app.get('/@admin', async (req, res) => {
+  res.type('html').send(await loadIndexHtml());
 });
 
-app.get('/ideas', (req, res) => {
-  res.type('html').send(ideasHtml);
+app.get('/ideas', async (req, res) => {
+  res.type('html').send(await loadIndexHtml());
 });
 
-app.get('*', (req, res) => {
-  res.type('html').send(indexHtml);
+app.get('*', async (req, res) => {
+  res.type('html').send(await loadIndexHtml());
 });
 
 app.listen(PORT, () => {
