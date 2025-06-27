@@ -7,7 +7,16 @@
     "express": "^4.19.2"
   },
   "scripts": {
-    "build": "node build.js",
+    "dev": "vite",
+    "build": "vite build",
+    "legacy-build": "node build.js",
     "start": "node node.js"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.6.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "typescript": "^5.8.3",
+    "vite": "^7.0.0"
   }
 }

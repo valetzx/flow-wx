@@ -41,7 +41,7 @@ Workers 会读取 `WX_URL`、`API_DOMAINS` 和 `IMG_DOMAINS` 这几个环境变�
 
 1. `npm install` 安装依赖。
 2. 根据需要设置 `API_DOMAINS`、`IMG_DOMAINS` 等环境变量。
-3. 运行 `npm run build`，构建结果位于 `dist/` 目录，可直接推送到 GitHub Pages。
+3. 运行 `npm run build` 使用 Vite 构建 React 前端，结果位于 `dist/` 目录，可直接推送到 GitHub Pages。
 
 构建后的页面会在运行时请求你配置的 API 域名，因此可将 API 部署在下文的 Cloudflare Workers 或 Node.js 服务中。
 

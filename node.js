@@ -1,6 +1,7 @@
 // node server.js
 import express from 'express';
 import fs from 'fs/promises';
+import { existsSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import * as cheerio from 'cheerio';
@@ -21,8 +22,14 @@ app.use((req, res, next) => {
   next();
 });
 
-// Serve files from the static directory
-app.use(express.static(path.join(__dirname, 'static')));
+// Serve built frontend if available
+const distDir = path.join(__dirname, 'dist');
+if (existsSync(distDir)) {
+  app.use(express.static(distDir));
+} else {
+  // fallback to legacy static files
+  app.use(express.static(path.join(__dirname, 'static')));
+}
 
 const apiDomains = (process.env.API_DOMAINS || '').split(/[\s,]+/).filter(Boolean);
 const imgDomains = (process.env.IMG_DOMAINS || '').split(/[\s,]+/).filter(Boolean);
@@ -34,7 +41,15 @@ function injectConfig(html) {
   return html.replace('</head>', `${script}</head>`);
 }
 
-const indexHtml = injectConfig(await fs.readFile(path.join(__dirname, 'main.html'), 'utf8'));
+let indexHtml;
+const distIndex = path.join(distDir, 'index.html');
+if (existsSync(distIndex)) {
+  indexHtml = await fs.readFile(distIndex, 'utf8');
+} else {
+  indexHtml = injectConfig(
+    await fs.readFile(path.join(__dirname, 'main.html'), 'utf8')
+  );
+}
 const ideasHtml = injectConfig(await fs.readFile(path.join(__dirname, 'ideas.html'), 'utf8'));
 const adminHtml = injectConfig(await fs.readFile(path.join(__dirname, 'admin.html'), 'utf8'));
 const swRaw = await fs.readFile(path.join(__dirname, 'static', 'sw.js'), 'utf8');
