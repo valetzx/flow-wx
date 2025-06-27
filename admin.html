@@ -71,7 +71,7 @@
         const r = await fetch(f.raw_url);
         if (!r.ok) continue;
         const text = await r.text();
-        let type = 'application/octet-stream';
+        let type = 'application/json';
         if (name.endsWith('.html')) type = 'text/html';
         else if (name.endsWith('.css')) type = 'text/css';
         else if (name.endsWith('.js')) type = 'text/javascript';
