@@ -36,6 +36,7 @@
   <div id="content" class="ml-[72px]">
     <header class="py-2 text-center">
       <button id="addCardBtn" class="px-4 py-2 bg-primary text-white rounded hidden">新增卡片</button>
+      <button id="newGistBtn" class="px-4 py-2 bg-primary text-white rounded ml-2 hidden">新增 Gist</button>
     </header>
     <div id="tagList" class="flex overflow-x-auto whitespace-nowrap gap-2 px-4 mb-4 no-scrollbar max-w-screen-xl mx-auto">
       <button id="loadGistsBtn" class="px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary bg-card hidden"> ↻ </button>
@@ -56,6 +57,7 @@
     window.commonReady?.then(() => {
       const gallery = document.getElementById('gallery');
       const addCardBtn = document.getElementById('addCardBtn');
+      const newGistBtn = document.getElementById('newGistBtn');
       const sidebarAddBtn = document.getElementById('addBtn');
       const settingsPanel = document.getElementById('settingsPanel');
       const moreBtn = document.getElementById('moreBtn');
@@ -77,7 +79,10 @@
 
       const savedToken = localStorage.getItem('githubToken') || '';
       if (githubTokenInput) githubTokenInput.value = savedToken;
-      if (savedToken) loadGistsBtn.classList.remove('hidden');
+      if (savedToken) {
+        loadGistsBtn.classList.remove('hidden');
+        newGistBtn.classList.remove('hidden');
+      }
 
       const savedCols = parseInt(localStorage.getItem('columnCount')) || 4;
       const savedPerPage = parseInt(localStorage.getItem('perPage')) || 30;
@@ -201,7 +206,18 @@
             updateTagsAndRender();
           }
         });
-        
+
+        if (item.gistId) {
+          const editBtn = document.createElement('button');
+          editBtn.className = 'text-xs text-primary flex-none';
+          editBtn.textContent = '编辑';
+          editBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            handleEditGist(index);
+          });
+          bottom.appendChild(editBtn);
+        }
+
         text.appendChild(h2);
         text.appendChild(p);
         text.appendChild(bottom);
@@ -273,6 +289,96 @@
         updateTagsAndRender();
       }
 
+      async function handleCreateGist() {
+        const filename = prompt('文件名，例如 note.md');
+        if (!filename) return;
+        const content = prompt('内容') || '';
+        const token = localStorage.getItem('githubToken');
+        if (!token) {
+          alert('请在设置中填写 GitHub Token');
+          return;
+        }
+        try {
+          const res = await fetch('https://api.github.com/gists', {
+            method: 'POST',
+            headers: {
+              Authorization: 'token ' + token,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              description: 'flow-gist',
+              public: false,
+              files: { [filename]: { content } }
+            })
+          });
+          if (!res.ok) throw new Error('create');
+          const data = await res.json();
+          const url = data.html_url + '?file=' + encodeURIComponent(filename);
+          const fm = parseFrontMatter(content);
+          if (fm) {
+            cards.push({
+              title: fm.title || filename,
+              description: fm.description || '',
+              url,
+              tags: fm.tags.length ? fm.tags : ['gist'],
+              content: fm.content.trim(),
+              gistId: data.id,
+              filename
+            });
+          } else {
+            cards.push({
+              title: filename,
+              description: '',
+              url,
+              tags: ['gist'],
+              content: content.trim(),
+              gistId: data.id,
+              filename
+            });
+          }
+          save();
+          updateTagsAndRender();
+        } catch (e) {
+          alert('创建失败');
+          console.error(e);
+        }
+      }
+
+      async function handleEditGist(index) {
+        const item = cards[index];
+        if (!item || !item.gistId) return;
+        const token = localStorage.getItem('githubToken');
+        if (!token) {
+          alert('请在设置中填写 GitHub Token');
+          return;
+        }
+        const content = prompt('修改内容', item.content || '');
+        if (content === null) return;
+        try {
+          const res = await fetch('https://api.github.com/gists/' + item.gistId, {
+            method: 'PATCH',
+            headers: {
+              Authorization: 'token ' + token,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ files: { [item.filename]: { content } } })
+          });
+          if (!res.ok) throw new Error('edit');
+          item.content = content;
+          const fm = parseFrontMatter(content);
+          if (fm) {
+            item.title = fm.title || item.filename;
+            item.description = fm.description || '';
+            item.tags = fm.tags.length ? fm.tags : ['gist'];
+          }
+          save();
+          updateTagsAndRender();
+        } catch (e) {
+          alert('修改失败');
+          console.error(e);
+        }
+      }
+
       async function fetchGists() {
         const token = localStorage.getItem('githubToken');
         if (!token) {
@@ -309,7 +415,9 @@
                   description: fm.description || '',
                   url,
                   tags: fm.tags.length ? fm.tags : ['gist'],
-                  content: fm.content.trim()
+                  content: fm.content.trim(),
+                  gistId: g.id,
+                  filename: name
                 });
               } else {
                 cards.push({
@@ -317,7 +425,9 @@
                   description: '',
                   url,
                   tags: ['gist'],
-                  content: text.trim()
+                  content: text.trim(),
+                  gistId: g.id,
+                  filename: name
                 });
               }
             }
@@ -337,6 +447,7 @@
         }
       }
       addCardBtn.addEventListener('click', handleCreate);
+      newGistBtn.addEventListener('click', handleCreateGist);
       loadGistsBtn.addEventListener('click', fetchGists);
       if (sidebarAddBtn) {
         sidebarAddBtn.addEventListener('click', (e) => {
@@ -394,8 +505,13 @@
         if (githubTokenInput) {
           const t = githubTokenInput.value.trim();
           localStorage.setItem('githubToken', t);
-          if (t) loadGistsBtn.classList.remove('hidden');
-          else loadGistsBtn.classList.add('hidden');
+          if (t) {
+            loadGistsBtn.classList.remove('hidden');
+            newGistBtn.classList.remove('hidden');
+          } else {
+            loadGistsBtn.classList.add('hidden');
+            newGistBtn.classList.add('hidden');
+          }
         }
         settingsPanel.classList.add('hidden');
         settingsPanel.classList.remove('flex', 'show');
