@@ -109,7 +109,33 @@
             tags: ['博客介绍']
           });
           save();
-        } 
+        }
+      }
+
+      function parseFrontMatter(text) {
+        if (!text.startsWith('---')) return null;
+        const end = text.indexOf('---', 3);
+        if (end === -1) return null;
+        const yaml = text.slice(3, end).trim();
+        const rest = text.slice(end + 3).trimStart();
+        const result = { tags: [] };
+        const lines = yaml.split(/\n+/);
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (line.startsWith('title:')) {
+            result.title = line.slice(6).trim();
+          } else if (line.startsWith('describe:')) {
+            result.description = line.slice(9).trim();
+          } else if (line.startsWith('tags:')) {
+            result.tags = [];
+            while (++i < lines.length && lines[i].trim().startsWith('-')) {
+              result.tags.push(lines[i].trim().replace(/^-\s*/, ''));
+            }
+            i--; // compensate final increment
+          }
+        }
+        result.content = rest;
+        return result;
       }
 
       function showArticle(content) {
@@ -216,22 +242,33 @@
           const data = await res.json();
           for (const g of data) {
             if (g.description !== 'flow-gist') continue;
-            if (cards.find(c => c.url === g.html_url)) continue;
-            const filenames = Object.keys(g.files).join(', ');
-            let content = '';
-            for (const f of Object.values(g.files)) {
+            for (const [name, f] of Object.entries(g.files)) {
+              const url = g.html_url + '?file=' + encodeURIComponent(name);
+              if (cards.find(c => c.url === url)) continue;
+              let text = '';
               try {
                 const r = await fetch(f.raw_url);
-                if (r.ok) content += await r.text() + '\n';
+                if (r.ok) text = await r.text();
               } catch {}
+              const fm = parseFrontMatter(text);
+              if (fm) {
+                cards.push({
+                  title: fm.title || name,
+                  description: fm.description || '',
+                  url,
+                  tags: fm.tags.length ? fm.tags : ['gist'],
+                  content: fm.content.trim()
+                });
+              } else {
+                cards.push({
+                  title: name,
+                  description: '',
+                  url,
+                  tags: ['gist'],
+                  content: text.trim()
+                });
+              }
             }
-            cards.push({
-              title: filenames,
-              description: '',
-              url: g.html_url,
-              tags: ['gist'],
-              content: content.trim()
-            });
           }
           save();
           render();
