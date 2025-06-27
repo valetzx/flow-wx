@@ -35,6 +35,7 @@
   <div id="content" class="ml-[72px]">
     <header class="py-2 text-center">
       <button id="addCardBtn" class="px-4 py-2 bg-primary text-white rounded hidden">新增卡片</button>
+      <button id="loadGistsBtn" class="px-4 py-2 bg-secondary text-white rounded hidden">加载 Gist</button>
     </header>
     <main class="px-4 max-w-screen-xl mx-auto pb-8">
       <div class="masonry" id="gallery"></div>
@@ -51,6 +52,8 @@
       const moreBtn = document.getElementById('moreBtn');
       const closeSettings = document.getElementById('closeSettings');
       const applySettings = document.getElementById('applySettings');
+      const loadGistsBtn = document.getElementById('loadGistsBtn');
+      const githubTokenInput = document.getElementById('githubTokenInput');
       const columnCountInput = document.getElementById('columnCountInput');
       const perPageInput = document.getElementById('perPageInput');
       const multiTagToggle = document.getElementById('multiTagToggle');
@@ -58,6 +61,10 @@
       const navEl = document.querySelector('nav');
       const contentEl = document.getElementById('content');
       const isMobile = /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
+
+      const savedToken = localStorage.getItem('githubToken') || '';
+      if (githubTokenInput) githubTokenInput.value = savedToken;
+      if (savedToken) loadGistsBtn.classList.remove('hidden');
 
       const savedCols = parseInt(localStorage.getItem('columnCount')) || 4;
       const savedPerPage = parseInt(localStorage.getItem('perPage')) || 30;
@@ -164,7 +171,38 @@
         save();
         render();
       }
+
+      async function fetchGists() {
+        const token = localStorage.getItem('githubToken');
+        if (!token) {
+          alert('请在设置中填写 GitHub Token');
+          return;
+        }
+        try {
+          const res = await fetch('https://api.github.com/gists', {
+            headers: { Authorization: 'token ' + token }
+          });
+          if (!res.ok) throw new Error('network');
+          const data = await res.json();
+          data.forEach(g => {
+            if (!cards.find(c => c.url === g.html_url)) {
+              cards.push({
+                title: g.description || 'Gist',
+                description: Object.keys(g.files).join(', '),
+                url: g.html_url,
+                tags: ['gist']
+              });
+            }
+          });
+          save();
+          render();
+        } catch (e) {
+          alert('拉取失败');
+          console.error(e);
+        }
+      }
       addCardBtn.addEventListener('click', handleCreate);
+      loadGistsBtn.addEventListener('click', fetchGists);
       if (sidebarAddBtn) {
         sidebarAddBtn.addEventListener('click', (e) => {
           e.preventDefault();
@@ -189,11 +227,17 @@
         gallery.style.columnCount = String(cols);
         localStorage.setItem('columnCount', String(cols));
         localStorage.setItem('perPage', String(perPage));
+        if (githubTokenInput) {
+          const t = githubTokenInput.value.trim();
+          localStorage.setItem('githubToken', t);
+          if (t) loadGistsBtn.classList.remove('hidden');
+          else loadGistsBtn.classList.add('hidden');
+        }
         settingsPanel.classList.add('hidden');
         settingsPanel.classList.remove('flex', 'show');
       });
       clearCacheBtn.addEventListener('click', async () => {
-        ['customCards', 'wxData', 'wxDataNew', 'columnCount', 'perPage'].forEach((k) => localStorage.removeItem(k));
+        ['customCards', 'wxData', 'wxDataNew', 'columnCount', 'perPage', 'githubToken'].forEach((k) => localStorage.removeItem(k));
         if ('caches' in window) {
           const names = await caches.keys();
           await Promise.all(names.map((n) => caches.delete(n)));
