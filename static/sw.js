@@ -46,6 +46,8 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(cacheThenNetwork(event.request));
   } else if (url.pathname === "/update") {
     event.respondWith(cacheOnly(event.request));
+  } else if (url.pathname === "/flowInject.json") {
+    event.respondWith(cacheOnly(event.request));
   } else if (/^\/web\.(html|css|js)$/.test(url.pathname)) {
     event.respondWith(cacheOnly(event.request));
   }
