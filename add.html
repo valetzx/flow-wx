@@ -530,7 +530,7 @@
           const gist = data.find(g => g.description === 'flow-inject');
           if (!gist) return;
           const cache = await caches.open('wx-cache-v2');
-          const list = [];
+
           for (const [name, f] of Object.entries(gist.files)) {
             const r = await fetch(f.raw_url);
             if (!r.ok) continue;
@@ -545,14 +545,8 @@
                 'X-Cache-Timestamp': Date.now().toString()
               }
             }));
-            list.push('/' + name);
+
           }
-          await cache.put('/flowInject.json', new Response(JSON.stringify(list), {
-            headers: {
-              'Content-Type': 'application/json; charset=utf-8',
-              'X-Cache-Timestamp': Date.now().toString()
-            }
-          }));
         } catch (e) {
           console.error('preload', e);
         }
