@@ -139,6 +139,11 @@ try {
   const localText = await Deno.readTextFile(join(__dirname, "article.txt"));
   articles = parseArticles(localText);
 }
+articles.sort((a, b) => {
+  const aLink = (a.abbrlink || '').toString();
+  const bLink = (b.abbrlink || '').toString();
+  return aLink.localeCompare(bLink);
+});
 
 async function fetchBiliTitle(url: string): Promise<string> {
   const controller = new AbortController();

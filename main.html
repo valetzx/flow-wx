@@ -218,11 +218,16 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       function buildItems(data) {
+        const entries = Object.entries(data).sort((a, b) => {
+          const aLink = (a[1].abbrlink || '').toString();
+          const bLink = (b[1].abbrlink || '').toString();
+          return aLink.localeCompare(bLink);
+        });
         const items = [];
         for (const [title, {
             description,
             images
-          }] of Object.entries(data)) {
+          }] of entries) {
           items.push({
             type: 'title',
             html: `<div class="masonry-item">

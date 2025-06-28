@@ -466,8 +466,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
         function buildItems(data) {
+          const entries = Object.entries(data).sort((a, b) => {
+            const aLink = (a[1].abbrlink || '').toString();
+            const bLink = (b[1].abbrlink || '').toString();
+            return aLink.localeCompare(bLink);
+          });
           const items = [];
-          for (const [title, { description, images, url, tags, abbrlink }] of Object.entries(data)) {
+          for (const [title, { description, images, url, tags, abbrlink }] of entries) {
             const imgSrc = Array.isArray(images) && images.length > 0 ? images[Math.floor(Math.random() * images.length)] : null;
             items.push({ title, description, imgSrc, url, tags, abbrlink });
           }

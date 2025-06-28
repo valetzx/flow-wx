@@ -110,6 +110,11 @@ async function getArticles(env) {
     if (articles.length === 0) {
       articles = parseArticles(articleText);
     }
+    articles.sort((a, b) => {
+      const aLink = (a.abbrlink || '').toString();
+      const bLink = (b.abbrlink || '').toString();
+      return aLink.localeCompare(bLink);
+    });
 
     async function fetchTitle(url) {
       const controller = new AbortController();
