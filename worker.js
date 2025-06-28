@@ -141,11 +141,11 @@ async function getArticles(env) {
   return articles;
 }
 
-function injectConfig(html, apiDomains, imgDomains) {
-  if (!apiDomains.length && !imgDomains.length) return html;
+function injectConfig(html, apiDomains, imgDomains, notionPage = '') {
+  if (!apiDomains.length && !imgDomains.length && !notionPage) return html;
   const script = `<script>window.API_DOMAINS=${JSON.stringify(
     apiDomains,
-  )};window.IMG_DOMAINS=${JSON.stringify(imgDomains)};</script>`;
+  )};window.IMG_DOMAINS=${JSON.stringify(imgDomains)};window.NOTION_PAGE=${JSON.stringify(notionPage)};</script>`;
   return html.replace("</head>", `${script}</head>`);
 }
 
@@ -358,10 +358,11 @@ export default {
       .filter(Boolean);
     const cacheImgDomain = env.IMG_CACHE || "mmbiz.qpic.cn";
 
-    const indexHtml = injectConfig(mainHtml, apiDomains, imgDomains);
-    const ideasPage = injectConfig(ideasHtml, apiDomains, imgDomains);
-    const addPage = injectConfig(addHtml, apiDomains, imgDomains);
-    const adminPage = injectConfig(adminHtml, apiDomains, imgDomains);
+    const notionPage = env.NOTION_PAGE || '';
+    const indexHtml = injectConfig(mainHtml, apiDomains, imgDomains, notionPage);
+    const ideasPage = injectConfig(ideasHtml, apiDomains, imgDomains, notionPage);
+    const addPage = injectConfig(addHtml, apiDomains, imgDomains, notionPage);
+    const adminPage = injectConfig(adminHtml, apiDomains, imgDomains, notionPage);
 
     const articles = await getArticles(env);
 
@@ -418,6 +419,22 @@ export default {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         dailyCache = { data, timestamp: Date.now() };
+        return json(data);
+      } catch (err) {
+        return json({ error: err.message }, 500);
+      }
+    }
+
+    if (pathname === "/api/notion") {
+      const pageUrl = searchParams.get("url");
+      if (!pageUrl) return new Response("missing url", { status: 400, headers: withCors() });
+      try {
+        const match = pageUrl.match(/([0-9a-fA-F]{32})/);
+        if (!match) throw new Error("invalid url");
+        const api = `https://notion-api.splitbee.io/v1/table/${match[1]}`;
+        const r = await fetch(api);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
         return json(data);
       } catch (err) {
         return json({ error: err.message }, 500);
@@ -530,7 +547,7 @@ self.addEventListener("activate", (event) => {
 });
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
-  if (url.pathname === "/api/wx" || url.pathname === "/api/bil" || url.pathname === "/api/daily") {
+  if (url.pathname === "/api/wx" || url.pathname === "/api/bil" || url.pathname === "/api/daily" || url.pathname === "/api/notion") {
     if (event.request.headers.get("x-skip-cache")) {
       event.respondWith(fetchAndCache(event.request));
     } else {

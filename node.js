@@ -27,10 +27,11 @@ app.use(express.static(path.join(__dirname, 'static')));
 const apiDomains = (process.env.API_DOMAINS || '').split(/[\s,]+/).filter(Boolean);
 const imgDomains = (process.env.IMG_DOMAINS || '').split(/[\s,]+/).filter(Boolean);
 const cacheImgDomain = process.env.IMG_CACHE || '';
+const notionPage = process.env.NOTION_PAGE || '';
 
 function injectConfig(html) {
-  if (!apiDomains.length && !imgDomains.length) return html;
-  const script = `<script>window.API_DOMAINS=${JSON.stringify(apiDomains)};window.IMG_DOMAINS=${JSON.stringify(imgDomains)};</script>`;
+  if (!apiDomains.length && !imgDomains.length && !notionPage) return html;
+  const script = `<script>window.API_DOMAINS=${JSON.stringify(apiDomains)};window.IMG_DOMAINS=${JSON.stringify(imgDomains)};window.NOTION_PAGE=${JSON.stringify(notionPage)};</script>`;
   return html.replace('</head>', `${script}</head>`);
 }
 
@@ -410,6 +411,22 @@ app.get('/api/daily', async (req, res) => {
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const data = await r.json();
     dailyCache = { data, timestamp: Date.now() };
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/notion', async (req, res) => {
+  const pageUrl = req.query.url;
+  if (!pageUrl) return res.status(400).send('missing url');
+  try {
+    const match = String(pageUrl).match(/([0-9a-fA-F]{32})/);
+    if (!match) throw new Error('invalid url');
+    const api = `https://notion-api.splitbee.io/v1/table/${match[1]}`;
+    const r = await fetch(api);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
     res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });

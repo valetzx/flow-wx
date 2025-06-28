@@ -33,8 +33,8 @@ const imgDomains = imgDomainsEnv
 const cacheImgDomain = Deno.env.get("IMG_CACHE") || "";
 
 function injectConfig(html: string): string {
-  if (apiDomains.length === 0 && imgDomains.length === 0) return html;
-  const script = `<script>window.API_DOMAINS=${JSON.stringify(apiDomains)};window.IMG_DOMAINS=${JSON.stringify(imgDomains)};</script>`;
+  if (apiDomains.length === 0 && imgDomains.length === 0 && !Deno.env.get("NOTION_PAGE")) return html;
+  const script = `<script>window.API_DOMAINS=${JSON.stringify(apiDomains)};window.IMG_DOMAINS=${JSON.stringify(imgDomains)};window.NOTION_PAGE=${JSON.stringify(Deno.env.get("NOTION_PAGE") || "")};</script>`;
   return html.replace("</head>", `${script}</head>`);
 }
 
@@ -516,6 +516,22 @@ async function handler(req: Request): Promise<Response> {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       dailyCache = { data, timestamp: Date.now() };
+      return json(data);
+    } catch (err) {
+      return json({ error: err.message }, 500);
+    }
+  }
+
+  if (pathname === "/api/notion") {
+    const pageUrl = searchParams.get("url");
+    if (!pageUrl) return new Response("missing url", { status: 400, headers: withCors() });
+    try {
+      const match = pageUrl.match(/([0-9a-fA-F]{32})/);
+      if (!match) throw new Error("invalid url");
+      const api = `https://notion-api.splitbee.io/v1/table/${match[1]}`;
+      const res = await fetch(api);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
       return json(data);
     } catch (err) {
       return json({ error: err.message }, 500);

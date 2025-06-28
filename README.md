@@ -7,6 +7,9 @@
 | `WX_URL` | `必填` | 获取的微信公众号文章列表，如果不填会从本地 `article.txt` 读取 |
 | `API_DOMAINS` | `可选` | 提供 `/api/wx`、`/api/article` 和 `/api/daily` 的备用域名，多个域名用逗号或空格分隔 |
 | `IMG_DOMAINS` | `可选` | 图片代理 `/img` 的备用域名，多个域名用逗号或空格分隔 |
+| `NOTION_PAGE` | `可选` | 默认加载的 Notion 表格链接 |
+
+设置 `NOTION_PAGE` 或在页面的“设置”面板中填写分享链接，即可从公开的 Notion 表格加载数据并展示到图集。
 
 ## 部署到 Deno  (推荐)
 

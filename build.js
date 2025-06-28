@@ -10,10 +10,11 @@ await fs.mkdir(outDir, { recursive: true });
 const apiDomains = (process.env.API_DOMAINS || '').split(/[\s,]+/).filter(Boolean);
 const imgDomains = (process.env.IMG_DOMAINS || '').split(/[\s,]+/).filter(Boolean);
 const cacheImgDomain = process.env.IMG_CACHE || '';
+const notionPage = process.env.NOTION_PAGE || '';
 
 function injectConfig(html) {
-  if (!apiDomains.length && !imgDomains.length) return html;
-  const script = `<script>window.API_DOMAINS=${JSON.stringify(apiDomains)};window.IMG_DOMAINS=${JSON.stringify(imgDomains)};</script>`;
+  if (!apiDomains.length && !imgDomains.length && !notionPage) return html;
+  const script = `<script>window.API_DOMAINS=${JSON.stringify(apiDomains)};window.IMG_DOMAINS=${JSON.stringify(imgDomains)};window.NOTION_PAGE=${JSON.stringify(notionPage)};</script>`;
   return html.replace('</head>', `${script}</head>`);
 }
 
