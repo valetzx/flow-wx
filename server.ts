@@ -5,7 +5,7 @@ import {
   fromFileUrl,
   join,
 } from "https://deno.land/std@0.224.0/path/mod.ts";
-import cheerio from "npm:cheerio@1.0.0-rc.12";
+import cheerio from "https://esm.sh/cheerio@1.0.0-rc.12";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
