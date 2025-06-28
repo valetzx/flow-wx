@@ -749,7 +749,18 @@ document.addEventListener('DOMContentLoaded', () => {
   <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(console.error);
+          navigator.serviceWorker.register('/sw.js').then(() => {
+            const sendInject = () => {
+              const val = localStorage.getItem('injectFlow');
+              if (!val) return;
+              const paths = val.split(',').map(p => p.trim()).filter(Boolean);
+              if (navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({ type: 'injectFlow', paths });
+              }
+            };
+            navigator.serviceWorker.ready.then(sendInject);
+            navigator.serviceWorker.addEventListener('controllerchange', sendInject);
+          }).catch(console.error);
         });
       }
   </script>

@@ -1,6 +1,12 @@
 const CACHE_NAME = "wx-cache-v2";
 const CACHE_AGE = 6 * 24 * 60 * 60 * 1000;
 const TS_HEADER = "X-Cache-Timestamp";
+let injectPaths = [];
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'injectFlow') {
+    injectPaths = Array.isArray(event.data.paths) ? event.data.paths : [];
+  }
+});
 self.addEventListener("install", (event) => {
   self.skipWaiting();
   event.waitUntil(caches.open(CACHE_NAME));
@@ -47,6 +53,8 @@ self.addEventListener("fetch", (event) => {
   } else if (url.pathname === "/update") {
     event.respondWith(cacheOnly(event.request));
   } else if (url.pathname === "/flowInject.json") {
+    event.respondWith(cacheOnly(event.request));
+  } else if (injectPaths.includes(url.pathname)) {
     event.respondWith(cacheOnly(event.request));
   } else if (/^\/web\.(html|css|js)$/.test(url.pathname)) {
     event.respondWith(cacheOnly(event.request));

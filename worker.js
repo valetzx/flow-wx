@@ -506,6 +506,12 @@ const IMG_CACHE = ${JSON.stringify(cacheImgDomain)};
 const CACHE_NAME = "wx-cache-v2";
 const CACHE_AGE = 6 * 24 * 60 * 60 * 1000;
 const TS_HEADER = "X-Cache-Timestamp";
+let injectPaths = [];
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'injectFlow') {
+    injectPaths = Array.isArray(event.data.paths) ? event.data.paths : [];
+  }
+});
 self.addEventListener("install", (event) => {
   self.skipWaiting();
   event.waitUntil(caches.open(CACHE_NAME));
@@ -549,6 +555,8 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(cacheThenNetwork(event.request));
   } else if (url.pathname === "/add") {
     event.respondWith(cacheThenNetwork(event.request));
+  } else if (injectPaths.includes(url.pathname)) {
+    event.respondWith(cacheOnly(event.request));
   }
 });
 
