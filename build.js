@@ -91,6 +91,11 @@ try {
   const localText = await fs.readFile(path.join(__dirname, 'article.txt'), 'utf8');
   articles = parseArticles(localText);
 }
+articles.sort((a, b) => {
+  const aLink = (a.abbrlink || '').toString();
+  const bLink = (b.abbrlink || '').toString();
+  return aLink.localeCompare(bLink);
+});
 
 await fs.mkdir(path.join(outDir, 'api'), { recursive: true });
 
