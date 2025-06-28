@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
         attempt();
       }
       async function fetchWithFallback(path, options = {}) {
-        const isApi = path.startsWith('/api/wx') || path.startsWith('/api/bil') || path.startsWith('/api/wx.json') || path.startsWith('/api/daily') || path.startsWith('/a/');
+        const isApi = path.startsWith('/api/wx') || path.startsWith('/api/bil') || path.startsWith('/api/notion') || path.startsWith('/api/wx.json') || path.startsWith('/api/daily') || path.startsWith('/a/');
         const domains = isApi ? apiDomains : imgDomains;
         for (const d of domains) {
           try {
@@ -340,6 +340,15 @@ document.addEventListener('DOMContentLoaded', () => {
           headers: { 'x-skip-cache': '1' },
         });
         const dataWx = resWx.ok ? await resWx.json() : {};
+        let dataNotion = {};
+        try {
+          const resNotion = await fetchWithFallback('/api/notion', {
+            headers: { 'x-skip-cache': '1' },
+          });
+          if (resNotion.ok) dataNotion = await resNotion.json();
+        } catch (e) {
+          console.error('加载 notion 失败:', e);
+        }
         let dataBil = {};
         try {
           const resBil = await fetchWithFallback('/api/bil', {
@@ -349,7 +358,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) {
           console.error('加载 bilibili 失败:', e);
         }
-        return Object.assign({}, dataWx, dataBil);
+        return Object.assign({}, dataWx, dataBil, dataNotion);
       }
       async function hasWxCache() {
         if (!("caches" in window)) return false;

@@ -5,6 +5,7 @@
 | 变量 | 默认值 | 说明 |
 | --- | --- | --- |
 | `WX_URL` | `必填` | 获取的微信公众号文章列表，如果不填会从本地 `article.txt` 读取 |
+| `NOTION_PAGE_ID` | `可选` | 公开的 Notion 表格页面 ID，用于额外的图集数据 |
 | `API_DOMAINS` | `可选` | 提供 `/api/wx`、`/api/article` 和 `/api/daily` 的备用域名，多个域名用逗号或空格分隔 |
 | `IMG_DOMAINS` | `可选` | 图片代理 `/img` 的备用域名，多个域名用逗号或空格分隔 |
 
@@ -35,7 +36,7 @@ date: 2024-01-01 12:00:00
 
 项目中的 HTML 与文本文件会在构建时作为字符串引入，规则已在 `wrangler.toml` 中配置。
 
-Workers 会读取 `WX_URL`、`API_DOMAINS` 和 `IMG_DOMAINS` 这几个环境变量。
+Workers 会读取 `WX_URL`、`NOTION_PAGE_ID`、`API_DOMAINS` 和 `IMG_DOMAINS` 这几个环境变量。
 
 ## 构建静态站点并部署到 GitHub Pages
 

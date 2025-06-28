@@ -74,9 +74,13 @@ function randomSentence() {
 }
 // 微信文章列表
 const WX_URL = Deno.env.get("WX_URL") || "article.txt";
+// Notion page id for extra articles
+const NOTION_PAGE_ID = Deno.env.get("NOTION_PAGE_ID") || "";
 const DAILY_URL = "https://www.cikeee.com/api?app_key=pub_23020990025";
 const DAILY_TTL = 60 * 60 * 8000;
 let dailyCache: { data: unknown; timestamp: number } = { data: null, timestamp: 0 };
+const NOTION_TTL = 60 * 60 * 1000;
+let notionCache: { data: Record<string, unknown> | null; timestamp: number } = { data: null, timestamp: 0 };
 
 interface ArticleMeta {
   url: string;
@@ -144,6 +148,41 @@ articles.sort((a, b) => {
   const bLink = (b.abbrlink || '').toString();
   return aLink.localeCompare(bLink);
 });
+
+async function fetchNotionData(): Promise<Record<string, unknown>> {
+  if (!NOTION_PAGE_ID) return {};
+  if (notionCache.data && Date.now() - notionCache.timestamp < NOTION_TTL) {
+    return notionCache.data;
+  }
+  const res = await fetch(
+    `https://notion-api.splitbee.io/v1/table/${NOTION_PAGE_ID}`,
+  );
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const rows = await res.json();
+  const data: Record<string, unknown> = {};
+  for (const row of rows) {
+    const title = row.title || row.Title || row.name || row.Name;
+    if (!title) continue;
+    const images: string[] = [];
+    const imgField = row.images || row.Images || row.image || row.Image;
+    if (Array.isArray(imgField)) {
+      for (const i of imgField) {
+        if (typeof i === "string") images.push(i);
+        else if (i && typeof i.url === "string") images.push(i.url);
+      }
+    }
+    data[title] = {
+      description: row.description || row.Description,
+      images,
+      url: row.url || row.URL,
+      tags: row.tags || row.Tags,
+      abbrlink: row.abbrlink || row.slug || row.Slug,
+      date: row.date || row.Date,
+    };
+  }
+  notionCache = { data, timestamp: Date.now() };
+  return data;
+}
 
 async function fetchBiliTitle(url: string): Promise<string> {
   const controller = new AbortController();
@@ -501,6 +540,15 @@ async function handler(req: Request): Promise<Response> {
 
       bilCache = { data: merged, timestamp: Date.now() };
       return json(merged);
+    } catch (err) {
+      return json({ error: err.message }, 500);
+    }
+  }
+
+  if (pathname === "/api/notion") {
+    try {
+      const data = await fetchNotionData();
+      return json(data);
     } catch (err) {
       return json({ error: err.message }, 500);
     }

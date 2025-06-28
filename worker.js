@@ -26,6 +26,7 @@ function withCors(headers = {}) {
 const DAILY_URL = "https://www.cikeee.com/api?app_key=pub_23020990025";
 const DAILY_TTL = 60 * 60 * 8000;
 const CACHE_TTL = 60 * 60 * 1000;
+const NOTION_TTL = 60 * 60 * 1000;
 
 const fallbackSentences = [
   "小荷才露尖尖角",
@@ -52,6 +53,7 @@ let articlesInit = false;
 let wxCache = { data: null, timestamp: 0 };
 let bilCache = { data: null, timestamp: 0 };
 let dailyCache = { data: null, timestamp: 0 };
+let notionCache = { data: null, timestamp: 0 };
 
 function parseArticles(text) {
   const trimmed = text.trim();
@@ -104,6 +106,27 @@ async function getArticles(env) {
         if (res.ok) {
           const txt = await res.text();
           articles = parseArticles(txt);
+        }
+      } catch {}
+    }
+    if (env.NOTION_PAGE_ID) {
+      try {
+        const res = await fetch(
+          `https://notion-api.splitbee.io/v1/table/${env.NOTION_PAGE_ID}`,
+        );
+        if (res.ok) {
+          const rows = await res.json();
+          rows.forEach((row) => {
+            const art = {
+              url: row.url || row.URL,
+              title: row.title || row.Title || row.name || row.Name,
+              tags: row.tags || row.Tags,
+              abbrlink: row.abbrlink || row.slug || row.Slug,
+              describe: row.description || row.Description,
+              date: row.date || row.Date,
+            };
+            if (art.url) articles.push(art);
+          });
         }
       } catch {}
     }
@@ -163,6 +186,41 @@ function proxifyHtml(html) {
     $(el).attr('style', style);
   });
   return $.html();
+}
+
+async function fetchNotionData(env) {
+  if (!env.NOTION_PAGE_ID) return {};
+  if (notionCache.data && Date.now() - notionCache.timestamp < NOTION_TTL) {
+    return notionCache.data;
+  }
+  const res = await fetch(
+    `https://notion-api.splitbee.io/v1/table/${env.NOTION_PAGE_ID}`,
+  );
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const rows = await res.json();
+  const data = {};
+  rows.forEach((row) => {
+    const title = row.title || row.Title || row.name || row.Name;
+    if (!title) return;
+    const images = [];
+    const imgField = row.images || row.Images || row.image || row.Image;
+    if (Array.isArray(imgField)) {
+      for (const i of imgField) {
+        if (typeof i === 'string') images.push(i);
+        else if (i && typeof i.url === 'string') images.push(i.url);
+      }
+    }
+    data[title] = {
+      description: row.description || row.Description,
+      images,
+      url: row.url || row.URL,
+      tags: row.tags || row.Tags,
+      abbrlink: row.abbrlink || row.slug || row.Slug,
+      date: row.date || row.Date,
+    };
+  });
+  notionCache = { data, timestamp: Date.now() };
+  return data;
 }
 
 async function buildArticlePage(url, abbr) {
@@ -402,8 +460,17 @@ export default {
             merged[`(抓取失败) ${bilArticles[i].url}`] = { error: String(r.reason) };
           }
         });
-        bilCache = { data: merged, timestamp: Date.now() };
-        return json(merged);
+      bilCache = { data: merged, timestamp: Date.now() };
+      return json(merged);
+    } catch (err) {
+      return json({ error: err.message }, 500);
+    }
+    }
+
+    if (pathname === "/api/notion") {
+      try {
+        const data = await fetchNotionData(env);
+        return json(data);
       } catch (err) {
         return json({ error: err.message }, 500);
       }

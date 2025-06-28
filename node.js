@@ -60,9 +60,12 @@ function randomSentence() {
 }
 
 const WX_URL = process.env.WX_URL || path.join(__dirname, 'article.txt');
+const NOTION_PAGE_ID = process.env.NOTION_PAGE_ID || '';
 const DAILY_URL = 'https://www.cikeee.com/api?app_key=pub_23020990025';
 const DAILY_TTL = 60 * 60 * 8000;
 let dailyCache = { data: null, timestamp: 0 };
+const NOTION_TTL = 60 * 60 * 1000;
+let notionCache = { data: null, timestamp: 0 };
 
 function parseArticles(text) {
   const trimmed = text.trim();
@@ -108,6 +111,25 @@ try {
 } catch {
   const localText = await fs.readFile(path.join(__dirname, 'article.txt'), 'utf8');
   articles = parseArticles(localText);
+}
+if (NOTION_PAGE_ID) {
+  try {
+    const res = await fetch(`https://notion-api.splitbee.io/v1/table/${NOTION_PAGE_ID}`);
+    if (res.ok) {
+      const rows = await res.json();
+      rows.forEach(row => {
+        const art = {
+          url: row.url || row.URL,
+          title: row.title || row.Title || row.name || row.Name,
+          tags: row.tags || row.Tags,
+          abbrlink: row.abbrlink || row.slug || row.Slug,
+          describe: row.description || row.Description,
+          date: row.date || row.Date,
+        };
+        if (art.url) articles.push(art);
+      });
+    }
+  } catch {}
 }
 articles.sort((a, b) => {
   const aLink = (a.abbrlink || '').toString();
@@ -258,6 +280,39 @@ function proxifyHtml(html) {
   return $.html();
 }
 
+async function fetchNotionData() {
+  if (!NOTION_PAGE_ID) return {};
+  if (notionCache.data && Date.now() - notionCache.timestamp < NOTION_TTL) {
+    return notionCache.data;
+  }
+  const res = await fetch(`https://notion-api.splitbee.io/v1/table/${NOTION_PAGE_ID}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const rows = await res.json();
+  const data = {};
+  rows.forEach(row => {
+    const title = row.title || row.Title || row.name || row.Name;
+    if (!title) return;
+    const images = [];
+    const imgField = row.images || row.Images || row.image || row.Image;
+    if (Array.isArray(imgField)) {
+      for (const i of imgField) {
+        if (typeof i === 'string') images.push(i);
+        else if (i && typeof i.url === 'string') images.push(i.url);
+      }
+    }
+    data[title] = {
+      description: row.description || row.Description,
+      images,
+      url: row.url || row.URL,
+      tags: row.tags || row.Tags,
+      abbrlink: row.abbrlink || row.slug || row.Slug,
+      date: row.date || row.Date,
+    };
+  });
+  notionCache = { data, timestamp: Date.now() };
+  return data;
+}
+
 async function buildArticlePage(url, abbr, res) {
   try {
     const r = await fetch(url, {
@@ -396,6 +451,15 @@ app.get('/api/bil', async (_req, res) => {
     });
     bilCache = { data: merged, timestamp: Date.now() };
     res.json(merged);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/notion', async (req, res) => {
+  try {
+    const data = await fetchNotionData();
+    res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
