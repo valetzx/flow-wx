@@ -305,18 +305,20 @@ document.getElementById('deleteArticle').addEventListener('click', () => {
   updateArticleText();
 });
 
-['detailUrl','detailTitle','detailTags','detailAbbrlink','detailDescribe','detailDate']
-  .forEach(id => {
-    document.getElementById(id).addEventListener('input', () => {
-      if (currentIndex < 0) return;
-      const art = articleArr[currentIndex];
-      art.url = document.getElementById('detailUrl').value;
-      art.title = document.getElementById('detailTitle').value;
-      art.tags = document.getElementById('detailTags').value.split(/[,\n]+/).map(t => t.trim()).filter(Boolean);
-      art.abbrlink = document.getElementById('detailAbbrlink').value;
-      art.describe = document.getElementById('detailDescribe').value;
-      art.date = document.getElementById('detailDate').value;
-      updateArticleText();
-      renderList();
-    });
-  });
+
+document.getElementById('saveArticle').addEventListener('click', () => {
+  if (currentIndex < 0) return;
+  const art = articleArr[currentIndex];
+  art.url = document.getElementById('detailUrl').value;
+  art.title = document.getElementById('detailTitle').value;
+  art.tags = document.getElementById('detailTags').value.split(/[,\n]+/).map(t => t.trim()).filter(Boolean);
+  art.abbrlink = document.getElementById('detailAbbrlink').value;
+  art.describe = document.getElementById('detailDescribe').value;
+  art.date = document.getElementById('detailDate').value;
+  sortArticles();
+  const newIndex = articleArr.indexOf(art);
+  currentIndex = newIndex;
+  updateArticleText();
+  renderList();
+  selectArticle(currentIndex);
+});
