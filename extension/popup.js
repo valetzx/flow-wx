@@ -102,13 +102,40 @@ async function scrapeBili(article) {
   };
 }
 
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === name);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => {
+    c.classList.toggle('active', c.id === name + 'Tab');
+  });
+}
+
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => switchTab(t.dataset.tab));
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  chrome.storage.local.get('articleText', res => {
+    if (res.articleText) document.getElementById('articleText').value = res.articleText;
+  });
+});
+
+document.getElementById('fileInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const text = await file.text();
+  document.getElementById('articleText').value = text;
+  chrome.storage.local.set({ articleText: text });
+});
+
 document.getElementById('generateBtn').addEventListener('click', async () => {
-  const file = document.getElementById('fileInput').files[0];
-  if (!file) {
-    alert('Please select article.txt');
+  const text = document.getElementById('articleText').value.trim();
+  if (!text) {
+    alert('Please input article.txt');
     return;
   }
-  const text = await file.text();
+  chrome.storage.local.set({ articleText: text });
   const articles = parseArticles(text);
   const wxArticles = articles.filter(a => a.url.includes('mp.weixin.qq.com'));
   const bilArticles = articles.filter(a => a.url.includes('bilibili.com'));
@@ -139,6 +166,7 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
 
   window.currentWx = wxMerged;
   window.currentBil = bilMerged;
+  switchTab('result');
 });
 
 document.getElementById('downloadWx').addEventListener('click', () => {
