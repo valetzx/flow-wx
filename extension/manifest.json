@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "WX API Generator",
+  "description": "Generate /api/wx from local article.txt",
+  "version": "1.0",
+  "permissions": ["storage"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
