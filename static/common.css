@@ -79,6 +79,7 @@
       margin-bottom: 1rem;
       border-radius: 1rem;
       overflow: hidden;
+      width: 100%;
     }
 
     .sidebar-link {
@@ -221,6 +222,7 @@
     .masonry-item {
       background-color: rgb(var(--card));
       color: rgb(var(--on-surface));
+      width: 100%;
     }
 
     .masonry-item h2 {
