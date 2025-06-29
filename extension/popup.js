@@ -244,6 +244,15 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
   document.getElementById('wxOutput').textContent = includeWx ? JSON.stringify(wxMerged, null, 2) : '';
   document.getElementById('bilOutput').textContent = includeBil ? JSON.stringify(bilMerged, null, 2) : '';
 
+  const combined = { ...wxMerged, ...bilMerged };
+  if (window.sharedStorage && typeof window.sharedStorage.set === 'function') {
+    window.sharedStorage.set('wxLocal', JSON.stringify(combined)).catch(() => {
+      chrome.storage.local.set({ wxLocal: combined });
+    });
+  } else {
+    chrome.storage.local.set({ wxLocal: combined });
+  }
+
   window.currentWx = includeWx ? wxMerged : null;
   window.currentBil = includeBil ? bilMerged : null;
   switchTab('result');

@@ -170,6 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
       let selectedTags = [];
       let searchTerm = '';
       let allowMultiTags = multiTagsSaved;
+      const defaultSource = localStorage.getItem('dataSource') || 'wxData';
       multiTagToggle.addEventListener('change', () => {
         allowMultiTags = multiTagToggle.checked;
         localStorage.setItem('multiTags', allowMultiTags ? 'true' : 'false');
@@ -335,6 +336,20 @@ document.addEventListener('DOMContentLoaded', () => {
         renderTags(collectTags(data));
         applyFilter();
       }
+
+      async function loadShared(key) {
+        if (window.sharedStorage && typeof window.sharedStorage.get === 'function') {
+          try {
+            const val = await window.sharedStorage.get(key);
+            if (val) return JSON.parse(val);
+          } catch {}
+        }
+        const local = localStorage.getItem(key);
+        if (local) {
+          try { return JSON.parse(local); } catch {}
+        }
+        return null;
+      }
       async function fetchLatest() {
         const resWx = await fetchWithFallback('/api/wx', {
           headers: { 'x-skip-cache': '1' },
@@ -361,6 +376,20 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       async function initGallery() {
         if (await hasWxCache()) hideSplash(true);
+        const localData = await loadShared('wxLocal');
+        if (localData) {
+          applyData(localData);
+          hideSplash();
+          return;
+        }
+        if (defaultSource === 'biLocal') {
+          const bi = await loadShared('biLocal');
+          if (bi) {
+            applyData(bi);
+            hideSplash();
+            return;
+          }
+        }
         const cachedStr = localStorage.getItem('wxData');
         let cached;
         if (cachedStr) {
