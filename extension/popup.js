@@ -198,6 +198,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (res.wxLocal) {
       document.getElementById('wxOutput').textContent = JSON.stringify(res.wxLocal.data || res.wxLocal, null, 2);
       document.getElementById('bilOutput').textContent = '';
+      if (window.sharedStorage && typeof window.sharedStorage.set === 'function') {
+        window.sharedStorage.set('wxLocal', JSON.stringify(res.wxLocal)).catch(() => {});
+      }
     }
   });
 });
