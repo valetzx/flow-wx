@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Flow WX Scraper",
+  "description": "Scrape WeChat articles from a local article.txt and provide /wx/api",
+  "version": "1.0",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://mp.weixin.qq.com/*",
+    "https://www.bilibili.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["wx_api.html"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

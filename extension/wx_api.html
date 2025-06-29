@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>/wx/api</title>
+  <style>body{font-family:monospace;white-space:pre;}</style>
+</head>
+<body>
+  <pre id="output">Loading...</pre>
+  <script>
+  chrome.runtime.sendMessage({ type: 'getWxData' }, (res) => {
+    document.getElementById('output').textContent = JSON.stringify(res.data || {}, null, 2);
+  });
+  </script>
+</body>
+</html>
