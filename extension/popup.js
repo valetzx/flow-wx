@@ -272,7 +272,7 @@ document.getElementById('fullscreenBtn').addEventListener('click', () => {
   if (chrome.runtime.openIndexPage) {
     chrome.runtime.openIndexPage();
   } else {
-    window.open(chrome.runtime.getURL('popup.html'));
+    window.open(chrome.runtime.getURL('popup.html#inTab'));
   }
 });
 
