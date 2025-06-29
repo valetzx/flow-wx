@@ -65,6 +65,17 @@
       }
     }
 
+    /* 横向排列的磁影漫流 */
+    .masonry.horizontal {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+    .masonry.horizontal > * {
+      transform: rotate(180deg);
+    }
+
     .masonry-item .card-content {
       background-color: rgb(var(--card));
       color: rgb(var(--on-surface));
