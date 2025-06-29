@@ -5,13 +5,22 @@
   <title>Flow WX Extension</title>
   <style>
     body { font-family: sans-serif; padding: 10px; width: 320px; }
-    #output { white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; }
+    pre { white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; }
   </style>
 </head>
 <body>
   <input type="file" id="fileInput" accept=".txt">
   <button id="generateBtn">Generate</button>
-  <div id="output"></div>
+  <div>
+    <h3>wx</h3>
+    <pre id="wxOutput"></pre>
+    <button id="downloadWx">Download wx</button>
+  </div>
+  <div>
+    <h3>bil.json</h3>
+    <pre id="bilOutput"></pre>
+    <button id="downloadBil">Download bil.json</button>
+  </div>
   <script src="popup.js"></script>
 </body>
 </html>

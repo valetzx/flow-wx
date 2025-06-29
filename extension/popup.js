@@ -52,7 +52,7 @@ function randomSentence() {
   return list[Math.floor(Math.random() * list.length)];
 }
 
-async function scrape(article) {
+async function scrapeWx(article) {
   const { url } = article;
   const res = await fetch(url);
   const html = await res.text();
@@ -82,6 +82,26 @@ async function scrape(article) {
   };
 }
 
+async function scrapeBili(article) {
+  const { url } = article;
+  const res = await fetch(url);
+  const html = await res.text();
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const title = article.title ||
+    doc.querySelector('.opus-module-title__text')?.textContent.trim() ||
+    randomSentence();
+  const description = article.describe ||
+    doc.querySelector('.opus-module-content')?.textContent.trim();
+  const images = Array.from(doc.querySelectorAll('.opus-module-content img')).map(img => {
+    let src = img.getAttribute('src');
+    if (src && src.startsWith('//')) src = 'https:' + src;
+    return src;
+  }).filter(Boolean);
+  return {
+    [title]: { description, images, url, tags: article.tags, abbrlink: article.abbrlink, date: article.date }
+  };
+}
+
 document.getElementById('generateBtn').addEventListener('click', async () => {
   const file = document.getElementById('fileInput').files[0];
   if (!file) {
@@ -91,14 +111,54 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
   const text = await file.text();
   const articles = parseArticles(text);
   const wxArticles = articles.filter(a => a.url.includes('mp.weixin.qq.com'));
-  const results = await Promise.allSettled(wxArticles.map(scrape));
-  const merged = {};
-  results.forEach((r, i) => {
+  const bilArticles = articles.filter(a => a.url.includes('bilibili.com'));
+
+  const [wxResults, bilResults] = await Promise.all([
+    Promise.allSettled(wxArticles.map(scrapeWx)),
+    Promise.allSettled(bilArticles.map(scrapeBili))
+  ]);
+
+  const wxMerged = {};
+  wxResults.forEach((r, i) => {
     if (r.status === 'fulfilled') {
-      Object.assign(merged, r.value);
+      Object.assign(wxMerged, r.value);
     } else {
-      merged[`(抓取失败) ${wxArticles[i].url}`] = { error: String(r.reason) };
+      wxMerged[`(抓取失败) ${wxArticles[i].url}`] = { error: String(r.reason) };
     }
   });
-  document.getElementById('output').textContent = JSON.stringify(merged, null, 2);
+  const bilMerged = {};
+  bilResults.forEach((r, i) => {
+    if (r.status === 'fulfilled') {
+      Object.assign(bilMerged, r.value);
+    } else {
+      bilMerged[`(抓取失败) ${bilArticles[i].url}`] = { error: String(r.reason) };
+    }
+  });
+  document.getElementById('wxOutput').textContent = JSON.stringify(wxMerged, null, 2);
+  document.getElementById('bilOutput').textContent = JSON.stringify(bilMerged, null, 2);
+
+  window.currentWx = wxMerged;
+  window.currentBil = bilMerged;
+});
+
+document.getElementById('downloadWx').addEventListener('click', () => {
+  if (!window.currentWx) return;
+  const blob = new Blob([JSON.stringify(window.currentWx, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'wx';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('downloadBil').addEventListener('click', () => {
+  if (!window.currentBil) return;
+  const blob = new Blob([JSON.stringify(window.currentBil, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'bil';
+  a.click();
+  URL.revokeObjectURL(url);
 });
