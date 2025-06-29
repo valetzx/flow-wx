@@ -187,6 +187,9 @@ document.querySelectorAll('.tab').forEach(t => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+  if (location.hash === '#inTab') {
+    document.body.classList.add('inTab');
+  }
   chrome.storage.local.get('articleText', res => {
     if (res.articleText) {
       document.getElementById('articleText').value = res.articleText;
