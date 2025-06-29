@@ -293,7 +293,18 @@ document.addEventListener('DOMContentLoaded', () => {
       perPageInput.value = String(savedPerPage);
       const multiTagsSaved = localStorage.getItem('multiTags') === 'true';
       multiTagToggle.checked = multiTagsSaved;
-      gallery.style.columnCount = String(initialCols);
+      let columns = [];
+      function setupColumns(count) {
+        gallery.innerHTML = '';
+        columns = [];
+        for (let i = 0; i < count; i++) {
+          const col = document.createElement('div');
+          col.className = 'masonry-column';
+          gallery.appendChild(col);
+          columns.push(col);
+        }
+      }
+      setupColumns(initialCols);
       if (isMobile) {
         document.body.classList.add("mobile");
         navEl.classList.add("mobile");
@@ -553,17 +564,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function renderPage() {
-        gallery.innerHTML = "";
+        columns.forEach(col => col.innerHTML = '');
+        let idx = 0;
         if (extraItemVisible([''])) {
-          gallery.appendChild(createBannerCard());
+          columns[idx % columns.length].appendChild(createBannerCard());
+          idx++;
         }
         if (dailyData && extraItemVisible(['电影'])) {
-          gallery.appendChild(createDailyCard(dailyData));
+          columns[idx % columns.length].appendChild(createDailyCard(dailyData));
+          idx++;
         }
         const end = (currentPage + 1) * perPage;
         const items = allItems.slice(0, end);
-        items.forEach((item) => {
-          gallery.appendChild(createCard(item));
+        items.forEach((item, i) => {
+          const col = columns[(idx + i) % columns.length];
+          col.appendChild(createCard(item));
         });
         if (end >= allItems.length) {
           loadMoreBtn.classList.add("hidden");
@@ -736,7 +751,7 @@ document.addEventListener('DOMContentLoaded', () => {
       applySettings.addEventListener('click', () => {
         const cols = Math.max(1, parseInt(columnCountInput.value) || 1);
         perPage = Math.max(1, parseInt(perPageInput.value) || 1);
-        gallery.style.columnCount = String(cols);
+        setupColumns(cols);
         localStorage.setItem('columnCount', String(cols));
         localStorage.setItem('perPage', String(perPage));
         currentPage = 0;
