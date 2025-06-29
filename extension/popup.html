@@ -6,10 +6,12 @@
   <style>
     body { font-family: sans-serif; padding: 10px; width: 320px; }
     pre { white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; }
-    .tabs { display: flex; margin-bottom: 6px; }
+    .tabs { display: flex; align-items: center; margin-bottom: 6px; }
     .tab { flex: 1; padding: 4px; text-align: center; border: 1px solid #ccc; cursor: pointer; }
     .tab.active { background: #eee; }
     .tab + .tab { border-left: none; }
+    .tab-actions { margin-left: auto; display: flex; gap: 4px; }
+    .tab-actions button { cursor: pointer; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     textarea { width: 100%; height: 120px; }
@@ -19,6 +21,10 @@
   <div class="tabs">
     <div class="tab active" data-tab="edit">文章</div>
     <div class="tab" data-tab="result">结果</div>
+    <div class="tab-actions">
+      <button id="fullscreenBtn" title="Fullscreen">⛶</button>
+      <button id="settingsBtn" title="Settings">⚙</button>
+    </div>
   </div>
   <div id="editTab" class="tab-content active">
     <input type="file" id="fileInput" accept=".txt">

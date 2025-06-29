@@ -5,6 +5,10 @@
   "version": "1.0",
   "permissions": ["storage"],
   "host_permissions": ["*://*/*"],
+  "side_panel": {
+    "default_path": "popup.html"
+  },
+  "options_page": "options.html",
   "action": {
     "default_popup": "popup.html"
   }
