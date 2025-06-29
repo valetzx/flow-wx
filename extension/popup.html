@@ -6,20 +6,36 @@
   <style>
     body { font-family: sans-serif; padding: 10px; width: 320px; }
     pre { white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; }
+    .tabs { display: flex; margin-bottom: 6px; }
+    .tab { flex: 1; padding: 4px; text-align: center; border: 1px solid #ccc; cursor: pointer; }
+    .tab.active { background: #eee; }
+    .tab + .tab { border-left: none; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    textarea { width: 100%; height: 120px; }
   </style>
 </head>
 <body>
-  <input type="file" id="fileInput" accept=".txt">
-  <button id="generateBtn">Generate</button>
-  <div>
-    <h3>wx</h3>
-    <pre id="wxOutput"></pre>
-    <button id="downloadWx">Download wx</button>
+  <div class="tabs">
+    <div class="tab active" data-tab="edit">文章</div>
+    <div class="tab" data-tab="result">结果</div>
   </div>
-  <div>
-    <h3>bil.json</h3>
-    <pre id="bilOutput"></pre>
-    <button id="downloadBil">Download bil.json</button>
+  <div id="editTab" class="tab-content active">
+    <input type="file" id="fileInput" accept=".txt">
+    <textarea id="articleText" placeholder="article.txt 内容"></textarea>
+    <button id="generateBtn">Generate</button>
+  </div>
+  <div id="resultTab" class="tab-content">
+    <div>
+      <h3>wx</h3>
+      <pre id="wxOutput"></pre>
+      <button id="downloadWx">Download wx</button>
+    </div>
+    <div>
+      <h3>bil</h3>
+      <pre id="bilOutput"></pre>
+      <button id="downloadBil">Download bil</button>
+    </div>
   </div>
   <script src="popup.js"></script>
 </body>
