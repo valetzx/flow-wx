@@ -253,6 +253,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
+      async function loadFromShared(key) {
+        if (window.sharedStorage && typeof window.sharedStorage.get === 'function') {
+          try {
+            const val = await window.sharedStorage.get(key);
+            if (typeof val === 'string') return JSON.parse(val);
+            if (val) return val;
+          } catch {}
+        }
+        if (chrome?.storage?.local?.get) {
+          try {
+            return await new Promise(res => chrome.storage.local.get(key, r => res(r[key])));
+          } catch {}
+        }
+        return null;
+      }
+
       function showArticle(html) {
         articleContent.innerHTML = html;
         articleModal.classList.remove("hidden");
@@ -613,12 +629,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
       async function initGallery() {
         if (await hasWxCache()) hideSplash(true);
-        const cachedStr = localStorage.getItem("wxData");
-        let cached;
-        if (cachedStr) {
-          try {
-            cached = JSON.parse(cachedStr);
-          } catch {}
+        const pref = localStorage.getItem('dataSource') || 'wxData';
+        let cached = await loadFromShared('wxLocal');
+        if (!cached && pref === 'biLocal') {
+          cached = await loadFromShared('biLocal');
+        }
+        const cachedStr = localStorage.getItem('wxData');
+        if (!cached && cachedStr) {
+          try { cached = JSON.parse(cachedStr); } catch {}
         }
         if (cached) {
           applyData(cached);
@@ -627,14 +645,14 @@ document.addEventListener('DOMContentLoaded', () => {
           const latest = await fetchLatest();
           const latestStr = JSON.stringify(latest);
           if (!cachedStr) {
-            localStorage.setItem("wxData", latestStr);
-            applyData(latest);
+            localStorage.setItem('wxData', latestStr);
+            if (!cached) applyData(latest);
           } else if (latestStr !== cachedStr) {
-            localStorage.setItem("wxDataNew", latestStr);
+            localStorage.setItem('wxDataNew', latestStr);
             showDot();
           }
         } catch (err) {
-          console.error("加载画廊失败:", err);
+          console.error('加载画廊失败:', err);
         } finally {
           hideSplash();
         }
