@@ -33,6 +33,21 @@ function parseArticles(text) {
   return arr;
 }
 
+function serializeArticles(arr) {
+  return arr.map(a => {
+    const lines = ['---'];
+    lines.push(`url: ${a.url || ''}`);
+    lines.push(`title: ${a.title || ''}`);
+    lines.push('tags:');
+    for (const t of (a.tags || [])) lines.push(`  - ${t}`);
+    lines.push(`abbrlink: ${a.abbrlink || ''}`);
+    lines.push(`describe: ${a.describe || ''}`);
+    lines.push(`date: ${a.date || ''}`);
+    lines.push('---');
+    return lines.join('\n');
+  }).join('\n\n');
+}
+
 function randomSentence() {
   const list = [
     '小荷才露尖尖角',
@@ -115,9 +130,65 @@ document.querySelectorAll('.tab').forEach(t => {
   t.addEventListener('click', () => switchTab(t.dataset.tab));
 });
 
+let articles = [];
+let currentIndex = null;
+let suppressUpdate = false;
+
+function updateArticleText() {
+  const text = serializeArticles(articles);
+  document.getElementById('articleText').value = text;
+  chrome.storage.local.set({ articleText: text });
+}
+
+function renderArticleList() {
+  const listEl = document.getElementById('articleList');
+  listEl.innerHTML = '';
+  articles.sort((a, b) => String(a.abbrlink || '').localeCompare(String(b.abbrlink || '')));
+  articles.forEach((a, i) => {
+    const li = document.createElement('li');
+    li.textContent = a.abbrlink || '(empty)';
+    li.dataset.index = i;
+    if (i === currentIndex) li.classList.add('active');
+    listEl.appendChild(li);
+  });
+  document.getElementById('articleManager').style.display = articles.length ? 'flex' : 'none';
+}
+
+function showArticleDetail(index) {
+  currentIndex = index;
+  const art = articles[index];
+  if (!art) return;
+  suppressUpdate = true;
+  document.getElementById('detailUrl').value = art.url || '';
+  document.getElementById('detailTitle').value = art.title || '';
+  document.getElementById('detailTags').value = (art.tags || []).join(', ');
+  document.getElementById('detailAbbrlink').value = art.abbrlink || '';
+  document.getElementById('detailDescribe').value = art.describe || '';
+  document.getElementById('detailDate').value = art.date || '';
+  suppressUpdate = false;
+  renderArticleList();
+}
+
+function updateCurrentArticle() {
+  if (suppressUpdate || currentIndex === null) return;
+  const art = articles[currentIndex];
+  art.url = document.getElementById('detailUrl').value;
+  art.title = document.getElementById('detailTitle').value;
+  art.tags = document.getElementById('detailTags').value.split(/[,\n]+/).map(t => t.trim()).filter(Boolean);
+  art.abbrlink = document.getElementById('detailAbbrlink').value;
+  art.describe = document.getElementById('detailDescribe').value;
+  art.date = document.getElementById('detailDate').value;
+  renderArticleList();
+  updateArticleText();
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   chrome.storage.local.get('articleText', res => {
-    if (res.articleText) document.getElementById('articleText').value = res.articleText;
+    if (res.articleText) {
+      document.getElementById('articleText').value = res.articleText;
+      articles = parseArticles(res.articleText);
+      renderArticleList();
+    }
   });
 });
 
@@ -126,7 +197,26 @@ document.getElementById('fileInput').addEventListener('change', async (e) => {
   if (!file) return;
   const text = await file.text();
   document.getElementById('articleText').value = text;
-  chrome.storage.local.set({ articleText: text });
+  articles = parseArticles(text);
+  renderArticleList();
+  updateArticleText();
+});
+
+document.getElementById('addArticle').addEventListener('click', () => {
+  const art = { url: '', title: '', tags: [], abbrlink: '', describe: '', date: '' };
+  articles.push(art);
+  showArticleDetail(articles.length - 1);
+  updateArticleText();
+});
+
+document.getElementById('articleList').addEventListener('click', e => {
+  if (e.target.tagName === 'LI') {
+    showArticleDetail(Number(e.target.dataset.index));
+  }
+});
+
+['detailUrl','detailTitle','detailTags','detailAbbrlink','detailDescribe','detailDate'].forEach(id => {
+  document.getElementById(id).addEventListener('input', updateCurrentArticle);
 });
 
 document.getElementById('generateBtn').addEventListener('click', async () => {
