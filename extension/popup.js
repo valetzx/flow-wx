@@ -211,9 +211,11 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
     return;
   }
   chrome.storage.local.set({ articleText: text });
+  const includeWx = document.getElementById('includeWx').checked;
+  const includeBil = document.getElementById('includeBil').checked;
   const articles = parseArticles(text);
-  const wxArticles = articles.filter(a => a.url.includes('mp.weixin.qq.com'));
-  const bilArticles = articles.filter(a => a.url.includes('bilibili.com'));
+  const wxArticles = includeWx ? articles.filter(a => a.url.includes('mp.weixin.qq.com')) : [];
+  const bilArticles = includeBil ? articles.filter(a => a.url.includes('bilibili.com')) : [];
 
   const [wxResults, bilResults] = await Promise.all([
     Promise.allSettled(wxArticles.map(scrapeWx)),
@@ -236,11 +238,11 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
       bilMerged[`(抓取失败) ${bilArticles[i].url}`] = { error: String(r.reason) };
     }
   });
-  document.getElementById('wxOutput').textContent = JSON.stringify(wxMerged, null, 2);
-  document.getElementById('bilOutput').textContent = JSON.stringify(bilMerged, null, 2);
+  document.getElementById('wxOutput').textContent = includeWx ? JSON.stringify(wxMerged, null, 2) : '';
+  document.getElementById('bilOutput').textContent = includeBil ? JSON.stringify(bilMerged, null, 2) : '';
 
-  window.currentWx = wxMerged;
-  window.currentBil = bilMerged;
+  window.currentWx = includeWx ? wxMerged : null;
+  window.currentBil = includeBil ? bilMerged : null;
   switchTab('result');
 });
 
