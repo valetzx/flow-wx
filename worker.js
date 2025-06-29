@@ -698,7 +698,7 @@ async function cacheThenNetwork(request) {
 
     if (pathname === "/article.txt") {
       return new Response(articleText, {
-        headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
+        headers: withCors({ "Content-Type": "text/plain; charset=utf-8" }),
       });
     }
 
