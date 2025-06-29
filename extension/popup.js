@@ -190,3 +190,19 @@ document.getElementById('downloadBil').addEventListener('click', () => {
   a.click();
   URL.revokeObjectURL(url);
 });
+
+document.getElementById('fullscreenBtn').addEventListener('click', () => {
+  chrome.windows.create({
+    url: chrome.runtime.getURL('popup.html'),
+    type: 'popup',
+    state: 'maximized'
+  });
+});
+
+document.getElementById('settingsBtn').addEventListener('click', () => {
+  if (chrome.runtime.openOptionsPage) {
+    chrome.runtime.openOptionsPage();
+  } else {
+    window.open(chrome.runtime.getURL('options.html'));
+  }
+});
