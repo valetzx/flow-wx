@@ -1,3 +1,5 @@
+const DEFAULT_ARTICLE_URL = 'https://xxxxx.cccc.com/article.txt';
+
 function parseArticles(text) {
   text = text.trim();
   if (!text.startsWith('---')) {
@@ -190,10 +192,22 @@ document.addEventListener('DOMContentLoaded', () => {
   if (location.hash === '#inTab') {
     document.body.classList.add('inTab');
   }
-  chrome.storage.local.get(['articleText', 'wxLocal'], res => {
+  chrome.storage.local.get(['articleText', 'wxLocal'], async res => {
     if (res.articleText) {
       document.getElementById('articleText').value = res.articleText;
       loadArticlesFromText(res.articleText);
+    } else {
+      try {
+        const resp = await fetch(DEFAULT_ARTICLE_URL);
+        if (resp.ok) {
+          const text = await resp.text();
+          document.getElementById('articleText').value = text;
+          chrome.storage.local.set({ articleText: text });
+          loadArticlesFromText(text);
+        }
+      } catch (e) {
+        console.error('Failed to fetch default article.txt', e);
+      }
     }
     if (res.wxLocal) {
       document.getElementById('wxOutput').textContent = JSON.stringify(res.wxLocal, null, 2);
