@@ -251,12 +251,9 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
   // merge wx and bil results into one object and persist
   const combined = { ...wxMerged, ...bilMerged };
   const stored = { data: combined, timestamp: Date.now() };
+  chrome.storage.local.set({ wxLocal: stored });
   if (window.sharedStorage && typeof window.sharedStorage.set === 'function') {
-    window.sharedStorage.set('wxLocal', JSON.stringify(stored)).catch(() => {
-      chrome.storage.local.set({ wxLocal: stored });
-    });
-  } else {
-    chrome.storage.local.set({ wxLocal: stored });
+    window.sharedStorage.set('wxLocal', JSON.stringify(stored)).catch(() => {});
   }
   document.getElementById('wxOutput').textContent = includeWx ? JSON.stringify(wxMerged, null, 2) : '';
   document.getElementById('bilOutput').textContent = includeBil ? JSON.stringify(bilMerged, null, 2) : '';
