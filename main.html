@@ -43,7 +43,7 @@
 
     <main class="px-4 max-w-screen-xl mx-auto pb-8">
       <!-- Masonry 容器 -->
-      <div class="masonry" id="gallery"></div>
+      <div class="masonry horizontal" id="gallery"></div>
       <button id="loadMore" class="mt-4 mx-auto block px-4 py-2 rounded bg-gray-200 text-gray-700 hidden">加载更多</button>
     </main>
 
@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
       perPageInput.value = String(savedPerPage);
       const multiTagsSaved = localStorage.getItem('multiTags') === 'true';
       multiTagToggle.checked = multiTagsSaved;
-      gallery.style.columnCount = String(initialCols);
+      gallery.style.setProperty('--columns', String(initialCols));
       if (isMobile) {
         document.body.classList.add('mobile');
         navEl.classList.add('mobile');
@@ -456,7 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
       applySettings.addEventListener('click', () => {
         const cols = Math.max(1, parseInt(columnCountInput.value) || 1);
         perPage = Math.max(1, parseInt(perPageInput.value) || 1);
-        gallery.style.columnCount = String(cols);
+        gallery.style.setProperty('--columns', String(cols));
         localStorage.setItem('columnCount', String(cols));
         localStorage.setItem('perPage', String(perPage));
         currentPage = 0;

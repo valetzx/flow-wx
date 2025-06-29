@@ -49,20 +49,32 @@
     /* Masonry 布局 */
 
     .masonry {
-      column-count: 4;
+      column-count: var(--columns, 4);
       column-gap: 1rem;
     }
 
     @media (max-width: 1024px) {
       .masonry {
-        column-count: 2;
+        column-count: var(--columns, 2);
       }
     }
 
     @media (max-width: 640px) {
       .masonry {
-        column-count: 1;
+        column-count: var(--columns, 1);
       }
+    }
+
+    /* 横向瀑布流布局 */
+    .masonry.horizontal {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      overflow-y: auto;
+      height: 80vh;
+    }
+
+    .masonry.horizontal > .masonry-item {
+      transform: rotate(180deg);
     }
 
     .masonry-item .card-content {
