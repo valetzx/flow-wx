@@ -696,6 +696,12 @@ async function cacheThenNetwork(request) {
       });
     }
 
+    if (pathname === "/article.txt") {
+      return new Response(articleText, {
+        headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
+      });
+    }
+
     if (pathname === "/add") {
       return new Response(addPage, {
         headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
