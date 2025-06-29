@@ -117,7 +117,13 @@ document.querySelectorAll('.tab').forEach(t => {
 
 document.addEventListener('DOMContentLoaded', () => {
   chrome.storage.local.get('articleText', res => {
-    if (res.articleText) document.getElementById('articleText').value = res.articleText;
+    if (res.articleText) {
+      document.getElementById('articleText').value = res.articleText;
+      window.articles = parseArticles(res.articleText);
+      renderArticleList();
+    } else {
+      window.articles = [];
+    }
   });
 });
 
@@ -127,6 +133,8 @@ document.getElementById('fileInput').addEventListener('change', async (e) => {
   const text = await file.text();
   document.getElementById('articleText').value = text;
   chrome.storage.local.set({ articleText: text });
+  window.articles = parseArticles(text);
+  renderArticleList();
 });
 
 document.getElementById('generateBtn').addEventListener('click', async () => {
@@ -137,6 +145,8 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
   }
   chrome.storage.local.set({ articleText: text });
   const articles = parseArticles(text);
+  window.articles = articles;
+  renderArticleList();
   const wxArticles = articles.filter(a => a.url.includes('mp.weixin.qq.com'));
   const bilArticles = articles.filter(a => a.url.includes('bilibili.com'));
 
@@ -205,4 +215,83 @@ document.getElementById('settingsBtn').addEventListener('click', () => {
   } else {
     window.open(chrome.runtime.getURL('options.html'));
   }
+});
+
+function serializeArticles(list) {
+  return list.map(a => {
+    const lines = ['---'];
+    lines.push('url: ' + (a.url || ''));
+    lines.push('title: ' + (a.title || ''));
+    lines.push('tags:');
+    (a.tags || []).forEach(t => lines.push('  - ' + t));
+    lines.push('abbrlink: ' + (a.abbrlink || ''));
+    lines.push('describe: ' + (a.describe || ''));
+    lines.push('date: ' + (a.date || ''));
+    lines.push('---');
+    return lines.join('\n');
+  }).join('\n\n');
+}
+
+function updateArticleText() {
+  const text = serializeArticles(window.articles);
+  document.getElementById('articleText').value = text;
+  chrome.storage.local.set({ articleText: text });
+}
+
+function renderArticleList() {
+  const listEl = document.getElementById('articleList');
+  if (!listEl) return;
+  if (!Array.isArray(window.articles)) window.articles = [];
+  window.articles.sort((a,b)=>String(a.abbrlink||'').localeCompare(String(b.abbrlink||'')));
+  listEl.innerHTML = '';
+  window.articles.forEach((a,i)=>{
+    const li = document.createElement('li');
+    li.textContent = a.abbrlink || '(空)';
+    li.dataset.index = i;
+    li.addEventListener('click', ()=>openEditor(i));
+    listEl.appendChild(li);
+  });
+}
+
+function openEditor(index) {
+  const ed = document.getElementById('articleEditor');
+  if (!ed) return;
+  const a = window.articles[index];
+  ed.dataset.index = index;
+  ed.innerHTML = `
+    url: <input type="text" id="eUrl"><br>
+    title: <input type="text" id="eTitle"><br>
+    tags: <input type="text" id="eTags"><br>
+    abbrlink: <input type="text" id="eAbbrlink"><br>
+    describe: <input type="text" id="eDescribe"><br>
+    date: <input type="text" id="eDate"><br>
+  `;
+  ed.querySelector('#eUrl').value = a.url || '';
+  ed.querySelector('#eTitle').value = a.title || '';
+  ed.querySelector('#eTags').value = (a.tags || []).join(', ');
+  ed.querySelector('#eAbbrlink').value = a.abbrlink || '';
+  ed.querySelector('#eDescribe').value = a.describe || '';
+  ed.querySelector('#eDate').value = a.date || '';
+  ed.querySelectorAll('input').forEach(inp => inp.addEventListener('input', saveEditor));
+}
+
+function saveEditor() {
+  const ed = document.getElementById('articleEditor');
+  const idx = parseInt(ed.dataset.index, 10);
+  const a = window.articles[idx];
+  a.url = ed.querySelector('#eUrl').value;
+  a.title = ed.querySelector('#eTitle').value;
+  a.tags = ed.querySelector('#eTags').value.split(',').map(s=>s.trim()).filter(Boolean);
+  a.abbrlink = ed.querySelector('#eAbbrlink').value;
+  a.describe = ed.querySelector('#eDescribe').value;
+  a.date = ed.querySelector('#eDate').value;
+  updateArticleText();
+  renderArticleList();
+}
+
+document.getElementById('addArticleBtn').addEventListener('click', () => {
+  window.articles.push({ url: '', title: '', tags: [], abbrlink: '', describe: '', date: '' });
+  renderArticleList();
+  openEditor(window.articles.length - 1);
+  updateArticleText();
 });

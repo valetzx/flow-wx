@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <title>Flow WX Extension</title>
   <style>
-    body { font-family: sans-serif; padding: 10px; width: 320px; }
+    body { font-family: sans-serif; padding: 10px; width: 600px; }
     pre { white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; }
     .tabs { display: flex; align-items: center; margin-bottom: 6px; }
     .tab { flex: 1; padding: 4px; text-align: center; border: 1px solid #ccc; cursor: pointer; }
@@ -15,6 +15,10 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     textarea { width: 100%; height: 120px; }
+    #articleContainer { display: flex; gap: 10px; margin-top: 10px; }
+    #articleListWrapper { flex: 1; }
+    #articleList li { cursor: pointer; border-bottom: 1px solid #ccc; padding: 2px 0; }
+    #articleEditor { flex: 2; }
   </style>
 </head>
 <body>
@@ -30,6 +34,13 @@
     <input type="file" id="fileInput" accept=".txt">
     <textarea id="articleText" placeholder="article.txt 内容"></textarea>
     <button id="generateBtn">Generate</button>
+    <div id="articleContainer">
+      <div id="articleListWrapper">
+        <button id="addArticleBtn">+</button>
+        <ul id="articleList"></ul>
+      </div>
+      <div id="articleEditor"></div>
+    </div>
   </div>
   <div id="resultTab" class="tab-content">
     <div>
