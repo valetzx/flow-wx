@@ -255,6 +255,19 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
   if (window.sharedStorage && typeof window.sharedStorage.set === 'function') {
     window.sharedStorage.set('wxLocal', JSON.stringify(stored)).catch(() => {});
   }
+  if (chrome.tabs && chrome.scripting) {
+    chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+      const tab = tabs && tabs[0];
+      if (!tab || !tab.id) return;
+      chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: data => {
+          try { localStorage.setItem('wxLocal', JSON.stringify(data)); } catch (e) {}
+        },
+        args: [stored]
+      });
+    });
+  }
   document.getElementById('wxOutput').textContent = includeWx ? JSON.stringify(wxMerged, null, 2) : '';
   document.getElementById('bilOutput').textContent = includeBil ? JSON.stringify(bilMerged, null, 2) : '';
 

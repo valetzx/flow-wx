@@ -3,7 +3,7 @@
   "name": "Flow WX Extractor",
   "description": "Generate /wx/api data from local article.txt",
   "version": "1.0",
-  "permissions": ["storage"],
+  "permissions": ["storage", "scripting"],
   "host_permissions": ["*://*/*"],
   "side_panel": {
     "default_path": "popup.html"
