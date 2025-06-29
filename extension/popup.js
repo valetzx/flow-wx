@@ -212,8 +212,10 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
   }
   chrome.storage.local.set({ articleText: text });
   const articles = parseArticles(text);
-  const wxArticles = articles.filter(a => a.url.includes('mp.weixin.qq.com'));
-  const bilArticles = articles.filter(a => a.url.includes('bilibili.com'));
+  const doWx = document.getElementById('wxToggle').checked;
+  const doBil = document.getElementById('bilToggle').checked;
+  const wxArticles = doWx ? articles.filter(a => a.url.includes('mp.weixin.qq.com')) : [];
+  const bilArticles = doBil ? articles.filter(a => a.url.includes('bilibili.com')) : [];
 
   const [wxResults, bilResults] = await Promise.all([
     Promise.allSettled(wxArticles.map(scrapeWx)),
