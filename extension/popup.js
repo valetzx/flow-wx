@@ -192,11 +192,11 @@ document.getElementById('downloadBil').addEventListener('click', () => {
 });
 
 document.getElementById('fullscreenBtn').addEventListener('click', () => {
-  chrome.windows.create({
-    url: chrome.runtime.getURL('popup.html'),
-    type: 'popup',
-    state: 'maximized'
-  });
+  if (chrome.runtime.openIndexPage) {
+    chrome.runtime.openIndexPage();
+  } else {
+    window.open(chrome.runtime.getURL('popup.html'));
+  }
 });
 
 document.getElementById('settingsBtn').addEventListener('click', () => {
