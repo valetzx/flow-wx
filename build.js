@@ -34,8 +34,8 @@ const swOut = `const IMG_CACHE = ${JSON.stringify(cacheImgDomain)};\n${swRaw}`;
 await fs.writeFile(path.join(outDir, 'sw.js'), swOut);
 await fs.copyFile(path.join(__dirname, 'static', 'common.css'), path.join(outDir, 'common.css'));
 await fs.copyFile(path.join(__dirname, 'static', 'ideas.css'), path.join(outDir, 'ideas.css')).catch(() => {});
+await fs.copyFile(path.join(__dirname, 'article.txt'), path.join(outDir, 'article.txt')).catch(() => {});
 await fs.copyFile(path.join(__dirname, 'static', 'common.js'), path.join(outDir, 'common.js'));
-await fs.copyFile(path.join(__dirname, 'static', 'article.txt'), path.join(outDir, 'article.txt'));
 await fs.copyFile(path.join(__dirname, 'static', 'sidebar.html'), path.join(outDir, 'sidebar.html'));
 await fs.copyFile(path.join(__dirname, 'static', 'settings.html'), path.join(outDir, 'settings.html'));
 
