@@ -15,6 +15,14 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     textarea { width: 100%; height: 120px; }
+    .article-manager { display: flex; gap: 6px; margin-top: 6px; }
+    .article-list { width: 80px; border: 1px solid #ccc; padding: 4px; overflow-y: auto; max-height: 200px; }
+    .article-list li { cursor: pointer; margin: 2px 0; }
+    .article-list li.active { background: #eee; }
+    .article-detail { flex: 1; }
+    .article-detail .row { display: flex; align-items: center; margin-bottom: 4px; }
+    .article-detail .row span { width: 60px; }
+    .article-detail input { flex: 1; }
   </style>
 </head>
 <body>
@@ -28,7 +36,21 @@
   </div>
   <div id="editTab" class="tab-content active">
     <input type="file" id="fileInput" accept=".txt">
-    <textarea id="articleText" placeholder="article.txt 内容"></textarea>
+    <textarea id="articleText" placeholder="article.txt 内容" style="display:none;"></textarea>
+    <div id="articleManager" class="article-manager" style="display:none;">
+      <div class="article-list">
+        <button id="addArticle">+</button>
+        <ul id="articleList"></ul>
+      </div>
+      <div class="article-detail" id="detailContainer">
+        <div class="row"><span>url:</span><input id="detailUrl"></div>
+        <div class="row"><span>title:</span><input id="detailTitle"></div>
+        <div class="row"><span>tags:</span><input id="detailTags"></div>
+        <div class="row"><span>abbrlink:</span><input id="detailAbbrlink"></div>
+        <div class="row"><span>describe:</span><input id="detailDescribe"></div>
+        <div class="row"><span>date:</span><input id="detailDate"></div>
+      </div>
+    </div>
     <button id="generateBtn">Generate</button>
   </div>
   <div id="resultTab" class="tab-content">

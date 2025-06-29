@@ -33,6 +33,77 @@ function parseArticles(text) {
   return arr;
 }
 
+function serializeArticles(arr) {
+  return arr.map(a => {
+    const lines = [
+      '---',
+      `url: ${a.url || ''}`,
+      `title: ${a.title || ''}`,
+      'tags:'
+    ];
+    if (Array.isArray(a.tags)) {
+      a.tags.forEach(t => lines.push(`  - ${t}`));
+    }
+    lines.push(`abbrlink: ${a.abbrlink || ''}`);
+    lines.push(`describe: ${a.describe || ''}`);
+    lines.push(`date: ${a.date || ''}`);
+    lines.push('---');
+    return lines.join('\n');
+  }).join('\n\n');
+}
+
+let articleArr = [];
+let currentIndex = -1;
+
+function sortArticles() {
+  articleArr.sort((a, b) => {
+    const aLink = (a.abbrlink || '').toString();
+    const bLink = (b.abbrlink || '').toString();
+    return aLink.localeCompare(bLink);
+  });
+}
+
+function renderList() {
+  sortArticles();
+  const listEl = document.getElementById('articleList');
+  listEl.innerHTML = '';
+  articleArr.forEach((a, i) => {
+    const li = document.createElement('li');
+    li.textContent = a.abbrlink || '(none)';
+    li.dataset.index = i;
+    if (i === currentIndex) li.classList.add('active');
+    li.addEventListener('click', () => selectArticle(i));
+    listEl.appendChild(li);
+  });
+}
+
+function selectArticle(i) {
+  currentIndex = i;
+  renderList();
+  const art = articleArr[i];
+  if (!art) return;
+  document.getElementById('detailUrl').value = art.url || '';
+  document.getElementById('detailTitle').value = art.title || '';
+  document.getElementById('detailTags').value = Array.isArray(art.tags) ? art.tags.join(',') : '';
+  document.getElementById('detailAbbrlink').value = art.abbrlink || '';
+  document.getElementById('detailDescribe').value = art.describe || '';
+  document.getElementById('detailDate').value = art.date || '';
+}
+
+function updateArticleText() {
+  const text = serializeArticles(articleArr);
+  document.getElementById('articleText').value = text;
+  chrome.storage.local.set({ articleText: text });
+}
+
+function loadArticlesFromText(text) {
+  articleArr = parseArticles(text);
+  sortArticles();
+  document.getElementById('articleManager').style.display = 'flex';
+  renderList();
+  if (articleArr.length) selectArticle(0);
+}
+
 function randomSentence() {
   const list = [
     '小荷才露尖尖角',
@@ -117,7 +188,10 @@ document.querySelectorAll('.tab').forEach(t => {
 
 document.addEventListener('DOMContentLoaded', () => {
   chrome.storage.local.get('articleText', res => {
-    if (res.articleText) document.getElementById('articleText').value = res.articleText;
+    if (res.articleText) {
+      document.getElementById('articleText').value = res.articleText;
+      loadArticlesFromText(res.articleText);
+    }
   });
 });
 
@@ -127,6 +201,7 @@ document.getElementById('fileInput').addEventListener('change', async (e) => {
   const text = await file.text();
   document.getElementById('articleText').value = text;
   chrome.storage.local.set({ articleText: text });
+  loadArticlesFromText(text);
 });
 
 document.getElementById('generateBtn').addEventListener('click', async () => {
@@ -206,3 +281,26 @@ document.getElementById('settingsBtn').addEventListener('click', () => {
     window.open(chrome.runtime.getURL('options.html'));
   }
 });
+
+document.getElementById('addArticle').addEventListener('click', () => {
+  articleArr.push({ url: '', title: '', tags: [], abbrlink: '', describe: '', date: '' });
+  renderList();
+  selectArticle(articleArr.length - 1);
+  updateArticleText();
+});
+
+['detailUrl','detailTitle','detailTags','detailAbbrlink','detailDescribe','detailDate']
+  .forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      if (currentIndex < 0) return;
+      const art = articleArr[currentIndex];
+      art.url = document.getElementById('detailUrl').value;
+      art.title = document.getElementById('detailTitle').value;
+      art.tags = document.getElementById('detailTags').value.split(/[,\n]+/).map(t => t.trim()).filter(Boolean);
+      art.abbrlink = document.getElementById('detailAbbrlink').value;
+      art.describe = document.getElementById('detailDescribe').value;
+      art.date = document.getElementById('detailDate').value;
+      updateArticleText();
+      renderList();
+    });
+  });
