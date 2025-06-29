@@ -196,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
       loadArticlesFromText(res.articleText);
     }
     if (res.wxLocal) {
-      document.getElementById('wxOutput').textContent = JSON.stringify(res.wxLocal.data || res.wxLocal, null, 2);
+      document.getElementById('wxOutput').textContent = JSON.stringify(res.wxLocal, null, 2);
       document.getElementById('bilOutput').textContent = '';
       if (window.sharedStorage && typeof window.sharedStorage.set === 'function') {
         window.sharedStorage.set('wxLocal', JSON.stringify(res.wxLocal)).catch(() => {});
@@ -249,11 +249,10 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
     }
   });
   // merge wx and bil results into one object and persist
-  const combined = { ...wxMerged, ...bilMerged };
-  const stored = { data: combined, timestamp: Date.now() };
-  chrome.storage.local.set({ wxLocal: stored });
+  const wxLocal = { ...wxMerged, ...bilMerged };
+  chrome.storage.local.set({ wxLocal });
   if (window.sharedStorage && typeof window.sharedStorage.set === 'function') {
-    window.sharedStorage.set('wxLocal', JSON.stringify(stored)).catch(() => {});
+    window.sharedStorage.set('wxLocal', JSON.stringify(wxLocal)).catch(() => {});
   }
   if (chrome.tabs && chrome.scripting) {
     chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
@@ -264,7 +263,7 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
         func: data => {
           try { localStorage.setItem('wxLocal', JSON.stringify(data)); } catch (e) {}
         },
-        args: [stored]
+        args: [wxLocal]
       });
     });
   }
