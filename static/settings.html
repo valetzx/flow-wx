@@ -1,7 +1,7 @@
 <div id="settingsPanel" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
   <div class="bg-card rounded-xl p-4 w-72">
     <div class="flex justify-between items-center mb-2">
-      <button id="closeSettings" class="text-xl leading-none">&times;</button>
+      <button id="closeSettings" class="text-xl leading-none" style="margin-left: auto">&times;</button>
     </div>
     <div id="settingsTabs">
       <input type="radio" id="tabSettings" name="settingsTab" checked>
@@ -50,15 +50,15 @@
         </label>
         <button id="applySettings" class="w-full bg-primary text-white py-1 rounded">应用</button>
         <button id="clearCache" class="w-full bg-red-500 text-white py-1 rounded">清理缓存</button>
-        <a href="https://github.com/valetzx/flow-wx" class="hover:underline">查看项目源码 </a> · <a href="#">联系我吧</a>
       </div>
       <div id="tabAboutContent" class="tab-content text-center text-sm">
-        <a href="https://github.com/valetzx/flow-wx" class="hover:underline">查看项目源码 </a> · <a href="#">联系我吧</a>
       </div>
       <div id="tabLogsContent" class="tab-content">
         <pre id="logOutput" class="text-xs whitespace-pre-wrap"></pre>
-        <a href="https://github.com/valetzx/flow-wx" class="hover:underline">查看项目源码 </a> · <a href="#">联系我吧</a>
       </div>
+        <footer class="text-xs text-center text-gray-400 dark:text-gray-300" style="margin-top: 10px">
+          <a href="https://github.com/valetzx/flow-wx" class="hover:underline">查看项目源码 </a> · <a href="#">联系我吧</a>
+        </footer>
     </div>
   </div>
 </div>
