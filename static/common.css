@@ -270,6 +270,17 @@
       border-color: rgb(var(--border));
     }
 
+    /* 全局选择框适配深色模式 */
+    select {
+      background-color: rgb(var(--surface));
+      color: rgb(var(--on-surface));
+      border-color: rgb(var(--border));
+    }
+    select option {
+      background-color: rgb(var(--card));
+      color: rgb(var(--on-surface));
+    }
+
     /* 加载按钮适配深色模式 */
 
     #loadMore {
