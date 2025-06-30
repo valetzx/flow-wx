@@ -2,52 +2,78 @@
       <div class="bg-card rounded-xl p-4 w-72 space-y-3">
         <div class="flex justify-between items-center">
           <h2 class="font-semibold">设置</h2>
-          <button id="closeSettings" class="text-xl leading-none">
-            &times;
-          </button>
+          <button id="closeSettings" class="text-xl leading-none">&times;</button>
         </div>
 
-        <!-- 深色模式切换器 -->
-        <div class="flex items-center justify-between py-1">
-          <label class="text-sm">深色模式</label>
-          <label class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" id="darkModeToggle" class="sr-only peer">
-            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-          </label>
-        </div>
+        <div id="settingsTabs">
+          <div class="mb-2 border-b flex space-x-2">
+            <div>
+              <input type="radio" id="tabSettings" name="tab" checked>
+              <label for="tabSettings">设置</label>
+            </div>
+            <div>
+              <input type="radio" id="tabAbout" name="tab">
+              <label for="tabAbout">关于</label>
+            </div>
+            <div>
+              <input type="radio" id="tabLog" name="tab">
+              <label for="tabLog">日志</label>
+            </div>
+          </div>
 
-        <!-- 多选标签切换器 -->
-        <div class="flex items-center justify-between py-1">
-          <label class="text-sm">多选标签</label>
-          <label class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" id="multiTagToggle" class="sr-only peer">
-            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-          </label>
-        </div>
+          <div id="panel-settings" class="tab-content space-y-3">
+            <!-- 深色模式切换器 -->
+            <div class="flex items-center justify-between py-1">
+              <label class="text-sm">深色模式</label>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="darkModeToggle" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </label>
+            </div>
 
-        <label class="block text-sm">列数
-          <input
-            id="columnCountInput"
-            type="number"
-            min="1"
-            max="6"
-            value="4"
-            class="mt-1 w-full border rounded p-1 bg-surface text-on-surface"
-          />
-        </label>
-        <label class="block text-sm">加载卡片数量
-          <input
-            id="perPageInput"
-            type="number"
-            min="1"
-            value="30"
-            class="mt-1 w-full border rounded p-1 bg-surface text-on-surface"
-          />
-        </label>
-        <button id="applySettings" class="w-full bg-primary text-white py-1 rounded">应用</button>
-        <button id="clearCache" class="w-full bg-red-500 text-white py-1 rounded">清理缓存</button>
-        <footer class="text-xs text-center text-gray-400 my-4 dark:text-gray-300">
-          <a href="https://github.com/valetzx/flow-wx" class="hover:underline">查看项目源码 </a> · <a href="#">联系我吧</a>
-        </footer>
+            <!-- 多选标签切换器 -->
+            <div class="flex items-center justify-between py-1">
+              <label class="text-sm">多选标签</label>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="multiTagToggle" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </label>
+            </div>
+
+            <label class="block text-sm">列数
+              <input
+                id="columnCountInput"
+                type="number"
+                min="1"
+                max="6"
+                value="4"
+                class="mt-1 w-full border rounded p-1 bg-surface text-on-surface"
+              />
+            </label>
+            <label class="block text-sm">加载卡片数量
+              <input
+                id="perPageInput"
+                type="number"
+                min="1"
+                value="30"
+                class="mt-1 w-full border rounded p-1 bg-surface text-on-surface"
+              />
+            </label>
+            <button id="applySettings" class="w-full bg-primary text-white py-1 rounded">应用</button>
+            <button id="clearCache" class="w-full bg-red-500 text-white py-1 rounded">清理缓存</button>
+          </div>
+
+          <div id="panel-about" class="tab-content space-y-3">
+            <p class="text-sm">这里显示关于信息。</p>
+          </div>
+
+          <div id="panel-log" class="tab-content space-y-3">
+            <p class="text-sm">这里显示日志信息。</p>
+          </div>
+
+          <footer class="text-xs text-center text-gray-400 my-4 dark:text-gray-300">
+            <a href="https://github.com/valetzx/flow-wx" class="hover:underline">查看项目源码 </a> · <a href="#">联系我吧</a>
+          </footer>
+        </div>
       </div>
     </div>

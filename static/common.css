@@ -307,3 +307,25 @@
       outline: none;
       box-shadow: none;
     }
+
+    /* 设置面板标签样式 */
+    #settingsTabs input[type="radio"] {
+      display: none;
+    }
+    #settingsTabs label {
+      cursor: pointer;
+      padding: 0.25rem 0.5rem;
+      color: rgb(var(--on-surface)/0.7);
+    }
+    #settingsTabs input[type="radio"]:checked + label {
+      color: rgb(var(--primary));
+      border-bottom: 2px solid rgb(var(--primary));
+    }
+    #settingsTabs .tab-content {
+      display: none;
+    }
+    #tabSettings:checked ~ #panel-settings,
+    #tabAbout:checked ~ #panel-about,
+    #tabLog:checked ~ #panel-log {
+      display: block;
+    }
