@@ -80,13 +80,12 @@
       margin-bottom: 1rem;
       border-radius: 1rem;
       overflow: hidden;
-      max-height: var(--card-height, 260px);
       width: 100%;
     }
 
-.bookmark-list li::marker {
-  content: '';
-}
+    .bookmark-list li::marker {
+      content: '';
+    }
 
     .sidebar-link {
       display: flex;
