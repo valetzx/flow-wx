@@ -40,6 +40,7 @@
     <div id="tagList" class="flex overflow-x-auto whitespace-nowrap gap-2 px-4 mb-4 no-scrollbar max-w-screen-xl mx-auto">
       <button id="loadGistsBtn" class="px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary bg-card hidden"> ↻ </button>
       <button id="newGistBtn" class="px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary bg-card hidden"> + </button>
+      <button id="newMarkBtn" class="px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary bg-card"> ☆ </button>
     </div>
     <main class="px-4 max-w-screen-xl mx-auto pb-8">
       <div class="masonry" id="gallery"></div>
@@ -61,6 +62,15 @@
         </div>
       </div>
     </div>
+    <div id="markEditModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+      <div class="bg-card text-on-surface rounded-xl w-11/12 max-w-3xl h-[80vh] overflow-auto relative p-4 flex flex-col gap-2">
+        <textarea id="markEditTextarea" class="flex-1 w-full p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface"></textarea>
+        <div class="flex justify-end gap-2 mt-2">
+          <button id="cancelEditMark" class="px-3 py-1 rounded bg-gray-500 text-white">取消</button>
+          <button id="saveEditMark" class="px-3 py-1 rounded bg-primary text-white">保存</button>
+        </div>
+      </div>
+    </div>
   </div>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
@@ -68,6 +78,7 @@
       const gallery = document.getElementById('gallery');
       const addCardBtn = document.getElementById('addCardBtn');
       const newGistBtn = document.getElementById('newGistBtn');
+      const newMarkBtn = document.getElementById('newMarkBtn');
       const sidebarAddBtn = document.getElementById('addBtn');
       const settingsPanel = document.getElementById('settingsPanel');
       const moreBtn = document.getElementById('moreBtn');
@@ -83,6 +94,10 @@
       const articleContent = document.getElementById('articleContent');
       const gistEditModal = document.getElementById('gistEditModal');
       const gistEditTextarea = document.getElementById('gistEditTextarea');
+      const markEditModal = document.getElementById('markEditModal');
+      const markEditTextarea = document.getElementById('markEditTextarea');
+      const saveEditMarkBtn = document.getElementById('saveEditMark');
+      const cancelEditMark = document.getElementById('cancelEditMark');
       const saveEditGist = document.getElementById('saveEditGist');
       const cancelEditGist = document.getElementById('cancelEditGist');
       const deleteGistBtn = document.getElementById('deleteGist');
@@ -197,6 +212,21 @@
         const p = document.createElement('p');
         p.className = 'text-sm leading-relaxed';
         p.textContent = item.description || '';
+        let list;
+        if (Array.isArray(item.marks)) {
+          list = document.createElement('ul');
+          list.className = 'flex flex-col gap-1 text-sm';
+          item.marks.forEach(m => {
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.textContent = m.title || m.url;
+            a.href = m.url;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            li.appendChild(a);
+            list.appendChild(li);
+          });
+        }
         const bottom = document.createElement('div');
         bottom.className = 'flex items-end mt-auto gap-2';
         const tagsEl = document.createElement('div');
@@ -232,19 +262,20 @@
           }
         });
 
-        if (item.gistId) {
+        if (item.gistId || item.marks) {
           const editBtn = document.createElement('button');
           editBtn.className = 'text-xs text-primary flex-none';
           editBtn.textContent = '编辑';
           editBtn.addEventListener('click', e => {
             e.stopPropagation();
-            handleEditGist(index);
+            if (item.gistId) handleEditGist(index); else handleEditMark(index);
           });
           bottom.appendChild(editBtn);
         }
 
         text.appendChild(h2);
         text.appendChild(p);
+        if (list) text.appendChild(list);
         text.appendChild(bottom);
         bottom.appendChild(delBtn);
         if (link) bottom.appendChild(link);
@@ -271,6 +302,7 @@
         tagList.innerHTML = '';
         tagList.appendChild(loadGistsBtn);
         tagList.appendChild(newGistBtn);
+        tagList.appendChild(newMarkBtn);
         tags.forEach(t => {
           const btn = document.createElement('button');
           btn.dataset.tag = t;
@@ -371,6 +403,21 @@
         }
       }
 
+      function handleCreateMark() {
+        const title = prompt('列表名称');
+        if (!title) return;
+        const listText = prompt('输入收藏，格式：标题|链接，每行一个') || '';
+        const tags = (prompt('标签（用空格分隔，可选）') || '').split(/\s+/).filter(Boolean);
+        const marks = listText.split(/\n+/).map(l => {
+          const [t, u] = l.split('|').map(s => s.trim());
+          if (!t && !u) return null;
+          return { title: t || u, url: u || t };
+        }).filter(Boolean);
+        cards.push({ title, marks, tags });
+        save();
+        updateTagsAndRender();
+      }
+
       function handleEditGist(index) {
         const item = cards[index];
         if (!item || !item.gistId) return;
@@ -378,6 +425,15 @@
         gistEditTextarea.value = item.content || '';
         gistEditModal.classList.remove('hidden');
         gistEditModal.classList.add('flex', 'show');
+      }
+
+      function handleEditMark(index) {
+        const item = cards[index];
+        if (!item || !Array.isArray(item.marks)) return;
+        editIndex = index;
+        markEditTextarea.value = item.marks.map(m => `${m.title||''}|${m.url||''}`).join('\n');
+        markEditModal.classList.remove('hidden');
+        markEditModal.classList.add('flex', 'show');
       }
 
       async function saveEdit() {
@@ -416,6 +472,23 @@
           alert('修改失败');
           console.error(e);
         }
+      }
+
+      function saveMarkEdit() {
+        const index = editIndex;
+        editIndex = null;
+        markEditModal.classList.add('hidden');
+        markEditModal.classList.remove('flex', 'show');
+        const item = cards[index];
+        if (!item || !Array.isArray(item.marks)) return;
+        const lines = markEditTextarea.value.split(/\n+/);
+        item.marks = lines.map(l => {
+          const [t, u] = l.split('|').map(s => s.trim());
+          if (!t && !u) return null;
+          return { title: t || u, url: u || t };
+        }).filter(Boolean);
+        save();
+        updateTagsAndRender();
       }
 
       async function deleteGist() {
@@ -575,6 +648,7 @@
       }
       addCardBtn.addEventListener('click', handleCreate);
       newGistBtn.addEventListener('click', handleCreateGist);
+      newMarkBtn.addEventListener('click', handleCreateMark);
       loadGistsBtn.addEventListener('click', () => {
         preloadInject();
         fetchGists();
@@ -623,7 +697,13 @@
         gistEditModal.classList.add('hidden');
         gistEditModal.classList.remove('flex', 'show');
       });
+      cancelEditMark.addEventListener('click', () => {
+        editIndex = null;
+        markEditModal.classList.add('hidden');
+        markEditModal.classList.remove('flex', 'show');
+      });
       saveEditGist.addEventListener('click', saveEdit);
+      saveEditMarkBtn.addEventListener('click', saveMarkEdit);
       deleteGistBtn.addEventListener('click', deleteGist);
       // 点击遮罩层时不再关闭编辑弹窗，避免误触
       // gistEditModal.addEventListener('click', e => {
