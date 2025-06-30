@@ -39,7 +39,6 @@
     </header>
     <div id="tagList" class="flex overflow-x-auto whitespace-nowrap gap-2 px-4 mb-4 no-scrollbar max-w-screen-xl mx-auto">
       <button id="loadGistsBtn" class="px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary bg-card hidden"> ↻ </button>
-      <button id="newGistBtn" class="px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary bg-card hidden"> + </button>
       <button id="newMarkBtn" class="px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary bg-card"> ☆ </button>
     </div>
     <main class="px-4 max-w-screen-xl mx-auto pb-8">
@@ -65,8 +64,19 @@
   </div>
     <div id="bookmarkEditModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
       <div class="bg-card text-on-surface rounded-xl w-11/12 max-w-3xl p-4 flex flex-col gap-2">
+        <select id="cardTypeSelect" class="p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface">
+          <option value="default">默认</option>
+          <option value="gist">Gist</option>
+          <option value="mark">Mark</option>
+        </select>
+        <label class="flex items-center gap-2">
+          <input id="saveToGist" type="checkbox" class="h-4 w-4">
+          <span>存到gists</span>
+        </label>
         <input id="bookmarkTitleInput" type="text" class="p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface" placeholder="标题">
-        <textarea id="bookmarkTextarea" class="flex-1 w-full p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface" placeholder="每行格式: 标题|链接"></textarea>
+        <input id="bookmarkDescriptionInput" type="text" class="p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface" placeholder="描述 可选">
+        <input id="bookmarkUrlInput" type="text" class="p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface" placeholder="链接 可选">
+        <textarea id="bookmarkTextarea" class="flex-1 w-full p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface" placeholder="内容"></textarea>
         <input id="bookmarkTagsInput" type="text" class="p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface" placeholder="标签 用空格分隔">
         <input id="bookmarkHeightInput" type="number" min="120" class="p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface" placeholder="卡片高度 默认260">
         <div class="flex justify-end gap-2 mt-2">
@@ -81,7 +91,6 @@
     window.commonReady?.then(() => {
       const gallery = document.getElementById('gallery');
       const addCardBtn = document.getElementById('addCardBtn');
-      const newGistBtn = document.getElementById('newGistBtn');
       const newMarkBtn = document.getElementById('newMarkBtn');
       const sidebarAddBtn = document.getElementById('addBtn');
       const settingsPanel = document.getElementById('settingsPanel');
@@ -103,7 +112,11 @@
       const cancelEditGist = document.getElementById('cancelEditGist');
       const deleteGistBtn = document.getElementById('deleteGist');
       const bookmarkEditModal = document.getElementById('bookmarkEditModal');
+      const cardTypeSelect = document.getElementById('cardTypeSelect');
+      const saveToGistToggle = document.getElementById('saveToGist');
       const bookmarkTitleInput = document.getElementById('bookmarkTitleInput');
+      const bookmarkDescriptionInput = document.getElementById('bookmarkDescriptionInput');
+      const bookmarkUrlInput = document.getElementById('bookmarkUrlInput');
       const bookmarkTextarea = document.getElementById('bookmarkTextarea');
       const bookmarkTagsInput = document.getElementById('bookmarkTagsInput');
       const bookmarkHeightInput = document.getElementById('bookmarkHeightInput');
@@ -117,7 +130,6 @@
       const savedToken = localStorage.getItem('githubToken') || '';
       if (savedToken) {
         loadGistsBtn.classList.remove('hidden');
-        newGistBtn.classList.remove('hidden');
       }
 
       const savedCols = parseInt(localStorage.getItem('columnCount')) || 4;
@@ -215,6 +227,106 @@
         articleModal.classList.add('hidden');
         articleModal.classList.remove('flex', 'show');
         articleContent.textContent = '';
+      }
+
+      function updateTypeFields() {
+        const type = cardTypeSelect.value;
+        if (type === 'mark') {
+          bookmarkTextarea.placeholder = '每行格式: 标题|链接';
+          bookmarkDescriptionInput.classList.add('hidden');
+          bookmarkUrlInput.classList.add('hidden');
+          saveToGistToggle.parentElement.classList.add('hidden');
+        } else if (type === 'gist') {
+          bookmarkTextarea.placeholder = '内容';
+          bookmarkDescriptionInput.classList.add('hidden');
+          bookmarkUrlInput.classList.add('hidden');
+          saveToGistToggle.parentElement.classList.remove('hidden');
+        } else {
+          bookmarkTextarea.placeholder = '内容';
+          bookmarkDescriptionInput.classList.remove('hidden');
+          bookmarkUrlInput.classList.remove('hidden');
+          saveToGistToggle.parentElement.classList.add('hidden');
+        }
+      }
+
+      async function saveNewCard() {
+        const type = cardTypeSelect.value;
+        bookmarkEditModal.classList.add('hidden');
+        bookmarkEditModal.classList.remove('flex', 'show');
+
+        const title = bookmarkTitleInput.value.trim() || (type === 'mark' ? '收藏' : '无标题');
+        const description = bookmarkDescriptionInput.value.trim();
+        const url = bookmarkUrlInput.value.trim();
+        const tags = bookmarkTagsInput.value.trim().split(/\s+/).filter(Boolean);
+        const height = Math.max(120, parseInt(bookmarkHeightInput.value) || 260);
+        const content = bookmarkTextarea.value;
+
+        if (type === 'mark') {
+          const marks = parseMarks(content);
+          cards.push({ type: 'webMark', title, marks, tags, height });
+          save();
+          updateTagsAndRender();
+          return;
+        }
+
+        if (type === 'gist' && saveToGistToggle.checked) {
+          const token = localStorage.getItem('githubToken');
+          if (!token) {
+            alert('请在管理页面填写 GitHub Token');
+            return;
+          }
+          try {
+            const filename = title || 'note.md';
+            const res = await fetch('https://api.github.com/gists', {
+              method: 'POST',
+              headers: {
+                Authorization: 'token ' + token,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                description: 'flow-gist',
+                public: false,
+                files: { [filename]: { content } }
+              })
+            });
+            if (!res.ok) throw new Error('create');
+            const data = await res.json();
+            const gistUrl = data.html_url + '?file=' + encodeURIComponent(filename);
+            const fm = parseFrontMatter(content);
+            if (fm) {
+              cards.push({
+                title: fm.title || filename,
+                description: fm.description || '',
+                url: gistUrl,
+                tags: fm.tags.length ? fm.tags : ['gist'],
+                content: fm.content.trim(),
+                gistId: data.id,
+                filename
+              });
+            } else {
+              cards.push({
+                title: filename,
+                description,
+                url: gistUrl,
+                tags: ['gist'],
+                content: content.trim(),
+                gistId: data.id,
+                filename
+              });
+            }
+            save();
+            updateTagsAndRender();
+            return;
+          } catch (e) {
+            alert('创建失败');
+            console.error(e);
+            return;
+          }
+        }
+
+        cards.push({ title, description, url, tags, content: content.trim(), height });
+        save();
+        updateTagsAndRender();
       }
 
       function createCard(item, index) {
@@ -330,7 +442,6 @@
       function renderTags(tags) {
         tagList.innerHTML = '';
         tagList.appendChild(loadGistsBtn);
-        tagList.appendChild(newGistBtn);
         tagList.appendChild(newMarkBtn);
         tags.forEach(t => {
           const btn = document.createElement('button');
@@ -368,27 +479,6 @@
           rIndex++;
         });
       }
-      function handleCreate() {
-        const title = prompt('标题');
-        if (!title) return;
-        const description = prompt('描述') || '';
-        const url = prompt('链接（可选）') || '';
-        const tags = (prompt('标签（用空格分隔，可选）') || '').split(/\s+/).filter(Boolean);
-        const height = Math.max(120, parseInt(prompt('卡片高度（默认260）') || '260'));
-        cards.push({ title, description, url, tags, height });
-        save();
-        updateTagsAndRender();
-      }
-
-      function handleCreateMark() {
-        bookmarkTitleInput.value = '';
-        bookmarkTextarea.value = '';
-        bookmarkTagsInput.value = '';
-        bookmarkHeightInput.value = '260';
-        editIndex = cards.length;
-        bookmarkEditModal.classList.remove('hidden');
-        bookmarkEditModal.classList.add('flex', 'show');
-      }
 
       function handleEditMark(index) {
         const item = cards[index];
@@ -425,105 +515,6 @@
         updateTagsAndRender();
       }
 
-      function handleCreateMark() {
-        bookmarkTitleInput.value = '';
-        bookmarkTextarea.value = '';
-        bookmarkTagsInput.value = '';
-        bookmarkHeightInput.value = '260';
-        editIndex = cards.length;
-        bookmarkEditModal.classList.remove('hidden');
-        bookmarkEditModal.classList.add('flex', 'show');
-      }
-
-      function handleEditMark(index) {
-        const item = cards[index];
-        if (!item || item.type !== 'webMark') return;
-        editIndex = index;
-        bookmarkTitleInput.value = item.title || '';
-        bookmarkTextarea.value = (item.marks || []).map(m => `${m.title}|${m.url}`).join('\n');
-        bookmarkTagsInput.value = Array.isArray(item.tags) ? item.tags.join(' ') : '';
-        bookmarkHeightInput.value = String(item.height || 260);
-        bookmarkEditModal.classList.remove('hidden');
-        bookmarkEditModal.classList.add('flex', 'show');
-      }
-
-      function saveMark() {
-        const index = editIndex;
-        editIndex = null;
-        bookmarkEditModal.classList.add('hidden');
-        bookmarkEditModal.classList.remove('flex', 'show');
-        const title = bookmarkTitleInput.value.trim() || '收藏';
-        const marks = parseMarks(bookmarkTextarea.value);
-        const tags = bookmarkTagsInput.value.trim().split(/\s+/).filter(Boolean);
-        const height = Math.max(120, parseInt(bookmarkHeightInput.value) || 260);
-        if (index >= cards.length) {
-          cards.push({ type: 'webMark', title, marks, tags, height });
-        } else {
-          const item = cards[index];
-          if (!item || item.type !== 'webMark') return;
-          item.title = title;
-          item.marks = marks;
-          item.tags = tags;
-          item.height = height;
-        }
-        save();
-        updateTagsAndRender();
-      }
-
-      async function handleCreateGist() {
-        const filename = prompt('文件名，例如 note.md');
-        if (!filename) return;
-        const content = prompt('内容') || '';
-        const token = localStorage.getItem('githubToken');
-        if (!token) {
-          alert('请在管理页面填写 GitHub Token');
-          return;
-        }
-        try {
-          const res = await fetch('https://api.github.com/gists', {
-            method: 'POST',
-            headers: {
-              Authorization: 'token ' + token,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              description: 'flow-gist',
-              public: false,
-              files: { [filename]: { content } }
-            })
-          });
-          if (!res.ok) throw new Error('create');
-          const data = await res.json();
-          const url = data.html_url + '?file=' + encodeURIComponent(filename);
-          const fm = parseFrontMatter(content);
-          if (fm) {
-            cards.push({
-              title: fm.title || filename,
-              description: fm.description || '',
-              url,
-              tags: fm.tags.length ? fm.tags : ['gist'],
-              content: fm.content.trim(),
-              gistId: data.id,
-              filename
-            });
-          } else {
-            cards.push({
-              title: filename,
-              description: '',
-              url,
-              tags: ['gist'],
-              content: content.trim(),
-              gistId: data.id,
-              filename
-            });
-          }
-          save();
-          updateTagsAndRender();
-        } catch (e) {
-          alert('创建失败');
-          console.error(e);
-        }
-      }
 
       function handleEditGist(index) {
         const item = cards[index];
@@ -730,9 +721,23 @@
           console.error('preload', e);
         }
       }
-      addCardBtn.addEventListener('click', handleCreate);
-      newGistBtn.addEventListener('click', handleCreateGist);
-      newMarkBtn.addEventListener('click', handleCreateMark);
+      function openCreateModal(type = 'default') {
+        cardTypeSelect.value = type;
+        bookmarkTitleInput.value = '';
+        bookmarkDescriptionInput.value = '';
+        bookmarkUrlInput.value = '';
+        bookmarkTextarea.value = '';
+        bookmarkTagsInput.value = '';
+        bookmarkHeightInput.value = '260';
+        saveToGistToggle.checked = false;
+        editIndex = cards.length;
+        updateTypeFields();
+        bookmarkEditModal.classList.remove('hidden');
+        bookmarkEditModal.classList.add('flex', 'show');
+      }
+
+      addCardBtn.addEventListener('click', () => openCreateModal());
+      newMarkBtn.addEventListener('click', () => openCreateModal());
       loadGistsBtn.addEventListener('click', () => {
         preloadInject();
         fetchGists();
@@ -740,7 +745,7 @@
       if (sidebarAddBtn) {
         sidebarAddBtn.addEventListener('click', (e) => {
           e.preventDefault();
-          handleCreate();
+          openCreateModal();
         });
       }
       tagList.addEventListener('click', (e) => {
@@ -787,7 +792,14 @@
         bookmarkEditModal.classList.remove('flex', 'show');
       });
       saveEditGist.addEventListener('click', saveEdit);
-      saveEditBookmark.addEventListener('click', saveMark);
+      saveEditBookmark.addEventListener('click', () => {
+        if (editIndex >= cards.length) {
+          saveNewCard();
+        } else {
+          saveMark();
+        }
+      });
+      cardTypeSelect.addEventListener('change', updateTypeFields);
       deleteGistBtn.addEventListener('click', deleteGist);
       // 点击遮罩层时不再关闭编辑弹窗，避免误触
       // gistEditModal.addEventListener('click', e => {
