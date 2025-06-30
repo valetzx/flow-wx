@@ -176,7 +176,7 @@ async function scrape(article) {
     const html = await res.text();
     const $ = cheerio.load(html, { decodeEntities: false });
     const name = article.title || $('#activity-name').text().trim() || $('.rich_media_title').text().trim() || randomSentence();
-    const time = article.date || $('#publish_time').text().trim() || $('meta[property="article:published_time"]').attr('content');
+    const date = article.date || $('#publish_time').text().trim() || $('meta[property="article:published_time"]').attr('content');
     const description = article.describe || $('meta[property="og:description"]').attr('content') || $('#js_content p').first().text().trim();
     const images = [];
     $('#js_content img').each((_, el) => {
@@ -194,14 +194,13 @@ async function scrape(article) {
     }
     return {
       [name]: {
-        time,
+        date,
         description,
         images,
         jsonWx,
         url,
         tags: article.tags,
         abbrlink: article.abbrlink,
-        date: article.date,
       },
     };
   } finally {
