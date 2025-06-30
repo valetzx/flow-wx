@@ -120,7 +120,7 @@ try {
           $('#activity-name').text().trim() ||
           $('.rich_media_title').text().trim() ||
           '无标题';
-        const time =
+        const date =
           article.date ||
           $('#publish_time').text().trim() ||
           $('meta[property="article:published_time"]').attr('content');
@@ -144,14 +144,13 @@ try {
         }
         return {
           [name]: {
-            time,
+            date,
             description,
             images,
             jsonWx,
             url: article.url,
             tags: article.tags,
             abbrlink: article.abbrlink,
-            date: article.date,
           },
         };
       } finally {

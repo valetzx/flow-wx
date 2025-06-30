@@ -269,7 +269,7 @@ async function scrape(article) {
       $('#activity-name').text().trim() ||
       $('.rich_media_title').text().trim() ||
       randomSentence();
-    const time = article.date ||
+    const date = article.date ||
       $('#publish_time').text().trim() ||
       $('meta[property="article:published_time"]').attr('content')?.trim();
     const description = article.describe || $('meta[property="og:description"]').attr('content')?.trim() ||
@@ -288,7 +288,7 @@ async function scrape(article) {
         jsonWx = { parseError: e.message, raw: jsonWxRaw };
       }
     }
-    return { [name]: { time, description, images, jsonWx, url, tags: article.tags, abbrlink: article.abbrlink, date: article.date } };
+    return { [name]: { date, description, images, jsonWx, url, tags: article.tags, abbrlink: article.abbrlink } };
   } finally {
     clearTimeout(timer);
   }

@@ -218,7 +218,7 @@ async function scrape(article: ArticleMeta) {
       $(".rich_media_title").text().trim() ||
       randomSentence();
 
-    const time = article.date ||
+    const date = article.date ||
       $("#publish_time").text().trim() ||
       $('meta[property="article:published_time"]').attr("content")?.trim();
 
@@ -245,14 +245,13 @@ async function scrape(article: ArticleMeta) {
 
     return {
       [name]: {
-        time,
+        date,
         description,
         images,
         jsonWx,
         url,
         tags: article.tags,
         abbrlink: article.abbrlink,
-        date: article.date,
       },
     };
   } finally {

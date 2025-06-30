@@ -134,7 +134,7 @@ async function scrapeWx(article) {
     doc.querySelector('#activity-name')?.textContent.trim() ||
     doc.querySelector('.rich_media_title')?.textContent.trim() ||
     randomSentence();
-  const time = article.date ||
+  const date = article.date ||
     doc.querySelector('#publish_time')?.textContent.trim() ||
     doc.querySelector('meta[property="article:published_time"]')?.getAttribute('content')?.trim();
   const description = article.describe ||
@@ -151,7 +151,7 @@ async function scrapeWx(article) {
     }
   }
   return {
-    [title]: { time, description, images, jsonWx, url, tags: article.tags, abbrlink: article.abbrlink, date: article.date }
+    [title]: { date, description, images, jsonWx, url, tags: article.tags, abbrlink: article.abbrlink }
   };
 }
 
