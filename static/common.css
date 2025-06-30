@@ -307,3 +307,30 @@
       outline: none;
       box-shadow: none;
     }
+
+/* Settings tabs */
+#settingsTabs input[type="radio"] {
+  display: none;
+}
+#settingsTabs .tab-labels label {
+  flex: 1;
+  text-align: center;
+  padding: 0.25rem 0;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+#tabSettings:checked ~ .tab-labels label[for="tabSettings"],
+#tabAbout:checked ~ .tab-labels label[for="tabAbout"],
+#tabLogs:checked ~ .tab-labels label[for="tabLogs"] {
+  border-color: rgb(var(--primary));
+  color: rgb(var(--primary));
+}
+#settingsTabs .tab-content {
+  display: none;
+  margin-top: 0.5rem;
+}
+#tabSettings:checked ~ #tabSettingsContent,
+#tabAbout:checked ~ #tabAboutContent,
+#tabLogs:checked ~ #tabLogsContent {
+  display: block;
+}
