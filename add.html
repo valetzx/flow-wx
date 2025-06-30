@@ -220,7 +220,10 @@
         wrapper.className = 'masonry-item rounded-2xl shadow overflow-hidden flex flex-col';
         wrapper.style.setProperty('--card-height', (item.height || 260) + 'px');
         const text = document.createElement('div');
-        text.className = 'card-content p-5 flex flex-col gap-2';
+        const cardHeight = item.height || 260;
+        text.className = 'card-content p-5 flex flex-col gap-2 no-scrollbar';
+        text.style.maxHeight = cardHeight + 'px';
+        text.style.overflowY = 'auto';
         const h2 = document.createElement('h2');
         h2.className = 'text-xl font-semibold mb-1';
         h2.textContent = item.title;
