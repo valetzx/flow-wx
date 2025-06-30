@@ -64,10 +64,11 @@ function setupSplash() {
   });
 }
 
+
+initDarkMode();
 window.commonReady = new Promise(resolve => {
   document.addEventListener('DOMContentLoaded', async () => {
     await includeHTML();
-    initDarkMode();
     setupSplash();
     resolve();
   });
