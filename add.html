@@ -441,7 +441,6 @@
       function renderTags(tags) {
         tagList.innerHTML = '';
         tagList.appendChild(loadGistsBtn);
-        tagList.appendChild(newMarkBtn);
         tags.forEach(t => {
           const btn = document.createElement('button');
           btn.dataset.tag = t;
