@@ -65,8 +65,15 @@
   </div>
     <div id="bookmarkEditModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
       <div class="bg-card text-on-surface rounded-xl w-11/12 max-w-3xl p-4 flex flex-col gap-2">
+        <select id="addTypeSelect" class="p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface">
+          <option value="default">默认</option>
+          <option value="gist">Gist</option>
+          <option value="mark">Mark</option>
+        </select>
+        <label class="flex items-center gap-1"><input id="saveToGist" type="checkbox">存到Gists</label>
         <input id="bookmarkTitleInput" type="text" class="p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface" placeholder="标题">
-        <textarea id="bookmarkTextarea" class="flex-1 w-full p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface" placeholder="每行格式: 标题|链接"></textarea>
+        <input id="bookmarkUrlInput" type="text" class="p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface hidden" placeholder="链接">
+        <textarea id="bookmarkTextarea" class="flex-1 w-full p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface" placeholder="内容"></textarea>
         <input id="bookmarkTagsInput" type="text" class="p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface" placeholder="标签 用空格分隔">
         <input id="bookmarkHeightInput" type="number" min="120" class="p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface" placeholder="卡片高度 默认260">
         <div class="flex justify-end gap-2 mt-2">
@@ -76,10 +83,6 @@
       </div>
     </div>
   </div>
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    window.commonReady?.then(() => {
-      const gallery = document.getElementById('gallery');
       const addCardBtn = document.getElementById('addCardBtn');
       const newGistBtn = document.getElementById('newGistBtn');
       const newMarkBtn = document.getElementById('newMarkBtn');
@@ -107,6 +110,9 @@
       const bookmarkTextarea = document.getElementById('bookmarkTextarea');
       const bookmarkTagsInput = document.getElementById('bookmarkTagsInput');
       const bookmarkHeightInput = document.getElementById('bookmarkHeightInput');
+        const bookmarkUrlInput = document.getElementById('bookmarkUrlInput');
+        const addTypeSelect = document.getElementById('addTypeSelect');
+        const saveToGist = document.getElementById('saveToGist');
       const saveEditBookmark = document.getElementById('saveEditBookmark');
       const cancelEditBookmark = document.getElementById('cancelEditBookmark');
       const clearCacheBtn = document.getElementById('clearCache');
@@ -149,6 +155,7 @@
       let selectedTags = [];
       let allowMultiTags = multiTagsSaved;
       let editIndex = null;
+      let isAdding = false;
       load();
       updateTagsAndRender();
 
@@ -368,15 +375,41 @@
           rIndex++;
         });
       }
+      function updateAddModal() {
+        const t = addTypeSelect.value;
+        if (t === "default") {
+          bookmarkUrlInput.classList.remove("hidden");
+          bookmarkTextarea.placeholder = "描述";
+        } else if (t === "mark") {
+          bookmarkUrlInput.classList.add("hidden");
+          bookmarkTextarea.placeholder = "每行格式: 标题|链接";
+        } else {
+          bookmarkUrlInput.classList.add("hidden");
+          bookmarkTextarea.placeholder = "内容";
+        }
+      }
+      function showAddModal(type) {
+        isAdding = true;
+        addTypeSelect.value = type || "default";
+        updateAddModal();
+        bookmarkTitleInput.value = "";
+        bookmarkUrlInput.value = "";
+        bookmarkTextarea.value = "";
+        bookmarkTagsInput.value = "";
+        bookmarkHeightInput.value = "260";
+        saveToGist.checked = false;
+        editIndex = cards.length;
+        bookmarkEditModal.classList.remove("hidden");
+        bookmarkEditModal.classList.add("flex", "show");
+      }
+      addTypeSelect.addEventListener("change", updateAddModal);
       function handleCreate() {
-        const title = prompt('标题');
-        if (!title) return;
-        const description = prompt('描述') || '';
-        const url = prompt('链接（可选）') || '';
-        const tags = (prompt('标签（用空格分隔，可选）') || '').split(/\s+/).filter(Boolean);
-        const height = Math.max(120, parseInt(prompt('卡片高度（默认260）') || '260'));
-        cards.push({ title, description, url, tags, height });
-        save();
+        showAddModal('default');
+      }
+
+      function handleCreateMark() {
+        showAddModal('mark');
+      }
         updateTagsAndRender();
       }
 
@@ -426,11 +459,20 @@
       }
 
       function handleCreateMark() {
-        bookmarkTitleInput.value = '';
-        bookmarkTextarea.value = '';
-        bookmarkTagsInput.value = '';
-        bookmarkHeightInput.value = '260';
-        editIndex = cards.length;
+        showAddModal('mark');
+      }
+
+      function handleEditMark(index) {
+        const item = cards[index];
+        if (!item || item.type !== 'webMark') return;
+        isAdding = false;
+        editIndex = index;
+        bookmarkTitleInput.value = item.title || '';
+        bookmarkTextarea.value = (item.marks || []).map(m => `${m.title}|${m.url}`).join('\n');
+        bookmarkTagsInput.value = Array.isArray(item.tags) ? item.tags.join(' ') : '';
+        bookmarkHeightInput.value = String(item.height || 260);
+        addTypeSelect.value = 'mark';
+        updateAddModal();
         bookmarkEditModal.classList.remove('hidden');
         bookmarkEditModal.classList.add('flex', 'show');
       }
@@ -438,34 +480,78 @@
       function handleEditMark(index) {
         const item = cards[index];
         if (!item || item.type !== 'webMark') return;
+        isAdding = false;
         editIndex = index;
         bookmarkTitleInput.value = item.title || '';
         bookmarkTextarea.value = (item.marks || []).map(m => `${m.title}|${m.url}`).join('\n');
         bookmarkTagsInput.value = Array.isArray(item.tags) ? item.tags.join(' ') : '';
         bookmarkHeightInput.value = String(item.height || 260);
+        addTypeSelect.value = 'mark';
+        updateAddModal();
         bookmarkEditModal.classList.remove('hidden');
         bookmarkEditModal.classList.add('flex', 'show');
       }
 
-      function saveMark() {
+      async function saveEntry() {
         const index = editIndex;
         editIndex = null;
         bookmarkEditModal.classList.add('hidden');
         bookmarkEditModal.classList.remove('flex', 'show');
-        const title = bookmarkTitleInput.value.trim() || '收藏';
-        const marks = parseMarks(bookmarkTextarea.value);
+        const type = addTypeSelect.value;
+        const title = bookmarkTitleInput.value.trim() || (type === 'mark' ? '收藏' : '无标题');
         const tags = bookmarkTagsInput.value.trim().split(/\s+/).filter(Boolean);
         const height = Math.max(120, parseInt(bookmarkHeightInput.value) || 260);
-        if (index >= cards.length) {
-          cards.push({ type: 'webMark', title, marks, tags, height });
-        } else {
+        if (!isAdding && type === 'mark' && index < cards.length) {
           const item = cards[index];
           if (!item || item.type !== 'webMark') return;
           item.title = title;
-          item.marks = marks;
+          item.marks = parseMarks(bookmarkTextarea.value);
           item.tags = tags;
           item.height = height;
+        } else {
+          if (type === 'mark') {
+            const marks = parseMarks(bookmarkTextarea.value);
+            cards.push({ type: 'webMark', title, marks, tags, height });
+          } else if (type === 'gist') {
+            const content = bookmarkTextarea.value;
+            if (saveToGist.checked) {
+              const token = localStorage.getItem('githubToken');
+              if (!token) { alert('请在管理页面填写 GitHub Token'); return; }
+              const filename = Date.now() + '.md';
+              try {
+                const res = await fetch('https://api.github.com/gists', {
+                  method: 'POST',
+                  headers: { Authorization: 'token ' + token, 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ description: 'flow-gist', public: false, files: { [filename]: { content } } })
+                });
+                if (!res.ok) throw new Error('create');
+                const data = await res.json();
+                const url = data.html_url + '?file=' + encodeURIComponent(filename);
+                const fm = parseFrontMatter(content);
+                if (fm) {
+                  cards.push({ title: fm.title || filename, description: fm.description || '', url, tags: fm.tags.length ? fm.tags : ['gist'], content: fm.content.trim(), gistId: data.id, filename, height });
+                } else {
+                  cards.push({ title: filename, description: '', url, tags: ['gist'], content: content.trim(), gistId: data.id, filename, height });
+                }
+              } catch (e) {
+                alert('创建失败');
+                console.error(e);
+              }
+            } else {
+              const fm = parseFrontMatter(content);
+              if (fm) {
+                cards.push({ title: fm.title || 'gist', description: fm.description || '', tags: fm.tags.length ? fm.tags : ['gist'], content: fm.content.trim(), height });
+              } else {
+                cards.push({ title: title, description: '', tags: ['gist'], content: content.trim(), height });
+              }
+            }
+          } else {
+            const description = bookmarkTextarea.value;
+            const url = bookmarkUrlInput.value.trim();
+            cards.push({ title, description, url, tags, height });
+          }
         }
+        isAdding = false;
         save();
         updateTagsAndRender();
       }
@@ -731,8 +817,8 @@
         }
       }
       addCardBtn.addEventListener('click', handleCreate);
-      newGistBtn.addEventListener('click', handleCreateGist);
-      newMarkBtn.addEventListener('click', handleCreateMark);
+      newGistBtn.addEventListener('click', () => showAddModal('gist'));
+      newMarkBtn.addEventListener('click', () => showAddModal('mark'));
       loadGistsBtn.addEventListener('click', () => {
         preloadInject();
         fetchGists();
@@ -740,7 +826,7 @@
       if (sidebarAddBtn) {
         sidebarAddBtn.addEventListener('click', (e) => {
           e.preventDefault();
-          handleCreate();
+          showAddModal('default');
         });
       }
       tagList.addEventListener('click', (e) => {
@@ -787,7 +873,7 @@
         bookmarkEditModal.classList.remove('flex', 'show');
       });
       saveEditGist.addEventListener('click', saveEdit);
-      saveEditBookmark.addEventListener('click', saveMark);
+      saveEditBookmark.addEventListener('click', saveEntry);
       deleteGistBtn.addEventListener('click', deleteGist);
       // 点击遮罩层时不再关闭编辑弹窗，避免误触
       // gistEditModal.addEventListener('click', e => {
