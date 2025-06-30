@@ -40,6 +40,7 @@
     <div id="tagList" class="flex overflow-x-auto whitespace-nowrap gap-2 px-4 mb-4 no-scrollbar max-w-screen-xl mx-auto">
       <button id="loadGistsBtn" class="px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary bg-card hidden"> ↻ </button>
       <button id="newGistBtn" class="px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary bg-card hidden"> + </button>
+      <button id="newMarkBtn" class="px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary bg-card"> ☆ </button>
     </div>
     <main class="px-4 max-w-screen-xl mx-auto pb-8">
       <div class="masonry" id="gallery"></div>
@@ -59,6 +60,18 @@
           <button id="saveEditGist" class="px-3 py-1 rounded bg-primary text-white">保存</button>
           <button id="deleteGist" class="px-3 py-1 rounded bg-red-500 text-white">删除</button>
         </div>
+    </div>
+  </div>
+    <div id="bookmarkEditModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+      <div class="bg-card text-on-surface rounded-xl w-11/12 max-w-3xl p-4 flex flex-col gap-2">
+        <input id="bookmarkTitleInput" type="text" class="p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface" placeholder="标题">
+        <textarea id="bookmarkTextarea" class="flex-1 w-full p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface" placeholder="每行格式: 标题|链接"></textarea>
+        <input id="bookmarkTagsInput" type="text" class="p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface" placeholder="标签 用空格分隔">
+        <input id="bookmarkHeightInput" type="number" min="120" class="p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface" placeholder="卡片高度 默认260">
+        <div class="flex justify-end gap-2 mt-2">
+          <button id="cancelEditBookmark" class="px-3 py-1 rounded bg-gray-500 text-white">取消</button>
+          <button id="saveEditBookmark" class="px-3 py-1 rounded bg-primary text-white">保存</button>
+        </div>
       </div>
     </div>
   </div>
@@ -68,6 +81,7 @@
       const gallery = document.getElementById('gallery');
       const addCardBtn = document.getElementById('addCardBtn');
       const newGistBtn = document.getElementById('newGistBtn');
+      const newMarkBtn = document.getElementById('newMarkBtn');
       const sidebarAddBtn = document.getElementById('addBtn');
       const settingsPanel = document.getElementById('settingsPanel');
       const moreBtn = document.getElementById('moreBtn');
@@ -86,6 +100,13 @@
       const saveEditGist = document.getElementById('saveEditGist');
       const cancelEditGist = document.getElementById('cancelEditGist');
       const deleteGistBtn = document.getElementById('deleteGist');
+      const bookmarkEditModal = document.getElementById('bookmarkEditModal');
+      const bookmarkTitleInput = document.getElementById('bookmarkTitleInput');
+      const bookmarkTextarea = document.getElementById('bookmarkTextarea');
+      const bookmarkTagsInput = document.getElementById('bookmarkTagsInput');
+      const bookmarkHeightInput = document.getElementById('bookmarkHeightInput');
+      const saveEditBookmark = document.getElementById('saveEditBookmark');
+      const cancelEditBookmark = document.getElementById('cancelEditBookmark');
       const clearCacheBtn = document.getElementById('clearCache');
       const navEl = document.querySelector('nav');
       const contentEl = document.getElementById('content');
@@ -174,6 +195,14 @@
         return result;
       }
 
+      function parseMarks(text) {
+        return text.split(/\n+/).map(l => {
+          const [t, u] = l.split('|').map(s => s.trim());
+          if (t && u) return { title: t, url: u };
+          return null;
+        }).filter(Boolean);
+      }
+
       function showArticle(content) {
         articleContent.textContent = content;
         articleModal.classList.remove('hidden');
@@ -189,6 +218,7 @@
       function createCard(item, index) {
         const wrapper = document.createElement('div');
         wrapper.className = 'masonry-item rounded-2xl shadow overflow-hidden flex flex-col';
+        wrapper.style.setProperty('--card-height', (item.height || 260) + 'px');
         const text = document.createElement('div');
         text.className = 'card-content p-5 flex flex-col gap-2';
         const h2 = document.createElement('h2');
@@ -197,6 +227,21 @@
         const p = document.createElement('p');
         p.className = 'text-sm leading-relaxed';
         p.textContent = item.description || '';
+        let listEl;
+        if (item.type === 'webMark' && Array.isArray(item.marks)) {
+          listEl = document.createElement('ul');
+          listEl.className = 'bookmark-list list-disc pl-4 text-sm flex flex-col gap-1';
+          item.marks.forEach(m => {
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.href = m.url;
+            a.textContent = m.title;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            li.appendChild(a);
+            listEl.appendChild(li);
+          });
+        }
         const bottom = document.createElement('div');
         bottom.className = 'flex items-end mt-auto gap-2';
         const tagsEl = document.createElement('div');
@@ -241,10 +286,20 @@
             handleEditGist(index);
           });
           bottom.appendChild(editBtn);
+        } else if (item.type === 'webMark') {
+          const editBtn = document.createElement('button');
+          editBtn.className = 'text-xs text-primary flex-none';
+          editBtn.textContent = '编辑';
+          editBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            handleEditMark(index);
+          });
+          bottom.appendChild(editBtn);
         }
 
         text.appendChild(h2);
         text.appendChild(p);
+        if (listEl) text.appendChild(listEl);
         text.appendChild(bottom);
         bottom.appendChild(delBtn);
         if (link) bottom.appendChild(link);
@@ -252,7 +307,7 @@
         wrapper.addEventListener('click', () => {
           if (item.content) {
             showArticle(item.content);
-          } else if (item.url) {
+          } else if (item.url && item.type !== 'webMark') {
             window.open(item.url, '_blank');
           }
         });
@@ -271,6 +326,7 @@
         tagList.innerHTML = '';
         tagList.appendChild(loadGistsBtn);
         tagList.appendChild(newGistBtn);
+        tagList.appendChild(newMarkBtn);
         tags.forEach(t => {
           const btn = document.createElement('button');
           btn.dataset.tag = t;
@@ -297,12 +353,14 @@
       }
       function render() {
         columns.forEach(col => col.innerHTML = '');
+        let rIndex = 0;
         cards.forEach((item, idx) => {
           if (selectedTags.length && !selectedTags.every(t => Array.isArray(item.tags) && item.tags.includes(t))) {
             return;
           }
-          const col = columns[idx % columns.length];
+          const col = columns[rIndex % columns.length];
           col.appendChild(createCard(item, idx));
+          rIndex++;
         });
       }
       function handleCreate() {
@@ -312,6 +370,51 @@
         const url = prompt('链接（可选）') || '';
         const tags = (prompt('标签（用空格分隔，可选）') || '').split(/\s+/).filter(Boolean);
         cards.push({ title, description, url, tags });
+        save();
+        updateTagsAndRender();
+      }
+
+      function handleCreateMark() {
+        bookmarkTitleInput.value = '';
+        bookmarkTextarea.value = '';
+        bookmarkTagsInput.value = '';
+        bookmarkHeightInput.value = '260';
+        editIndex = cards.length;
+        bookmarkEditModal.classList.remove('hidden');
+        bookmarkEditModal.classList.add('flex', 'show');
+      }
+
+      function handleEditMark(index) {
+        const item = cards[index];
+        if (!item || item.type !== 'webMark') return;
+        editIndex = index;
+        bookmarkTitleInput.value = item.title || '';
+        bookmarkTextarea.value = (item.marks || []).map(m => `${m.title}|${m.url}`).join('\n');
+        bookmarkTagsInput.value = Array.isArray(item.tags) ? item.tags.join(' ') : '';
+        bookmarkHeightInput.value = String(item.height || 260);
+        bookmarkEditModal.classList.remove('hidden');
+        bookmarkEditModal.classList.add('flex', 'show');
+      }
+
+      function saveMark() {
+        const index = editIndex;
+        editIndex = null;
+        bookmarkEditModal.classList.add('hidden');
+        bookmarkEditModal.classList.remove('flex', 'show');
+        const title = bookmarkTitleInput.value.trim() || '收藏';
+        const marks = parseMarks(bookmarkTextarea.value);
+        const tags = bookmarkTagsInput.value.trim().split(/\s+/).filter(Boolean);
+        const height = Math.max(120, parseInt(bookmarkHeightInput.value) || 260);
+        if (index >= cards.length) {
+          cards.push({ type: 'webMark', title, marks, tags, height });
+        } else {
+          const item = cards[index];
+          if (!item || item.type !== 'webMark') return;
+          item.title = title;
+          item.marks = marks;
+          item.tags = tags;
+          item.height = height;
+        }
         save();
         updateTagsAndRender();
       }
@@ -575,6 +678,7 @@
       }
       addCardBtn.addEventListener('click', handleCreate);
       newGistBtn.addEventListener('click', handleCreateGist);
+      newMarkBtn.addEventListener('click', handleCreateMark);
       loadGistsBtn.addEventListener('click', () => {
         preloadInject();
         fetchGists();
@@ -623,7 +727,13 @@
         gistEditModal.classList.add('hidden');
         gistEditModal.classList.remove('flex', 'show');
       });
+      cancelEditBookmark.addEventListener('click', () => {
+        editIndex = null;
+        bookmarkEditModal.classList.add('hidden');
+        bookmarkEditModal.classList.remove('flex', 'show');
+      });
       saveEditGist.addEventListener('click', saveEdit);
+      saveEditBookmark.addEventListener('click', saveMark);
       deleteGistBtn.addEventListener('click', deleteGist);
       // 点击遮罩层时不再关闭编辑弹窗，避免误触
       // gistEditModal.addEventListener('click', e => {
