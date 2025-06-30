@@ -307,3 +307,17 @@
       outline: none;
       box-shadow: none;
     }
+
+    /* 设置面板标签样式 */
+    #settingsTabs .tab-button {
+      border-radius: 9999px 9999px 0 0;
+      padding: 0.25rem 0.75rem;
+      font-weight: 600;
+      background-color: rgb(var(--surface));
+      color: rgb(var(--on-surface));
+    }
+
+    #settingsTabs .tab-button.active {
+      background-color: rgb(var(--primary));
+      color: #fff;
+    }

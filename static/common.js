@@ -64,11 +64,39 @@ function setupSplash() {
   });
 }
 
+function initSettingsTabs() {
+  const panel = document.getElementById('settingsPanel');
+  if (!panel) return;
+  const tabs = panel.querySelectorAll('#settingsTabs .tab-button');
+  const contents = panel.querySelectorAll('.tab-content');
+  const logList = document.getElementById('logList');
+  if (logList) {
+    const origLog = console.log.bind(console);
+    console.log = (...args) => {
+      origLog(...args);
+      const li = document.createElement('li');
+      li.textContent = args.join(' ');
+      logList.appendChild(li);
+    };
+  }
+  tabs.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabs.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const target = btn.dataset.tab + 'Content';
+      contents.forEach(c => {
+        c.classList.toggle('hidden', c.id !== target);
+      });
+    });
+  });
+}
+
 window.commonReady = new Promise(resolve => {
   document.addEventListener('DOMContentLoaded', async () => {
     await includeHTML();
     initDarkMode();
     setupSplash();
+    initSettingsTabs();
     resolve();
   });
 });

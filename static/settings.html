@@ -1,11 +1,17 @@
     <div id="settingsPanel" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
       <div class="bg-card rounded-xl p-4 w-72 space-y-3">
         <div class="flex justify-between items-center">
-          <h2 class="font-semibold">设置</h2>
+          <div id="settingsTabs" class="flex space-x-2">
+            <button data-tab="settings" class="tab-button active">设置</button>
+            <button data-tab="about" class="tab-button">关于</button>
+            <button data-tab="logs" class="tab-button">日志</button>
+          </div>
           <button id="closeSettings" class="text-xl leading-none">
             &times;
           </button>
         </div>
+
+        <div id="settingsContent" class="tab-content space-y-3">
 
         <!-- 深色模式切换器 -->
         <div class="flex items-center justify-between py-1">
@@ -49,5 +55,15 @@
         <footer class="text-xs text-center text-gray-400 my-4 dark:text-gray-300">
           <a href="https://github.com/valetzx/flow-wx" class="hover:underline">查看项目源码 </a> · <a href="#">联系我吧</a>
         </footer>
+        </div>
+
+        <div id="aboutContent" class="tab-content hidden text-sm">
+          <p>本项目用于展示微信公众号文章的瀑布流图集。</p>
+        </div>
+
+        <div id="logsContent" class="tab-content hidden text-sm">
+          <ul id="logList" class="space-y-1"></ul>
+        </div>
+
       </div>
     </div>
