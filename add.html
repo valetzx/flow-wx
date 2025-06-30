@@ -54,7 +54,7 @@
     <div id="gistEditModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
       <div class="bg-card text-on-surface rounded-xl w-11/12 max-w-3xl h-[80vh] overflow-auto relative p-4 flex flex-col gap-2">
         <textarea id="gistEditTextarea" class="flex-1 w-full p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface"></textarea>
-        <input id="cardHeightInput" type="number" min="120" class="p-2 mt-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface" placeholder="卡片高度 默认260">
+        <input id="cardHeightInput" type="number" min="120" class="p-2 mt-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface" placeholder="卡片高度 默认280">
         <div class="flex justify-end gap-2 mt-2">
           <button id="cancelEditGist" class="px-3 py-1 rounded bg-gray-500 text-white">取消</button>
           <button id="saveEditGist" class="px-3 py-1 rounded bg-primary text-white">保存</button>
@@ -78,7 +78,7 @@
         <input id="bookmarkUrlInput" type="text" class="p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface" placeholder="链接 可选">
         <textarea id="bookmarkTextarea" class="flex-1 w-full p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface" placeholder="内容"></textarea>
         <input id="bookmarkTagsInput" type="text" class="p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface" placeholder="标签 用空格分隔">
-        <input id="bookmarkHeightInput" type="number" min="120" class="p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface" placeholder="卡片高度 默认260">
+        <input id="bookmarkHeightInput" type="number" min="120" class="p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface" placeholder="卡片高度 默认280">
         <div class="flex justify-end gap-2 mt-2">
           <button id="cancelEditBookmark" class="px-3 py-1 rounded bg-gray-500 text-white">取消</button>
           <button id="saveEditBookmark" class="px-3 py-1 rounded bg-primary text-white">保存</button>
@@ -258,7 +258,7 @@
         const description = bookmarkDescriptionInput.value.trim();
         const url = bookmarkUrlInput.value.trim();
         const tags = bookmarkTagsInput.value.trim().split(/\s+/).filter(Boolean);
-        const height = Math.max(120, parseInt(bookmarkHeightInput.value) || 260);
+        const height = Math.max(120, parseInt(bookmarkHeightInput.value) || 280);
         const content = bookmarkTextarea.value;
 
         if (type === 'mark') {
@@ -332,9 +332,9 @@
       function createCard(item, index) {
         const wrapper = document.createElement('div');
         wrapper.className = 'masonry-item rounded-2xl shadow overflow-hidden flex flex-col';
-        wrapper.style.setProperty('--card-height', (item.height || 260) + 'px');
+        wrapper.style.setProperty('--card-height', (item.height || 280) + 'px');
         const text = document.createElement('div');
-        const cardHeight = item.height || 260;
+        const cardHeight = item.height || 280;
         text.className = 'card-content p-5 flex flex-col gap-2 no-scrollbar';
         text.style.maxHeight = cardHeight + 'px';
         text.style.overflowY = 'auto';
@@ -487,7 +487,7 @@
         bookmarkTitleInput.value = item.title || '';
         bookmarkTextarea.value = (item.marks || []).map(m => `${m.title}|${m.url}`).join('\n');
         bookmarkTagsInput.value = Array.isArray(item.tags) ? item.tags.join(' ') : '';
-        bookmarkHeightInput.value = String(item.height || 260);
+        bookmarkHeightInput.value = String(item.height || 280);
         bookmarkEditModal.classList.remove('hidden');
         bookmarkEditModal.classList.add('flex', 'show');
       }
@@ -500,7 +500,7 @@
         const title = bookmarkTitleInput.value.trim() || '收藏';
         const marks = parseMarks(bookmarkTextarea.value);
         const tags = bookmarkTagsInput.value.trim().split(/\s+/).filter(Boolean);
-        const height = Math.max(120, parseInt(bookmarkHeightInput.value) || 260);
+        const height = Math.max(120, parseInt(bookmarkHeightInput.value) || 280);
         if (index >= cards.length) {
           cards.push({ type: 'webMark', title, marks, tags, height });
         } else {
@@ -521,7 +521,7 @@
         if (!item || !item.gistId) return;
         editIndex = index;
         gistEditTextarea.value = item.content || '';
-        cardHeightInput.value = String(item.height || 260);
+        cardHeightInput.value = String(item.height || 280);
         gistEditModal.classList.remove('hidden');
         gistEditModal.classList.add('flex', 'show');
       }
@@ -534,7 +534,7 @@
         const item = cards[index];
         if (!item || !item.gistId) return;
         const content = gistEditTextarea.value;
-        const height = Math.max(120, parseInt(cardHeightInput.value) || 260);
+        const height = Math.max(120, parseInt(cardHeightInput.value) || 280);
         const token = localStorage.getItem('githubToken');
         if (!token) {
           alert('请在管理页面填写 GitHub Token');
@@ -728,7 +728,7 @@
         bookmarkUrlInput.value = '';
         bookmarkTextarea.value = '';
         bookmarkTagsInput.value = '';
-        bookmarkHeightInput.value = '260';
+        bookmarkHeightInput.value = '280';
         saveToGistToggle.checked = false;
         editIndex = cards.length;
         updateTypeFields();
