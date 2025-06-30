@@ -89,6 +89,7 @@
       const loadGistsBtn = document.getElementById('loadGistsBtn');
       const columnCountInput = document.getElementById('columnCountInput');
       const perPageInput = document.getElementById('perPageInput');
+      const cardHeightInput = document.getElementById('cardHeightInput');
       const multiTagToggle = document.getElementById('multiTagToggle');
       const tagList = document.getElementById('tagList');
       const articleModal = document.getElementById('articleModal');
@@ -118,10 +119,12 @@
 
       const savedCols = parseInt(localStorage.getItem('columnCount')) || 4;
       const savedPerPage = parseInt(localStorage.getItem('perPage')) || 30;
+      const savedHeight = parseInt(localStorage.getItem('cardHeight')) || 260;
       const multiTagsSaved = localStorage.getItem('multiTags') === 'true';
       const initialCols = isMobile ? 2 : savedCols;
       columnCountInput.value = String(initialCols);
       perPageInput.value = String(savedPerPage);
+      cardHeightInput.value = String(savedHeight);
       multiTagToggle.checked = multiTagsSaved;
       let columns = [];
       function setupColumns(count) {
@@ -144,6 +147,7 @@
       let cards = [];
       let selectedTags = [];
       let allowMultiTags = multiTagsSaved;
+      let cardHeight = savedHeight;
       let editIndex = null;
       load();
       updateTagsAndRender();
@@ -216,6 +220,7 @@
       function createCard(item, index) {
         const wrapper = document.createElement('div');
         wrapper.className = 'masonry-item rounded-2xl shadow overflow-hidden flex flex-col';
+        wrapper.style.setProperty('--card-height', cardHeight + 'px');
         const text = document.createElement('div');
         text.className = 'card-content p-5 flex flex-col gap-2';
         const h2 = document.createElement('h2');
@@ -227,7 +232,7 @@
         let listEl;
         if (item.type === 'webMark' && Array.isArray(item.marks)) {
           listEl = document.createElement('ul');
-          listEl.className = 'list-disc pl-4 text-sm flex flex-col gap-1';
+          listEl.className = 'bookmark-list list-disc pl-4 text-sm flex flex-col gap-1';
           item.marks.forEach(m => {
             const li = document.createElement('li');
             const a = document.createElement('a');
@@ -350,12 +355,14 @@
       }
       function render() {
         columns.forEach(col => col.innerHTML = '');
+        let rIndex = 0;
         cards.forEach((item, idx) => {
           if (selectedTags.length && !selectedTags.every(t => Array.isArray(item.tags) && item.tags.includes(t))) {
             return;
           }
-          const col = columns[idx % columns.length];
+          const col = columns[rIndex % columns.length];
           col.appendChild(createCard(item, idx));
+          rIndex++;
         });
       }
       function handleCreate() {
@@ -745,15 +752,18 @@
       applySettings.addEventListener('click', () => {
         const cols = Math.max(1, parseInt(columnCountInput.value) || 1);
         const perPage = Math.max(1, parseInt(perPageInput.value) || 1);
+        const height = Math.max(120, parseInt(cardHeightInput.value) || 260);
         setupColumns(cols);
         localStorage.setItem('columnCount', String(cols));
         localStorage.setItem('perPage', String(perPage));
+        cardHeight = height;
+        localStorage.setItem('cardHeight', String(height));
         render();
         settingsPanel.classList.add('hidden');
         settingsPanel.classList.remove('flex', 'show');
       });
       clearCacheBtn.addEventListener('click', async () => {
-        ['customCards', 'wxData', 'wxDataNew', 'columnCount', 'perPage', 'githubToken'].forEach((k) => localStorage.removeItem(k));
+        ['customCards', 'wxData', 'wxDataNew', 'columnCount', 'perPage', 'cardHeight', 'githubToken'].forEach((k) => localStorage.removeItem(k));
         if ('caches' in window) {
           const names = await caches.keys();
           await Promise.all(names.map((n) => caches.delete(n)));
