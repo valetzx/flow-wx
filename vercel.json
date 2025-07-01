@@ -2,11 +2,11 @@
   "redirects": [
     {
       "source": "/ideas",
-      "destination": "/ideas.html",
+      "destination": "/ideas.html"
     },
     {
       "source": "/add",
-      "destination": "/add.html",
+      "destination": "/add.html"
     }
   ]
 }
