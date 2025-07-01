@@ -539,6 +539,7 @@ async function handler(req: Request): Promise<Response> {
     "/common.css",
     "/ideas.css",
     "/common.js",
+    "/article.js",
     "/sidebar.html",
     "/settings.html",
   ].includes(pathname)) {

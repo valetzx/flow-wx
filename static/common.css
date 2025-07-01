@@ -321,7 +321,8 @@
 }
 #tabSettings:checked ~ .tab-labels label[for="tabSettings"],
 #tabAbout:checked ~ .tab-labels label[for="tabAbout"],
-#tabLogs:checked ~ .tab-labels label[for="tabLogs"] {
+#tabLogs:checked ~ .tab-labels label[for="tabLogs"],
+#tabArticle:checked ~ .tab-labels label[for="tabArticle"] {
   border-color: rgb(var(--primary));
   color: rgb(var(--primary));
 }
@@ -331,6 +332,7 @@
 }
 #tabSettings:checked ~ #tabSettingsContent,
 #tabAbout:checked ~ #tabAboutContent,
-#tabLogs:checked ~ #tabLogsContent {
+#tabLogs:checked ~ #tabLogsContent,
+#tabArticle:checked ~ #tabArticleContent {
   display: block;
 }

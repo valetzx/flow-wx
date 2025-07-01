@@ -7,10 +7,12 @@
       <input type="radio" id="tabSettings" name="settingsTab" checked>
       <input type="radio" id="tabAbout" name="settingsTab">
       <input type="radio" id="tabLogs" name="settingsTab">
+      <input type="radio" id="tabArticle" name="settingsTab">
       <div class="tab-labels flex border-b mb-2">
         <label for="tabSettings" class="flex-1 text-center py-1 cursor-pointer">设置</label>
         <label for="tabAbout" class="flex-1 text-center py-1 cursor-pointer">关于</label>
         <label for="tabLogs" class="flex-1 text-center py-1 cursor-pointer">日志</label>
+        <label for="tabArticle" class="flex-1 text-center py-1 cursor-pointer">文章</label>
       </div>
       <div id="tabSettingsContent" class="tab-content space-y-3">
         <!-- 深色模式切换器 -->
@@ -56,9 +58,89 @@
       <div id="tabLogsContent" class="tab-content">
         <pre id="logOutput" class="text-xs whitespace-pre-wrap"></pre>
       </div>
-        <footer class="text-xs text-center text-gray-400 dark:text-gray-300" style="margin-top: 10px">
-          <a href="https://github.com/valetzx/flow-wx" class="hover:underline">查看项目源码 </a> · <a href="#">联系我吧</a>
-        </footer>
+      <div id="tabArticleContent" class="tab-content">
+        <style>
+          #flowWxPanel{font-family:system-ui,sans-serif;background:#f3f4f6;padding:12px}
+          #flowWxPanel button,#flowWxPanel input,#flowWxPanel select{font:inherit;border-radius:.375rem;border:1px solid #d1d5db;padding:4px 8px}
+          #flowWxPanel button{background:#3b82f6;color:#fff;cursor:pointer;border:none}
+          #flowWxPanel button:hover{background:#2563eb}
+          #flowWxPanel pre{white-space:pre-wrap;word-break:break-all;max-height:300px;overflow-y:auto}
+          #flowWxPanel .tabs{display:flex;align-items:center;margin-bottom:8px;background:#fff;border-radius:.5rem;box-shadow:0 1px 2px rgba(0,0,0,0.1);overflow:hidden}
+          #flowWxPanel .tab{flex:1;padding:6px 0;text-align:center;cursor:pointer;border-right:1px solid #e5e7eb}
+          #flowWxPanel .tab:last-child{border-right:none}
+          #flowWxPanel .tab.active{background:#3b82f6;color:#fff}
+          #flowWxPanel .tab-actions{margin-left:auto;display:flex;gap:4px;padding:0 6px}
+          #flowWxPanel .tab-actions button{background:transparent;color:#374151;border:none}
+          #flowWxPanel .tab-actions button:hover{background:#e5e7eb}
+          #flowWxPanel .tab-content{display:none;background:#fff;border-radius:.5rem;box-shadow:0 1px 2px rgba(0,0,0,0.1);padding:8px}
+          #flowWxPanel .tab-content.active{display:block}
+          #flowWxPanel textarea{width:100%;height:120px;border-radius:.375rem;border:1px solid #d1d5db;padding:4px}
+          #flowWxPanel .article-manager{display:flex;gap:6px;margin-top:6px}
+          #flowWxPanel .article-list{width:80px;border:1px solid #e5e7eb;padding:4px;overflow-y:auto;max-height:210px;background:#f9fafb;border-radius:.375rem}
+          #flowWxPanel .article-list ul{list-style:none;padding:0;margin:0}
+          #flowWxPanel .list-actions{display:flex;gap:4px;margin-bottom:4px}
+          #flowWxPanel .article-list li{cursor:pointer;margin:2px 0;padding:2px 4px;border-radius:.25rem}
+          #flowWxPanel .article-list li.active{background:#e5e7eb}
+          #flowWxPanel .article-detail{flex:1;background:#f9fafb;padding:6px;border-radius:.375rem;border:1px solid #e5e7eb}
+          #flowWxPanel .article-detail .row{display:flex;align-items:center;margin-bottom:4px}
+          #flowWxPanel .article-detail .row span{width:60px}
+          #flowWxPanel .article-detail input{flex:1;padding:4px;border-radius:.375rem;border:1px solid #d1d5db}
+          #flowWxPanel .options{display:flex;gap:8px;margin:6px 0}
+          #flowWxPanel .options label{display:flex;align-items:center;gap:2px}
+        </style>
+        <div id="flowWxPanel">
+          <div class="tabs">
+            <div class="tab active" data-tab="edit">文章</div>
+            <div class="tab" data-tab="result">结果</div>
+            <div class="tab-actions">
+              <button id="fullscreenBtn" title="Fullscreen">⛶</button>
+              <button id="settingsBtn" title="Settings">⚙</button>
+            </div>
+          </div>
+          <div id="editTab" class="tab-content active">
+            <input type="file" id="fileInput" accept=".txt">
+            <textarea id="articleText" placeholder="article.txt 内容" style="display:none;"></textarea>
+            <div id="articleManager" class="article-manager" style="display:none;">
+              <div class="article-list">
+                <div class="list-actions">
+                  <button id="addArticle">+</button>
+                  <button id="deleteArticle" title="Delete">-</button>
+                </div>
+                <ul id="articleList"></ul>
+              </div>
+              <div class="article-detail" id="detailContainer">
+                <div class="row"><span>url:</span><input id="detailUrl"></div>
+                <div class="row"><span>title:</span><input id="detailTitle"></div>
+                <div class="row"><span>tags:</span><input id="detailTags"></div>
+                <div class="row"><span>abbrlink:</span><input id="detailAbbrlink"></div>
+                <div class="row"><span>describe:</span><input id="detailDescribe"></div>
+                <div class="row"><span>date:</span><input id="detailDate"></div>
+                <div class="row" style="justify-content:flex-end"><button id="saveArticle">保存</button></div>
+              </div>
+            </div>
+            <div class="options">
+              <label><input type="checkbox" id="includeWx" checked>wx</label>
+              <label><input type="checkbox" id="includeBil" checked>bil</label>
+              <button id="generateBtn" style="margin-left: auto">生成</button>
+            </div>
+          </div>
+          <div id="resultTab" class="tab-content">
+            <div>
+              <h3>wx</h3>
+              <pre id="wxOutput"></pre>
+              <button id="downloadWx">Download wx</button>
+            </div>
+            <div>
+              <h3>bil</h3>
+              <pre id="bilOutput"></pre>
+              <button id="downloadBil">Download bil</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <footer class="text-xs text-center text-gray-400 dark:text-gray-300" style="margin-top: 10px">
+        <a href="https://github.com/valetzx/flow-wx" class="hover:underline">查看项目源码 </a> · <a href="#">联系我吧</a>
+      </footer>
     </div>
   </div>
 </div>

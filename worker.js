@@ -9,6 +9,7 @@ import ideasCss from "./static/ideas.css";
 //import { commonJs } from "./static/common.js?raw";
 import sidebarHtml from "./static/sidebar.html";
 import settingsHtml from "./static/settings.html";
+import articleJs from "./static/article.js";
 // import swHtml from "./sw.js";
 import articleText from "./article.txt";
 
@@ -549,7 +550,7 @@ self.addEventListener("fetch", (event) => {
   //   event.respondWith(cacheThenNetwork(event.request));
   } else if (url.pathname === "/") {
     event.respondWith(cacheThenNetwork(event.request));
-  } else if (url.pathname === "/common.css" || url.pathname === "/common.js" || url.pathname === "/ideas.css" || url.pathname === "/settings.html" || url.pathname === "/sidebar.html") {
+  } else if (url.pathname === "/common.css" || url.pathname === "/common.js" || url.pathname === "/ideas.css" || url.pathname === "/settings.html" || url.pathname === "/sidebar.html" || url.pathname === "/article.js") {
     event.respondWith(cacheThenNetwork(event.request));
   } else if (url.pathname === "/ideas") {
     event.respondWith(cacheThenNetwork(event.request));
@@ -667,6 +668,7 @@ async function cacheThenNetwork(request) {
 //      "/common.js",
       "/sidebar.html",
       "/settings.html",
+      "/article.js",
     ].includes(pathname)) {
       const ext = pathname.split(".").pop();
       const type =
@@ -678,6 +680,7 @@ async function cacheThenNetwork(request) {
         pathname === "/ideas.css" ? ideasCss :
 //        pathname === "/common.js" ? commonJs :
         pathname === "/sidebar.html" ? sidebarHtml :
+        pathname === "/article.js" ? articleJs :
         settingsHtml;
       return new Response(content, {
         headers: withCors({ "Content-Type": `${type}; charset=utf-8` }),
