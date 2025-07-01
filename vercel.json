@@ -1,0 +1,14 @@
+{
+  "redirects": [
+    {
+      "source": "/ideas.html",
+      "destination": "/ideas",
+      "permanent": true
+    },
+    {
+      "source": "/add.html",
+      "destination": "/add",
+      "permanent": true
+    }
+  ]
+}
