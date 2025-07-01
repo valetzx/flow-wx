@@ -20,8 +20,20 @@ function injectConfig(html) {
 async function buildHtml(name) {
   const raw = await fs.readFile(path.join(__dirname, name), 'utf8');
   const html = injectConfig(raw);
-  const outName = name === 'main.html' ? 'index.html' : name;
-  await fs.writeFile(path.join(outDir, outName), html);
+  const folderMap = {
+    'add.html': 'add',
+    'ideas.html': 'ideas',
+    'admin.html': '@admin',
+  };
+  if (name === 'main.html') {
+    await fs.writeFile(path.join(outDir, 'index.html'), html);
+  } else if (folderMap[name]) {
+    const dir = path.join(outDir, folderMap[name]);
+    await fs.mkdir(dir, { recursive: true });
+    await fs.writeFile(path.join(dir, 'index.html'), html);
+  } else {
+    await fs.writeFile(path.join(outDir, name), html);
+  }
 }
 
 await buildHtml('main.html');
