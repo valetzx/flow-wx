@@ -334,3 +334,36 @@
 #tabLogs:checked ~ #tabLogsContent {
   display: block;
 }
+
+/* About page animations */
+.about-message {
+  margin-top: 0.5rem;
+  animation: fadeInUp 0.6s ease;
+}
+
+.about-links a {
+  transition: transform 0.3s;
+}
+
+.about-links a:hover {
+  transform: scale(1.1) rotate(5deg);
+}
+
+#moreBtn {
+  transition: transform 0.3s;
+}
+
+#moreBtn:hover svg {
+  animation: spin 0.6s linear;
+}
+
+@keyframes fadeInUp {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
