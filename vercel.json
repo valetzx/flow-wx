@@ -3,12 +3,10 @@
     {
       "source": "/ideas",
       "destination": "/ideas.html",
-      "permanent": true
     },
     {
       "source": "/add",
       "destination": "/add.html",
-      "permanent": true
     }
   ]
 }
