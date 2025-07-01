@@ -1,5 +1,5 @@
 {
-  "redirects": [
+  "rewrites": [
     {
       "source": "/ideas",
       "destination": "/ideas.html"
@@ -7,6 +7,10 @@
     {
       "source": "/add",
       "destination": "/add.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
