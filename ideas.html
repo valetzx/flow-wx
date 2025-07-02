@@ -170,10 +170,8 @@ document.addEventListener('DOMContentLoaded', () => {
           requestAnimationFrame(animate);
         }
         requestAnimationFrame(animate);
-        // 添加点击事件
-        wrapper.addEventListener("click", () => {
-          showToast("这个还没做好捏嘻嘻");
-        });
+        // 点击打开随机文章
+        wrapper.addEventListener("click", openRandomArticle);
         return wrapper;
       }
         const gallery = document.getElementById("gallery");
@@ -277,6 +275,37 @@ document.addEventListener('DOMContentLoaded', () => {
           `;
         articleModal.classList.remove("hidden");
         articleModal.classList.add("flex", "show");
+      }
+
+      async function openRandomArticle() {
+        const entries = Object.entries(rawData);
+        if (entries.length === 0) {
+          showToast('没有文章可供显示');
+          return;
+        }
+        const [title, info] = entries[Math.floor(Math.random() * entries.length)];
+        const abbr = info.abbrlink;
+        const url = info.url;
+        if (!abbr || !url) {
+          showToast('缺少文章数据');
+          return;
+        }
+        const key = 'article:' + url;
+        let html = localStorage.getItem(key);
+        if (!html) {
+          showLoading();
+          try {
+            const res = await fetchWithFallback(`/a/${abbr}?view=1`);
+            html = await res.text();
+            if (res.ok) {
+              localStorage.setItem(key, html);
+            }
+          } catch {
+            html = '<p>加载失败</p>';
+          }
+          await new Promise(r => setTimeout(r, 300));
+        }
+        showArticle(html);
       }
 
       function hideArticle() {
