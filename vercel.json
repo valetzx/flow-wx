@@ -11,6 +11,15 @@
       }
     },
     {
+      "src": "/a/(.*)",
+      "dest": "https://pigeonpig.github.io/a/$1",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST",
+        "Cache-Control": "public, max-age=360000"
+      }
+    },
+    {
       "src": "/ideas",
       "dest": "/ideas.html"
     },
