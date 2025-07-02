@@ -3,7 +3,7 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "https://wx-api-deno.onmicrosoft.cn/api/$1",
+      "dest": "https://pigeonpig.github.io/api/$1",
       "headers": {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, POST",
@@ -12,7 +12,7 @@
     },
     {
       "src": "/a/(.*)",
-      "dest": "https://pigeonpig.github.io/a/$1",
+      "dest": "https://wx-api-deno.onmicrosoft.cn/a/$1",
       "headers": {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, POST",
