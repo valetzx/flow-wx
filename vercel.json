@@ -1,4 +1,10 @@
 {
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "http://wx-api-deno.onmicrosoft.cn/$1"
+    }
+  ],
   "rewrites": [
     {
       "source": "/ideas",
