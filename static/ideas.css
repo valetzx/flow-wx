@@ -68,3 +68,27 @@
       position: relative;
       z-index: 5;
     }
+
+/* 搜索按钮展开效果 */
+#searchWrapper {
+  display: inline-flex;
+  align-items: center;
+}
+
+#searchInput {
+  width: 0;
+  opacity: 0;
+  transition: width 0.3s ease, opacity 0.3s ease;
+  margin-left: 0.25rem;
+  padding: 0 0.5rem;
+  border-radius: 9999px;
+  background: rgb(var(--card));
+  border: 1px solid rgb(var(--border));
+  color: rgb(var(--on-surface));
+  font-size: 0.875rem;
+}
+
+#searchInput.open {
+  width: 8rem;
+  opacity: 1;
+}
