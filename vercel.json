@@ -1,8 +1,13 @@
 {
+  "version": 2,
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "http://wx-api-deno.onmicrosoft.cn/$1"
+      "dest": "https://wx-api-deno.onmicrosoft.cn/api/$1",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,POST"
+      }
     }
   ],
   "rewrites": [
