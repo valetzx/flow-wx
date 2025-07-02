@@ -64,7 +64,36 @@
       transition: background-image 1s ease, background-color 1s ease;
     }
 
-    .banner-card .card-content {
-      position: relative;
-      z-index: 5;
-    }
+.banner-card .card-content {
+  position: relative;
+  z-index: 5;
+}
+
+/* Search button */
+.search-wrapper {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.search-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  transition: background-color 0.3s;
+}
+
+.search-input {
+  width: 0;
+  opacity: 0;
+  padding: 0;
+  margin-left: 0;
+  transition: width 0.3s ease, opacity 0.3s ease, padding 0.3s ease, margin-left 0.3s ease;
+}
+
+.search-wrapper.active .search-input {
+  width: 160px;
+  opacity: 1;
+  padding: 0.25rem 0.5rem;
+  margin-left: 0.5rem;
+}
