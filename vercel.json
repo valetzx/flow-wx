@@ -1,26 +1,25 @@
 {
+  "version": 2,
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "https://wx-api-deno.onmicrosoft.cn/api/$1",
+      "dest": "https://wx-api-deno.onmicrosoft.cn/$1",
       "headers": {
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET,POST"
+        "Access-Control-Allow-Methods": "GET, POST"
       }
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/ideas",
-      "destination": "/ideas.html"
     },
     {
-      "source": "/add",
-      "destination": "/add.html"
+      "src": "/ideas",
+      "dest": "/ideas.html"
     },
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "src": "/add",
+      "dest": "/add.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
