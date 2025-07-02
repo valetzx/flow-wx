@@ -18,6 +18,10 @@
       "dest": "/add.html"
     },
     {
+      "src": "/(.*\\.(css|js))",
+      "dest": "/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }
