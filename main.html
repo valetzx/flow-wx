@@ -180,6 +180,8 @@ document.addEventListener('DOMContentLoaded', () => {
       let perPage = savedPerPage;
       let selectedTags = [];
       let searchTerm = '';
+      let searchInput = null;
+      let searchWrapper = null;
       let allowMultiTags = multiTagsSaved;
       multiTagToggle.addEventListener('change', () => {
         allowMultiTags = multiTagToggle.checked;
@@ -271,11 +273,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
       function renderTags(tags) {
         tagList.innerHTML = '';
+        searchWrapper = document.createElement('div');
+        searchWrapper.className = 'search-wrapper';
         const searchBtn = document.createElement('button');
         searchBtn.id = 'searchBtn';
         searchBtn.textContent = '🔍︎';
-        searchBtn.className = 'px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary bg-card';
-        tagList.appendChild(searchBtn);
+        searchBtn.className = 'search-btn px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary bg-card';
+        searchInput = document.createElement('input');
+        searchInput.id = 'searchInput';
+        searchInput.type = 'text';
+        searchInput.placeholder = '搜索';
+        searchInput.className = 'search-input text-sm bg-card border border-border rounded-full ml-0';
+        searchWrapper.appendChild(searchBtn);
+        searchWrapper.appendChild(searchInput);
+        tagList.appendChild(searchWrapper);
+        searchBtn.addEventListener('click', () => {
+          searchWrapper.classList.toggle('active');
+          if (searchWrapper.classList.contains('active')) {
+            searchInput.focus();
+          } else {
+            searchTerm = '';
+            searchInput.value = '';
+            applyFilter();
+          }
+        });
+        searchInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            searchTerm = searchInput.value.trim();
+            applyFilter();
+            searchInput.blur();
+          }
+        });
+        searchInput.addEventListener('blur', () => {
+          searchTerm = searchInput.value.trim();
+          applyFilter();
+          if (!searchTerm) searchWrapper.classList.remove('active');
+        });
         tags.forEach((t) => {
           const btn = document.createElement('button');
           btn.dataset.tag = t;
@@ -428,15 +461,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderPage();
       });
       tagList.addEventListener('click', (e) => {
-        const searchBtn = e.target.closest('#searchBtn');
-        if (searchBtn) {
-          const term = prompt('请输入标题关键词');
-          if (term !== null) {
-            searchTerm = term.trim();
-            applyFilter();
-          }
-          return;
-        }
         const btn = e.target.closest('button[data-tag]');
         if (!btn) return;
         const tag = btn.dataset.tag;
