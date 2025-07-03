@@ -113,7 +113,7 @@ try {
           signal: controller.signal,
         });
         const html = await res.text();
-        const cheerio = (await import('cheerio')).default;
+        const cheerio = await import('cheerio');
         const $ = cheerio.load(html, { decodeEntities: false });
         const name =
           article.title ||
