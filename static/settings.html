@@ -1,220 +1,100 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZIP 资源加载 Demo</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#165DFF',
-                        secondary: '#4080FF',
-                        accent: '#86B4FF',
-                    },
-                    fontFamily: {
-                        inter: ['Inter', 'system-ui', 'sans-serif'],
-                    },
-                }
-            }
-        }
-    </script>
-    <style type="text/tailwindcss">
-        @layer utilities {
-            .content-auto {
-                content-visibility: auto;
-            }
-            .animate-pulse-slow {
-                animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-            }
-            .animate-spin-slow {
-                animation: spin 2s linear infinite;
-            }
-            .animate-float {
-                animation: float 3s ease-in-out infinite;
-            }
-            .text-shadow {
-                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            }
-            .animate-progress {
-                animation: progress 2s linear infinite;
-            }
-        }
-
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-        }
-
-        @keyframes progress {
-            0% { background-position: 0% 50%; }
-            100% { background-position: 200% 50%; }
-        }
-    </style>
-</head>
-<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen font-inter flex flex-col items-center justify-center p-4">
-    <div class="w-full max-w-3xl bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div class="bg-primary/5 p-6 border-b border-gray-100">
-            <h1 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-gray-800 text-center text-shadow">
-                ZIP 资源加载
-            </h1>
-        </div>
-        
-        <div class="p-6 md:p-8">
-            <!-- 围绕文本框的进度条动画 -->
-            <div class="relative mb-6">
-                <div class="absolute inset-0 bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_100%] animate-progress rounded-md blur-sm opacity-70"></div>
-                <div id="console-output" class="relative bg-white p-4 rounded-md overflow-y-auto max-h-64 border border-gray-200">
-                    <!-- 用于显示 console 输出 -->
-                </div>
-            </div>
-        </div>
-        
-        <div class="bg-gray-50 p-4 border-t border-gray-100">
-            <div class="flex flex-wrap justify-center items-center text-sm text-gray-500 gap-2">
-                <a href="https://github.com/valetzx/flow-wx" class="hover:underline flex items-center">
-                    <span class="mr-1"></span> 查看项目源码
-                </a>
-                <span class="text-gray-300"> · </span>
-                <a href="#" class="hover:underline flex items-center">
-                    <span class="mr-1"></span> 联系我们
-                </a>
-            </div>
-        </div>
+<div id="settingsPanel" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+  <div class="bg-card rounded-xl p-4 w-72">
+    <div class="flex justify-between items-center mb-2">
+      <button id="closeSettings" class="text-xl leading-none" style="margin-left: auto">&times;</button>
     </div>
+    <div id="settingsTabs">
+      <input type="radio" id="tabSettings" name="settingsTab" checked>
+      <input type="radio" id="tabAbout" name="settingsTab">
+      <input type="radio" id="tabLogs" name="settingsTab">
+      <div class="tab-labels flex border-b mb-2">
+        <label for="tabSettings" class="flex-1 text-center py-1 cursor-pointer">设置</label>
+        <label for="tabAbout" class="flex-1 text-center py-1 cursor-pointer">关于</label>
+        <label for="tabLogs" class="flex-1 text-center py-1 cursor-pointer">日志</label>
+      </div>
+      <div id="tabSettingsContent" class="tab-content space-y-3">
+        <!-- 深色模式切换器 -->
+        <div class="flex items-center justify-between py-1">
+          <label class="text-sm">深色模式</label>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="darkModeToggle" class="sr-only peer">
+            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+          </label>
+        </div>
+        <!-- 多选标签切换器 -->
+        <div class="flex items-center justify-between py-1">
+          <label class="text-sm">多选标签</label>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="multiTagToggle" class="sr-only peer">
+            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+          </label>
+        </div>
+        <label class="block text-sm">列数
+          <input
+            id="columnCountInput"
+            type="number"
+            min="1"
+            max="6"
+            value="4"
+            class="mt-1 w-full border rounded p-1 bg-surface text-on-surface"
+          />
+        </label>
+        <label class="block text-sm">加载卡片数量
+          <input
+            id="perPageInput"
+            type="number"
+            min="1"
+            value="30"
+            class="mt-1 w-full border rounded p-1 bg-surface text-on-surface"
+          />
+        </label>
+        <button id="applySettings" class="w-full bg-primary text-white py-1 rounded">应用</button>
+        <button id="clearCache" class="w-full bg-red-500 text-white py-1 rounded">清理缓存</button>
+      </div>
+      <div id="tabAboutContent" class="tab-content text-center text-sm">
+        <p class="about-message mb-2">不专业，但有趣的东西都想试试看! </p>
+        <p class="about-message mb-2">喜欢《DoctorWho》《R&M》... </p>
+<div class="about-links flex justify-between gap-1.5 mb-2">
+  <a href="https://github.com/valetzx" class="flex-1 bg-primary text-white py-2.5 px-2 rounded-lg flex items-center justify-center gap-2">
+    <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+    </svg>
+  </a>
+  <a href="https://valetzx.github.io" class="flex-1 bg-secondary text-white py-2.5 px-2 rounded-lg flex items-center justify-center gap-2">
+    <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+      <path d="M4.715 6.542 3.343 7.914a3 3 0 1 0 4.243 4.243l1.828-1.829A3 3 0 0 0 8.586 5.5L8 6.086a1.002 1.002 0 0 0-.154.199 2 2 0 0 1 .861 3.337L6.88 11.45a2 2 0 1 1-2.83-2.83l.793-.792a4.018 4.018 0 0 1-.128-1.287z"></path>
+      <path d="M6.586 4.672A3 3 0 0 0 7.414 9.5l.775-.776a2 2 0 0 1-.896-3.346L9.12 3.55a2 2 0 1 1 2.83 2.83l-.793.792c.112.42.155.855.128 1.287l1.372-1.372a3 3 0 1 0-4.243-4.243L6.586 4.672z"></path>
+    </svg>
+  </a>
+  <a href="https://namemc.com/skin/89de20f1b9e19d2c" class="flex-1 bg-red-400 text-white py-2.5 px-2 rounded-lg flex items-center justify-center gap-2">
+    <svg width="18" height="18" fill="currentColor" viewBox="0 0 32 32">
+      <path d="M9.213 0c-5.088 0-9.213 4.125-9.213 9.213v22.787h22.787c5.088 0 9.213-4.125 9.213-9.213v-22.787zM22.697 3.459c0.756 0 1.365 3.339 1.365 4.093 0.025 0.771-0.593 1.407-1.365 1.407-0.771 0-1.391-0.636-1.364-1.407 0-0.755 0.615-4.093 1.364-4.093zM19.213 7.328c0.923 0.256 2.776 5.032 4.849 2.959 1.932-1.932 2.735 9.552 2.735 9.552l-2.735-1.365c0 0 0-2.728-4.093-5.457-5.079-3.391-10.923-1.156-10.923 4.088 0 10.713 17.751 6.828 17.751 6.828s-0.005 2.729-2.735 2.729h-16.375c-2.729 0-2.735-2.729-2.735-2.729v-13.645c0-2.735 2.735-2.735 2.735-2.735h5.457c2.729 0 5.459 2.735 5.459 2.735 0-1.989 0.156-2.803 0.437-2.943 0.057-0.027 0.115-0.032 0.172-0.016z"></path>
+    </svg>
+  </a>
+  <a href="https://space.bilibili.com/156751467" class="flex-1 bg-accent text-white py-2.5 px-2 rounded-lg flex items-center justify-center gap-2">
+    <svg width="18" height="18" fill="currentColor" viewBox="0 0 1000 1000">
+      <path d="M129.36 208c131.28-4.88 760.4 0 760.4 0s122.88 25.6 126.16 160.4c-1.6 134.8 0 404.16 0 404.16s-6.8 131.6-124.56 152.48c-50.48-1.68-67.2 0-67.2 0s-3.36 55.36-52.96 56.16c-49.76 0.72-57.2-38.56-58.88-52.96-28.48 0-352.88 1.44-390.16 1.6h-3.52s-6 51.36-55.6 51.36c-49.76 0-52.16-42.56-55.52-51.28-32 0-75.68-0.8-75.68-0.8s-109.6-21.6-123.76-157.2c1.84-130.4 0.24-383.12 0.08-402.32v-1.28C7.84 362.88 1.04 242.56 129.36 208z m745.92 98.4H158.96c-21.76 0-39.44 17.28-39.44 38.56v452.4c0 21.36 17.68 38.56 39.44 38.56h716.32c21.76 0 39.36-17.28 39.36-38.56V344.88c0-21.28-17.6-38.48-39.36-38.48zM527.92 610.96c49.92 108.56 105.04 28.8 105.04 28.8l31.28 20.4s-58.48 94.16-135.6 22.96c-65.2 71.28-133.76-22.64-133.76-22.64l34.8-22.32 0.24 0.48c3.92 6.56 48.56 78.56 98-27.68zM413.68 399.68l16 79.76-210.08 40.72-17.76-79.76 211.84-40.72z m235.44 0l211.76 40.72-17.84 79.76-210.16-40.72 16.24-79.76z m85.6-337.92c8.4-6 9.68-15.6 34.32 6 21.76 19.2 12.96 36.48 10.56 40.24l-0.48 0.8-93.12 97.04H596.24S726.4 67.84 734.72 61.76zM328 58.16c8.32 6 138.48 144.08 138.48 144.08H376.72L283.68 105.2s-14.56-19.28 10-41.04c24.8-21.6 26-12 34.32-6z m0 0"></path>
+    </svg>
+  </a>
+    <a href="mailto:valetzx@qq.com" class="flex-1 bg-blue-400 text-white py-2.5 px-2 rounded-lg flex items-center justify-center gap-2">
+    <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+      <path d="M.05 3.555A2 2 0 0 1 2 2h12a2 2 0 0 1 1.95 1.555L8 8.414.05 3.555ZM0 4.697v7.104l5.803-3.558L0 4.697ZM6.761 8.83l-6.57 4.027A2 2 0 0 0 2 14h12a2 2 0 0 0 1.808-1.144l-6.57-4.027L8 9.586l-1.239-.757Zm3.436-.586L16 11.801V4.697l-5.803 3.546Z"></path>
+    </svg>
+  </a>
+  <a href="wechat" class="flex-1 bg-green-500 text-white py-2.5 px-2 rounded-lg flex items-center justify-center gap-2">
+    <svg width="18" height="18" fill="currentColor" viewBox="0 0 22 22">
+      <path d="M5.457 18.185C3.358 16.677 2 14.4 2 11.908 2 7.323 6.475 3.6 12 3.6s10 3.723 10 8.308c0 4.584-4.475 8.307-10 8.307a11.36 11.36 0 0 1-3.272-.461c-.092-.03-.216-.03-.308-.03-.185 0-.37.06-.525.153l-2.191 1.261a.44.44 0 0 1-.185.062.342.342 0 0 1-.34-.338c0-.093.03-.154.062-.247.03-.03.308-1.046.463-1.661 0-.062.03-.154.03-.216 0-.246-.092-.43-.277-.553zm3.21-7.674c.717 0 1.285-.568 1.285-1.285 0-.718-.568-1.286-1.285-1.286-.718 0-1.285.568-1.285 1.286 0 .717.567 1.285 1.285 1.285zm6.666 0c.718 0 1.285-.568 1.285-1.285 0-.718-.567-1.286-1.285-1.286-.717 0-1.285.568-1.285 1.286 0 .717.568 1.285 1.285 1.285z"></path>
+    </svg>
+  </a>
+</div>
 
-    <script>
-        // 重写 console.log 方法，将输出显示在页面上
-        const originalConsoleLog = console.log;
-        const consoleOutput = document.getElementById('console-output');
-        console.log = function(...args) {
-            originalConsoleLog.apply(console, args);
-            const logEntry = document.createElement('p');
-            logEntry.textContent = args.join(' ');
-            logEntry.className = 'my-1'; // 添加行间距
-            consoleOutput.appendChild(logEntry);
-            consoleOutput.scrollTop = consoleOutput.scrollHeight; // 自动滚动到最新日志
-        };
-
-        // 添加初始提示
-        console.log('正在初始化环境...');
-        console.log('尝试注册 Service Worker...');
-
-        const zipUrls = [
-            'https://m.wbiao.cn/mallapi/wechat/picReverseUrl?url=https://db0kqspitke0bs.database.nocode.cn/storage/v1/object/public/flow/flow.zip',
-            'https://share-download.onmicrosoft.cn/2025-07-06/flowx-1751766989102.zip',
-            'https://cnb.cool/valetzx/static/-/git/raw/main/flowx_flow.zip'
-        ];
-
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js')
-                .then(async reg => {
-                    console.log('Service Worker 注册成功');
-
-                    // 如果已经有控制器，立即下载 ZIP
-                    if (navigator.serviceWorker.controller) {
-                        await fetchAndCacheZip();
-                    } else {
-                        // 等待 Service Worker 激活后再下载
-                        navigator.serviceWorker.addEventListener('controllerchange', async () => {
-                            console.log('Service Worker 已激活');
-                            await fetchAndCacheZip();
-                        });
-                    }
-                })
-                .catch(err => {
-                    console.error('Service Worker 注册失败:', err);
-                    // 错误提示添加到页面
-                    const statusElement = document.createElement('p');
-                    statusElement.className = 'text-red-500 my-1';
-                    statusElement.textContent = 'Service Worker 注册失败，请检查控制台获取更多信息';
-                    consoleOutput.appendChild(statusElement);
-                });
-        } else {
-            console.error('当前浏览器不支持 Service Worker');
-            // 错误提示添加到页面
-            const statusElement = document.createElement('p');
-            statusElement.className = 'text-red-500 my-1';
-            statusElement.textContent = '当前浏览器不支持 Service Worker，无法继续执行';
-            consoleOutput.appendChild(statusElement);
-        }
-
-        async function fetchAndCacheZip() {
-            console.log('开始自动下载 ZIP 文件...');
-            try {
-                const arrayBuffer = await tryFetchZip(zipUrls);
-                navigator.serviceWorker.controller.postMessage({
-                    type: 'ZIP_CACHE',
-                    arrayBuffer: arrayBuffer
-                });
-                console.log('ZIP 数据已发送到 Service Worker，正在解压...');
-            } catch (err) {
-                console.error('下载 ZIP 资源地址失败:', err);
-                // 错误提示添加到页面
-                const statusElement = document.createElement('p');
-                statusElement.className = 'text-red-500 my-1';
-                statusElement.textContent = '下载 ZIP 资源地址失败，请检查控制台获取更多信息';
-                consoleOutput.appendChild(statusElement);
-            }
-        }
-
-        async function tryFetchZip(urlList) {
-            for (let i = 0; i < urlList.length; i++) {
-                try {
-                    console.log(`尝试链接: ${urlList[i]}`);
-                    // 显示状态更新
-                    const statusElement = document.createElement('p');
-                    statusElement.className = 'my-1';
-                    statusElement.innerHTML = `<span class="inline-block w-4 h-4 border-2 border-gray-300 border-t-primary rounded-full animate-spin mr-2"></span>尝试链接: ${i+1}/${urlList.length}`;
-                    consoleOutput.appendChild(statusElement);
-                    
-                    const response = await fetch(urlList[i]);
-                    if (!response.ok) throw new Error('响应失败: ' + response.status);
-                    
-                    return await response.arrayBuffer();
-                } catch (err) {
-                    console.warn(`链接失败: ${urlList[i]}`, err);
-                    // 显示错误信息
-                    const errorElement = document.createElement('p');
-                    errorElement.className = 'text-yellow-500 my-1';
-                    errorElement.innerHTML = `<span class="inline-block mr-2">⚠️</span>链接失败: ${urlList[i]}`;
-                    consoleOutput.appendChild(errorElement);
-                    
-                    if (i === urlList.length - 1) {
-                        throw new Error('所有链接地址失败');
-                    }
-                }
-            }
-        }
-
-        // 监听 Service Worker 消息
-        navigator.serviceWorker.addEventListener('message', event => {
-            if (event.data && event.data.status) {
-                console.log(event.data.status);
-                
-                // 显示状态更新
-                const statusElement = document.createElement('p');
-                statusElement.className = 'my-1';
-                statusElement.textContent = event.data.status;
-                consoleOutput.appendChild(statusElement);
-                
-                if (event.data.status === 'ZIP 解压完成，准备就绪') {
-                    console.log('加载完成，自动刷新页面');
-                    // 显示完成状态
-                    const successElement = document.createElement('p');
-                    successElement.className = 'text-green-500 font-bold my-2';
-                    successElement.textContent = '✅ 加载完成，准备刷新页面...';
-                    consoleOutput.appendChild(successElement);
-                    
-                    setTimeout(() => {
-                        location.reload(); // 自动刷新页面
-                    }, 500); // 增加一点延迟
-                }
-            }
-        });
-    </script>
-</body>
-</html>
+      </div>
+      <div id="tabLogsContent" class="tab-content">
+        <pre id="logOutput" class="text-xs whitespace-pre-wrap"></pre>
+      </div>
+        <footer class="text-xs text-center text-gray-400 dark:text-gray-300" style="margin-top: 10px">
+          <a href="https://github.com/valetzx/flow-wx" class="hover:underline">查看项目源码 </a> · <a href="#">联系我吧</a>
+        </footer>
+    </div>
+  </div>
+</div>
