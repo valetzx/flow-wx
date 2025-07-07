@@ -47,7 +47,7 @@
     <div data-include="settings.html"></div>
     <div id="articleModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
       <div class="w-11/12 max-w-4xl h-[80vh] relative flex gap-4">
-        <button id="closeArticle" class="absolute top-2 right-4 text-2xl">
+        <button id="closeArticle" class="hidden absolute top-2 right-4 text-2xl">
           &times;
         </button>
         <div class="modal-panel flex-1 overflow-hidden">
@@ -351,7 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const savedPerPage = parseInt(localStorage.getItem("perPage")) || 30;
       const navEl = document.querySelector("nav");
       const contentEl = document.getElementById("content");
-      const isMobile = /Mobi|Android|iPhone|Windows Phone/i.test(navigator.userAgent, );
+      const isMobile = /Mobi|Android|iPhone|Windows Phone/i.test(navigator.userAgent);
       const initialCols = isMobile ? 2 : savedCols;
       columnCountInput.value = String(initialCols);
       perPageInput.value = String(savedPerPage);
@@ -374,6 +374,8 @@ document.addEventListener('DOMContentLoaded', () => {
         navEl.classList.add("mobile");
         contentEl.classList.remove("ml-[72px]");
         contentEl.classList.add("mb-[72px]");
+        const tocEl = document.getElementById('toc');
+        if (tocEl) tocEl.style.display = 'none';
       }
         let rawData = {};
         let allItems = [];
