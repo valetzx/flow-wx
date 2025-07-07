@@ -46,12 +46,14 @@
     <!-- 设置面板 -->
     <div data-include="settings.html"></div>
     <div id="articleModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
-            <div class="bg-card text-on-surface rounded-xl w-11/12 max-w-3xl h-[80vh] overflow-auto relative p-4 flex">
-          <button id="closeArticle" class="absolute top-2 right-4 text-2xl">
-            &times;
-          </button>
-          <div id="articleContent" class="prose max-w-none flex-1 overflow-y-auto"></div>
-          <aside id="toc" class="hidden md:block w-1/4 ml-4 overflow-y-auto text-sm"></aside>
+      <div class="w-11/12 max-w-4xl h-[80vh] relative flex gap-4">
+        <button id="closeArticle" class="absolute top-2 right-4 text-2xl">
+          &times;
+        </button>
+        <div class="modal-panel flex-1 overflow-hidden">
+          <div id="articleContent" class="prose max-w-none h-full overflow-y-auto"></div>
+        </div>
+        <aside id="toc" class="modal-panel hidden md:block w-1/4 overflow-y-auto text-sm"></aside>
       </div>
     </div>
     <div id="toastContainer"></div>

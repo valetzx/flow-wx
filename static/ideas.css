@@ -114,7 +114,8 @@
   color: rgb(var(--primary));
 }
 
-#toc {
+
+.modal-panel {
   border: 1px solid rgb(var(--border));
   border-radius: 0.5rem;
   background-color: rgb(var(--card));
