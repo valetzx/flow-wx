@@ -46,10 +46,14 @@
     <!-- 设置面板 -->
     <div data-include="settings.html"></div>
     <div id="articleModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
-            <div class="bg-card text-on-surface rounded-xl w-11/12 max-w-3xl h-[80vh] overflow-auto relative p-4"> <button id="closeArticle" class="absolute top-2 right-4 text-2xl">
-            &times;
-          </button>
-        <div id="articleContent" class="prose max-w-none"></div>
+      <div class="w-11/12 max-w-4xl h-[80vh] relative flex gap-4">
+        <button id="closeArticle" class="absolute top-2 right-4 text-2xl">
+          &times;
+        </button>
+        <div class="modal-panel flex-1 overflow-hidden">
+          <div id="articleContent" class="prose max-w-none h-full overflow-y-auto no-scrollbar"></div>
+        </div>
+        <aside id="toc" class="modal-panel hidden md:block w-1/4 overflow-y-auto no-scrollbar text-sm"></aside>
       </div>
     </div>
     <div id="toastContainer"></div>
@@ -252,8 +256,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
+      function generateToc() {
+        const toc = document.getElementById('toc');
+        if (!toc) return;
+        toc.innerHTML = '';
+        const headings = articleContent.querySelectorAll('h1, h2, h3, h4, h5, h6');
+        if (headings.length === 0) {
+          toc.classList.add('hidden');
+          return;
+        }
+        toc.classList.remove('hidden');
+        const list = document.createElement('ul');
+        headings.forEach(h => {
+          if (!h.id) h.id = 'h-' + Math.random().toString(36).slice(2, 8);
+          const li = document.createElement('li');
+          li.className = 'pl-' + ((parseInt(h.tagName[1]) - 1) * 2);
+          const a = document.createElement('a');
+          a.href = '#' + h.id;
+          a.textContent = h.textContent;
+          li.appendChild(a);
+          list.appendChild(li);
+        });
+        toc.appendChild(list);
+      }
+
       function showArticle(html) {
         articleContent.innerHTML = html;
+        generateToc();
         articleModal.classList.remove("hidden");
         articleModal.classList.add("flex", "show");
         // 添加深色模式样式类到文章内容
@@ -312,6 +341,11 @@ document.addEventListener('DOMContentLoaded', () => {
         articleModal.classList.add("hidden");
         articleModal.classList.remove("flex", "show");
         articleContent.innerHTML = "";
+        const toc = document.getElementById('toc');
+        if (toc) {
+          toc.innerHTML = '';
+          toc.classList.add('hidden');
+        }
       }
       const savedCols = parseInt(localStorage.getItem("columnCount")) || 4;
       const savedPerPage = parseInt(localStorage.getItem("perPage")) || 30;

@@ -98,3 +98,26 @@
   margin-left: 0.5rem;
   border-color: rgb(var(--primary));
 }
+
+#toc ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+#toc li a {
+  display: block;
+  padding: 0.25rem 0;
+  color: rgb(107, 114, 128);
+}
+
+#toc li a:hover {
+  color: rgb(var(--primary));
+}
+
+
+.modal-panel {
+  border: 1px solid rgb(var(--border));
+  border-radius: 0.5rem;
+  background-color: rgb(var(--card));
+  padding: 0.5rem;
+}
