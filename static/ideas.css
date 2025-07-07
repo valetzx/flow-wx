@@ -121,3 +121,7 @@
   background-color: rgb(var(--card));
   padding: 0.5rem;
 }
+
+body.mobile #toc {
+  display: none;
+}
