@@ -98,3 +98,10 @@
   margin-left: 0.5rem;
   border-color: rgb(var(--primary));
 }
+
+/* Table of contents */
+.toc{margin-bottom:1rem;}
+.toc ul{list-style:none;padding-left:0;}
+.toc li{margin-bottom:0.25rem;}
+.toc a{color:rgb(var(--primary));text-decoration:none;}
+.toc a:hover{text-decoration:underline;}
