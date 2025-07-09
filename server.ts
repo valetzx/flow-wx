@@ -31,6 +31,12 @@ const imgDomains = imgDomainsEnv
   .map((d) => d.trim())
   .filter(Boolean);
 const cacheImgDomain = Deno.env.get("IMG_CACHE") || "";
+const cacheDir = join(__dirname, "cache");
+try {
+  await Deno.mkdir(cacheDir, { recursive: true });
+} catch {
+  // ignore
+}
 
 function injectConfig(html: string): string {
   if (apiDomains.length === 0 && imgDomains.length === 0) return html;
@@ -315,6 +321,32 @@ function proxifyHtml(html: string): string {
   return $.html();
 }
 
+// Return cached page if available, otherwise build and cache it
+async function cachedPage(
+  abbr: string,
+  builder: () => Promise<Response>,
+): Promise<Response> {
+  const filePath = join(cacheDir, `${abbr}.html`);
+  try {
+    const html = await Deno.readTextFile(filePath);
+    return new Response(html, {
+      headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
+    });
+  } catch {
+    // cache miss; build
+  }
+  const res = await builder();
+  if (res.ok) {
+    try {
+      const html = await res.clone().text();
+      await Deno.writeTextFile(filePath, html);
+    } catch {
+      // ignore cache errors
+    }
+  }
+  return res;
+}
+
 // ---------- 生成离线文章页面 ----------
 async function buildArticlePage(url: string, abbr?: string): Promise<Response> {
   try {
@@ -447,9 +479,9 @@ async function handler(req: Request): Promise<Response> {
     if (found) {
       if (searchParams.get("view") === "1") {
         if (found.url.includes("bilibili.com")) {
-          return await buildBiliPage(found.url);
+          return await cachedPage(abbr, () => buildBiliPage(found.url));
         }
-        return await buildArticlePage(found.url, abbr);
+        return await cachedPage(abbr, () => buildArticlePage(found.url, abbr));
       }
       return Response.redirect(found.url, 302);
     }
