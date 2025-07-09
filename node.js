@@ -27,6 +27,8 @@ app.use(express.static(path.join(__dirname, 'static')));
 const apiDomains = (process.env.API_DOMAINS || '').split(/[\s,]+/).filter(Boolean);
 const imgDomains = (process.env.IMG_DOMAINS || '').split(/[\s,]+/).filter(Boolean);
 const cacheImgDomain = process.env.IMG_CACHE || '';
+const cacheDir = path.join(__dirname, 'cache');
+await fs.mkdir(cacheDir, { recursive: true }).catch(() => {});
 
 function injectConfig(html) {
   if (!apiDomains.length && !imgDomains.length) return html;
@@ -257,7 +259,25 @@ function proxifyHtml(html) {
   return $.html();
 }
 
-async function buildArticlePage(url, abbr, res) {
+async function cachedPage(abbr, builder, res) {
+  const filePath = path.join(cacheDir, `${abbr}.html`);
+  try {
+    const html = await fs.readFile(filePath, 'utf8');
+    res.type('html').send(html);
+    return;
+  } catch {
+    // cache miss
+  }
+  try {
+    const html = await builder();
+    await fs.writeFile(filePath, html).catch(() => {});
+    res.type('html').send(html);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+async function buildArticlePage(url, abbr) {
   try {
     const r = await fetch(url, {
       headers: {
@@ -285,14 +305,13 @@ async function buildArticlePage(url, abbr, res) {
     });
     const content = proxifyHtml($('#js_content').html() || '');
     const page = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8" /><title>${title}</title></head><body><h1 class="text-2xl font-semibold mb-2">${title}</h1>${content}</body></html>`;
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.send(page);
+    return page;
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    throw err;
   }
 }
 
-async function buildBiliPage(url, res) {
+async function buildBiliPage(url) {
   try {
     const r = await fetch(url, {
       headers: { 'User-Agent': 'Mozilla/5.0 (Node)' },
@@ -313,10 +332,9 @@ async function buildBiliPage(url, res) {
     });
     const content = $('.opus-module-content').first().html() || '';
     const page = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8" /><title>${title}</title></head><body><h1 class="text-2xl font-semibold mb-2">${title}</h1>${content}</body></html>`;
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.send(page);
+    return page;
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    throw err;
   }
 }
 
@@ -347,9 +365,9 @@ app.get('/a/:abbr', async (req, res) => {
   if (found) {
     if (req.query.view === '1') {
       if (found.url.includes('bilibili.com')) {
-        return await buildBiliPage(found.url, res);
+        return await cachedPage(abbr, () => buildBiliPage(found.url), res);
       }
-      return await buildArticlePage(found.url, abbr, res);
+      return await cachedPage(abbr, () => buildArticlePage(found.url, abbr), res);
     }
     return res.redirect(found.url);
   }

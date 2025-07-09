@@ -6,6 +6,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const outDir = path.join(__dirname, 'dist');
 await fs.rm(outDir, { recursive: true, force: true });
 await fs.mkdir(outDir, { recursive: true });
+const cacheDir = path.join(outDir, 'cache');
+await fs.mkdir(cacheDir, { recursive: true });
 
 const apiDomains = (process.env.API_DOMAINS || '').split(/[\s,]+/).filter(Boolean);
 const imgDomains = (process.env.IMG_DOMAINS || '').split(/[\s,]+/).filter(Boolean);
@@ -38,6 +40,8 @@ await fs.copyFile(path.join(__dirname, 'article.txt'), path.join(outDir, 'articl
 await fs.copyFile(path.join(__dirname, 'static', 'common.js'), path.join(outDir, 'common.js'));
 await fs.copyFile(path.join(__dirname, 'static', 'sidebar.html'), path.join(outDir, 'sidebar.html'));
 await fs.copyFile(path.join(__dirname, 'static', 'settings.html'), path.join(outDir, 'settings.html'));
+
+const cheerio = await import('cheerio');
 
 // ---------------- 额外的静态化逻辑 ----------------
 
@@ -97,6 +101,71 @@ articles.sort((a, b) => {
   const bLink = (b.abbrlink || '').toString();
   return aLink.localeCompare(bLink);
 });
+
+function proxifyHtml(html) {
+  const $ = cheerio.load(html, { decodeEntities: false });
+  $('[style]').each((_, el) => {
+    let style = $(el).attr('style') ?? '';
+    style = style.replace(/url\((['"]?)(https?:\/\/[^'"]+)\1\)/g, (m, q, url) => {
+      if (url.includes('mmbiz')) {
+        const clean = url.replace(/&amp;/g, '&');
+        return `url(${q}?url=${encodeURIComponent(clean)}${q})`;
+      }
+      return m;
+    });
+    $(el).attr('style', style);
+  });
+  return $.html();
+}
+
+async function buildArticlePage(url, abbr) {
+  const r = await fetch(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Node)',
+      Referer: 'https://mp.weixin.qq.com/',
+    },
+  });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const html = await r.text();
+  const $ = cheerio.load(html, { decodeEntities: false });
+  let title = $('#activity-name').text().trim() || $('.rich_media_title').text().trim() || '无标题';
+  if (abbr) {
+    const found = articles.find(a => a.abbrlink === abbr);
+    if (found && found.title) title = found.title;
+  }
+  $('#js_content img').each((_, el) => {
+    const src = $(el).attr('data-src') || $(el).attr('src');
+    if (src) {
+      const imgPath = `?url=${encodeURIComponent(src)}`;
+      const domain = imgDomains[0];
+      const full = domain ? domain.replace(/\/$/, '') + imgPath : imgPath;
+      $(el).attr('src', full);
+      $(el).removeAttr('data-src');
+    }
+  });
+  const content = proxifyHtml($('#js_content').html() || '');
+  return `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8" /><title>${title}</title></head><body><h1 class="text-2xl font-semibold mb-2">${title}</h1>${content}</body></html>`;
+}
+
+async function buildBiliPage(url) {
+  const r = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Node)' } });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const html = await r.text();
+  const $ = cheerio.load(html, { decodeEntities: false });
+  const title = $('.opus-module-title__text').first().text().trim() || '无标题';
+  $('.opus-module-content img').each((_, el) => {
+    const src = $(el).attr('src');
+    if (src) {
+      const clean = src.startsWith('//') ? `https:${src}` : src;
+      const imgPath = `?url=${encodeURIComponent(clean)}`;
+      const domain = imgDomains[0];
+      const full = domain ? domain.replace(/\/$/, '') + imgPath : imgPath;
+      $(el).attr('src', full);
+    }
+  });
+  const content = $('.opus-module-content').first().html() || '';
+  return `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8" /><title>${title}</title></head><body><h1 class="text-2xl font-semibold mb-2">${title}</h1>${content}</body></html>`;
+}
 
 await fs.mkdir(path.join(outDir, 'api'), { recursive: true });
 
@@ -197,6 +266,15 @@ for (const art of articles) {
   await fs.mkdir(dir, { recursive: true });
   const redirectHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=${art.url}"></head><body><p>Redirecting to <a href="${art.url}">${art.url}</a></p></body></html>`;
   await fs.writeFile(path.join(dir, 'index.html'), redirectHtml);
+
+  try {
+    const page = art.url.includes('bilibili.com')
+      ? await buildBiliPage(art.url)
+      : await buildArticlePage(art.url, art.abbrlink);
+    await fs.writeFile(path.join(cacheDir, `${art.abbrlink}.html`), page);
+  } catch (e) {
+    console.error('build page failed for', art.url, e.message);
+  }
 }
 
 console.log('Build complete in', outDir);
