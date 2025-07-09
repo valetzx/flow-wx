@@ -31,6 +31,8 @@ const imgDomains = imgDomainsEnv
   .map((d) => d.trim())
   .filter(Boolean);
 const cacheImgDomain = Deno.env.get("IMG_CACHE") || "";
+const htmlCacheDir = join(__dirname, "article_cache");
+await Deno.mkdir(htmlCacheDir, { recursive: true }).catch(() => {});
 
 function injectConfig(html: string): string {
   if (apiDomains.length === 0 && imgDomains.length === 0) return html;
@@ -193,6 +195,114 @@ for (const art of articles) {
   }
 }
 
+async function loadCachedArticle(abbr: string): Promise<string | null> {
+  try {
+    const file = join(htmlCacheDir, `${abbr}.html`);
+    return await Deno.readTextFile(file);
+  } catch {
+    return null;
+  }
+}
+
+async function saveCachedArticle(abbr: string, html: string) {
+  try {
+    await Deno.writeTextFile(join(htmlCacheDir, `${abbr}.html`), html);
+  } catch {}
+}
+
+async function buildArticleHtml(url: string, abbr?: string): Promise<string> {
+  const res = await fetch(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (Deno)",
+      Referer: "https://mp.weixin.qq.com/",
+    },
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const html = await res.text();
+  const $ = cheerio.load(html, { decodeEntities: false });
+  let title = $("#activity-name").text().trim() ||
+    $(".rich_media_title").text().trim() ||
+    randomSentence();
+  if (abbr) {
+    const found = articles.find((a) => a.abbrlink === abbr);
+    if (found?.title) title = found.title;
+  }
+  $("#js_content img").each((_, el) => {
+    const src = $(el).attr("data-src") || $(el).attr("src");
+    if (src) {
+      const imgPath = `?url=${encodeURIComponent(src)}`;
+      const domain = imgDomains[0];
+      const full = domain ? domain.replace(/\/$/, "") + imgPath : imgPath;
+      $(el).attr("src", full);
+      $(el).removeAttr("data-src");
+    }
+  });
+  const content = proxifyHtml($("#js_content").html() || "");
+  const page = `<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>${title}</title>
+  </head>
+  <body>
+    <h1 class="text-2xl font-semibold mb-2">${title}</h1>
+    ${content}
+  </body>
+</html>`;
+  if (abbr) await saveCachedArticle(abbr, page);
+  return page;
+}
+
+async function buildBiliHtml(url: string, abbr?: string): Promise<string> {
+  const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 (Deno)" } });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const html = await res.text();
+  const $ = cheerio.load(html, { decodeEntities: false });
+  const title = $(".opus-module-title__text").first().text().trim() || randomSentence();
+  $(".opus-module-content img").each((_, el) => {
+    const src = $(el).attr("src");
+    if (src) {
+      const clean = src.startsWith("//") ? `https:${src}` : src;
+      const imgPath = `?url=${encodeURIComponent(clean)}`;
+      const domain = imgDomains[0];
+      const full = domain ? domain.replace(/\/$/, "") + imgPath : imgPath;
+      $(el).attr("src", full);
+    }
+  });
+  const content = $(".opus-module-content").first().html() || "";
+  const page = `<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>${title}</title>
+  </head>
+  <body>
+    <h1 class="text-2xl font-semibold mb-2">${title}</h1>
+    ${content}
+  </body>
+</html>`;
+  if (abbr) await saveCachedArticle(abbr, page);
+  return page;
+}
+
+async function prefetchArticles() {
+  for (const art of articles) {
+    if (!art.abbrlink) continue;
+    const cached = await loadCachedArticle(art.abbrlink);
+    if (cached) continue;
+    try {
+      if (art.url.includes("bilibili.com")) {
+        await buildBiliHtml(art.url, art.abbrlink);
+      } else {
+        await buildArticleHtml(art.url, art.abbrlink);
+      }
+    } catch (err) {
+      console.error("prefetch fail", art.url, err.message);
+    }
+  }
+}
+
+
 // 抓取结果缓存（JSON）
 const CACHE_TTL = 60 * 60 * 1000;
 let wxCache: { data: unknown; timestamp: number } = { data: null, timestamp: 0 };
@@ -318,44 +428,7 @@ function proxifyHtml(html: string): string {
 // ---------- 生成离线文章页面 ----------
 async function buildArticlePage(url: string, abbr?: string): Promise<Response> {
   try {
-    const res = await fetch(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Deno)",
-        Referer: "https://mp.weixin.qq.com/",
-      },
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const html = await res.text();
-    const $ = cheerio.load(html, { decodeEntities: false });
-    let title = $("#activity-name").text().trim() ||
-      $(".rich_media_title").text().trim() ||
-      randomSentence();
-    if (abbr) {
-      const found = articles.find((a) => a.abbrlink === abbr);
-      if (found?.title) title = found.title;
-    }
-    $("#js_content img").each((_, el) => {
-      const src = $(el).attr("data-src") || $(el).attr("src");
-      if (src) {
-        const imgPath = `?url=${encodeURIComponent(src)}`;
-        const domain = imgDomains[0];
-        const full = domain ? domain.replace(/\/$/, "") + imgPath : imgPath;
-        $(el).attr("src", full);
-        $(el).removeAttr("data-src");
-      }
-    });
-    const content = proxifyHtml($("#js_content").html() || "");
-    const page = `<!DOCTYPE html>
-<html lang="zh-CN">
-  <head>
-    <meta charset="utf-8" />
-    <title>${title}</title>
-  </head>
-  <body>
-    <h1 class="text-2xl font-semibold mb-2">${title}</h1>
-    ${content}
-  </body>
-</html>`;
+    const page = await buildArticleHtml(url, abbr);
     return new Response(page, {
       headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
     });
@@ -364,36 +437,12 @@ async function buildArticlePage(url: string, abbr?: string): Promise<Response> {
   }
 }
 
-async function buildBiliPage(url: string): Promise<Response> {
+async function buildBiliPage(url: string, abbr?: string): Promise<Response> {
   try {
-    const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 (Deno)" } });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const html = await res.text();
-    const $ = cheerio.load(html, { decodeEntities: false });
-    const title = $(".opus-module-title__text").first().text().trim() || randomSentence();
-    $(".opus-module-content img").each((_, el) => {
-      const src = $(el).attr("src");
-      if (src) {
-        const clean = src.startsWith("//") ? `https:${src}` : src;
-        const imgPath = `?url=${encodeURIComponent(clean)}`;
-        const domain = imgDomains[0];
-        const full = domain ? domain.replace(/\/$/, "") + imgPath : imgPath;
-        $(el).attr("src", full);
-      }
+    const page = await buildBiliHtml(url, abbr);
+    return new Response(page, {
+      headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
     });
-    const content = $(".opus-module-content").first().html() || "";
-    const page = `<!DOCTYPE html>
-<html lang="zh-CN">
-  <head>
-    <meta charset="utf-8" />
-    <title>${title}</title>
-  </head>
-  <body>
-    <h1 class="text-2xl font-semibold mb-2">${title}</h1>
-    ${content}
-  </body>
-</html>`;
-    return new Response(page, { headers: withCors({ "Content-Type": "text/html; charset=utf-8" }) });
   } catch (err) {
     return json({ error: err.message }, 500);
   }
@@ -446,8 +495,14 @@ async function handler(req: Request): Promise<Response> {
     const found = articles.find((a) => a.abbrlink === abbr);
     if (found) {
       if (searchParams.get("view") === "1") {
+        const cached = abbr ? await loadCachedArticle(abbr) : null;
+        if (cached) {
+          return new Response(cached, {
+            headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
+          });
+        }
         if (found.url.includes("bilibili.com")) {
-          return await buildBiliPage(found.url);
+          return await buildBiliPage(found.url, abbr);
         }
         return await buildArticlePage(found.url, abbr);
       }
@@ -593,5 +648,6 @@ function json(data: unknown, status = 200) {
 }
 
 // ---------- 启动 ----------
+await prefetchArticles();
 serve(handler, { port: PORT });
 console.log(`Server running on http://localhost:${PORT}`);

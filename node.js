@@ -27,6 +27,8 @@ app.use(express.static(path.join(__dirname, 'static')));
 const apiDomains = (process.env.API_DOMAINS || '').split(/[\s,]+/).filter(Boolean);
 const imgDomains = (process.env.IMG_DOMAINS || '').split(/[\s,]+/).filter(Boolean);
 const cacheImgDomain = process.env.IMG_CACHE || '';
+const htmlCacheDir = path.join(__dirname, 'article_cache');
+await fs.mkdir(htmlCacheDir, { recursive: true }).catch(() => {});
 
 function injectConfig(html) {
   if (!apiDomains.length && !imgDomains.length) return html;
@@ -160,6 +162,91 @@ for (const art of articles) {
   }
 }
 
+async function loadCachedArticle(abbr) {
+  try {
+    const file = path.join(htmlCacheDir, `${abbr}.html`);
+    return await fs.readFile(file, 'utf8');
+  } catch {
+    return null;
+  }
+}
+
+async function saveCachedArticle(abbr, html) {
+  try {
+    await fs.writeFile(path.join(htmlCacheDir, `${abbr}.html`), html);
+  } catch {}
+}
+
+async function buildArticleHtml(url, abbr) {
+  const r = await fetch(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Node)',
+      Referer: 'https://mp.weixin.qq.com/',
+    },
+  });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const html = await r.text();
+  const $ = cheerio.load(html, { decodeEntities: false });
+  let title = $('#activity-name').text().trim() || $('.rich_media_title').text().trim() || randomSentence();
+  if (abbr) {
+    const found = articles.find(a => a.abbrlink === abbr);
+    if (found && found.title) title = found.title;
+  }
+  $('#js_content img').each((_, el) => {
+    const src = $(el).attr('data-src') || $(el).attr('src');
+    if (src) {
+      const imgPath = `?url=${encodeURIComponent(src)}`;
+      const domain = imgDomains[0];
+      const full = domain ? domain.replace(/\/$/, '') + imgPath : imgPath;
+      $(el).attr('src', full);
+      $(el).removeAttr('data-src');
+    }
+  });
+  const content = proxifyHtml($('#js_content').html() || '');
+  const page = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8" /><title>${title}</title></head><body><h1 class="text-2xl font-semibold mb-2">${title}</h1>${content}</body></html>`;
+  if (abbr) await saveCachedArticle(abbr, page);
+  return page;
+}
+
+async function buildBiliHtml(url, abbr) {
+  const r = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Node)' } });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const html = await r.text();
+  const $ = cheerio.load(html, { decodeEntities: false });
+  const title = $('.opus-module-title__text').first().text().trim() || randomSentence();
+  $('.opus-module-content img').each((_, el) => {
+    const src = $(el).attr('src');
+    if (src) {
+      const clean = src.startsWith('//') ? `https:${src}` : src;
+      const imgPath = `?url=${encodeURIComponent(clean)}`;
+      const domain = imgDomains[0];
+      const full = domain ? domain.replace(/\/$/, '') + imgPath : imgPath;
+      $(el).attr('src', full);
+    }
+  });
+  const content = $('.opus-module-content').first().html() || '';
+  const page = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8" /><title>${title}</title></head><body><h1 class="text-2xl font-semibold mb-2">${title}</h1>${content}</body></html>`;
+  if (abbr) await saveCachedArticle(abbr, page);
+  return page;
+}
+
+async function prefetchArticles() {
+  for (const art of articles) {
+    if (!art.abbrlink) continue;
+    const cached = await loadCachedArticle(art.abbrlink);
+    if (cached) continue;
+    try {
+      if (art.url.includes('bilibili.com')) {
+        await buildBiliHtml(art.url, art.abbrlink);
+      } else {
+        await buildArticleHtml(art.url, art.abbrlink);
+      }
+    } catch (err) {
+      console.error('prefetch fail', art.url, err.message);
+    }
+  }
+}
+
 const CACHE_TTL = 60 * 60 * 1000;
 let wxCache = { data: null, timestamp: 0 };
 let bilCache = { data: null, timestamp: 0 };
@@ -259,32 +346,7 @@ function proxifyHtml(html) {
 
 async function buildArticlePage(url, abbr, res) {
   try {
-    const r = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Node)',
-        Referer: 'https://mp.weixin.qq.com/',
-      },
-    });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const html = await r.text();
-    const $ = cheerio.load(html, { decodeEntities: false });
-    let title = $('#activity-name').text().trim() || $('.rich_media_title').text().trim() || randomSentence();
-    if (abbr) {
-      const found = articles.find(a => a.abbrlink === abbr);
-      if (found && found.title) title = found.title;
-    }
-    $('#js_content img').each((_, el) => {
-      const src = $(el).attr('data-src') || $(el).attr('src');
-      if (src) {
-        const imgPath = `?url=${encodeURIComponent(src)}`;
-        const domain = imgDomains[0];
-        const full = domain ? domain.replace(/\/$/, '') + imgPath : imgPath;
-        $(el).attr('src', full);
-        $(el).removeAttr('data-src');
-      }
-    });
-    const content = proxifyHtml($('#js_content').html() || '');
-    const page = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8" /><title>${title}</title></head><body><h1 class="text-2xl font-semibold mb-2">${title}</h1>${content}</body></html>`;
+    const page = await buildArticleHtml(url, abbr);
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.send(page);
   } catch (err) {
@@ -292,27 +354,9 @@ async function buildArticlePage(url, abbr, res) {
   }
 }
 
-async function buildBiliPage(url, res) {
+async function buildBiliPage(url, abbr, res) {
   try {
-    const r = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Node)' },
-    });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const html = await r.text();
-    const $ = cheerio.load(html, { decodeEntities: false });
-    const title = $('.opus-module-title__text').first().text().trim() || randomSentence();
-    $('.opus-module-content img').each((_, el) => {
-      const src = $(el).attr('src');
-      if (src) {
-        const clean = src.startsWith('//') ? `https:${src}` : src;
-        const imgPath = `?url=${encodeURIComponent(clean)}`;
-        const domain = imgDomains[0];
-        const full = domain ? domain.replace(/\/$/, '') + imgPath : imgPath;
-        $(el).attr('src', full);
-      }
-    });
-    const content = $('.opus-module-content').first().html() || '';
-    const page = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8" /><title>${title}</title></head><body><h1 class="text-2xl font-semibold mb-2">${title}</h1>${content}</body></html>`;
+    const page = await buildBiliHtml(url, abbr);
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.send(page);
   } catch (err) {
@@ -346,8 +390,13 @@ app.get('/a/:abbr', async (req, res) => {
   const found = articles.find(a => a.abbrlink === abbr);
   if (found) {
     if (req.query.view === '1') {
+      const cached = abbr ? await loadCachedArticle(abbr) : null;
+      if (cached) {
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        return res.send(cached);
+      }
       if (found.url.includes('bilibili.com')) {
-        return await buildBiliPage(found.url, res);
+        return await buildBiliPage(found.url, abbr, res);
       }
       return await buildArticlePage(found.url, abbr, res);
     }
@@ -478,6 +527,8 @@ app.get('/ideas', (req, res) => {
 app.get('*', (req, res) => {
   res.type('html').send(indexHtml);
 });
+
+await prefetchArticles();
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
