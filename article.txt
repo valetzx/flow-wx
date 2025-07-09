@@ -13,7 +13,7 @@ title: 室内设计2023作品合集
 tags:
   - 日常
   - 设计
-abbrlink: 1a1b
+abbrlink: indoordesign
 describe: ▁▁
 date: 2024-09-05 22:36
 ---
@@ -41,27 +41,15 @@ date: 2025-06-02 20:50
 ---
 
 ---
-url: https://mp.weixin.qq.com/s/lV14lI8O67VN6cEazaqIOA
-title: Ai合集1
+url: https://mp.weixin.qq.com/s/c8cJ_d_DwaVlLYFjJsnZyg
+title: 
 tags:
-  - AI
-  - 科技
-  - 分享
-abbrlink: 1a1e
-describe:  
-date: 2025-03-06 11:52
----
-
----
-url: https://mp.weixin.qq.com/s/uIeij0G6M2rkq1JAuP4Xcw
-title: Ai合集2
-tags:
-  - AI
-  - 科技
-  - 分享
-abbrlink: 1a1f
+  - 白嫖
+  - git
+  - 教程
+abbrlink: cnbuse
 describe:   
-date: 2025-04-14 20:50
+date:
 ---
 
 ---
@@ -70,7 +58,7 @@ title:
 tags:
   - 科技
   - 教程
-abbrlink: 1a1g
+abbrlink: cloudflarenotes
 describe:   
 date:
 ---
@@ -80,7 +68,7 @@ url: https://www.bilibili.com/opus/953541215728435240
 title: GenP
 tags:
   - 资源下载
-abbrlink: b1a
+abbrlink: genpyyds
 describe: Adobe GenP
 date: 2025-06-24
 ---
@@ -90,7 +78,7 @@ url: https://www.bilibili.com/opus/695602354850889746
 title: 
 tags:
   - B站
-abbrlink: b1b
+abbrlink: dockerpluginrclone
 describe: -
 date: 2025-06-25
 ---
@@ -100,7 +88,7 @@ url: https://www.bilibili.com/opus/888383984858300436
 title: 
 tags:
   - B站
-abbrlink: b1c
+abbrlink: test1
 describe: 测试
 date: 2025-06-25
 ---
