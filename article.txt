@@ -13,7 +13,7 @@ title: 室内设计2023作品合集
 tags:
   - 日常
   - 设计
-abbrlink: indoordesign
+abbrlink: 1indoordesign
 describe: ▁▁
 date: 2024-09-05 22:36
 ---
@@ -24,7 +24,7 @@ title:
 tags:
   - 案例
   - 设计
-abbrlink: 1a1c
+abbrlink: 2a1c
 describe:   
 date: 2025-06-19 21:13
 ---
@@ -35,7 +35,7 @@ title:
 tags:
   - 案例
   - 设计
-abbrlink: 1a1d
+abbrlink: 2a1d
 describe:   
 date: 2025-06-02 20:50
 ---
