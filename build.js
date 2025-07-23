@@ -144,7 +144,8 @@ async function buildArticlePage(url, abbr) {
     }
   });
   const content = proxifyHtml($('#js_content').html() || '');
-  return `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8" /><title>${title}</title></head><body><h1 class="text-2xl font-semibold mb-2">${title}</h1>${content}</body></html>`;
+  const headExtra = '<meta name="viewport" content="width=device-width,initial-scale=1" />\n<style>img{max-width:100%;height:auto;display:block;margin:0 auto;}</style>';
+  return `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8" />${headExtra}<title>${title}</title></head><body><h1 class="text-2xl font-semibold mb-2">${title}</h1>${content}</body></html>`;
 }
 
 async function buildBiliPage(url) {
@@ -164,7 +165,8 @@ async function buildBiliPage(url) {
     }
   });
   const content = $('.opus-module-content').first().html() || '';
-  return `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8" /><title>${title}</title></head><body><h1 class="text-2xl font-semibold mb-2">${title}</h1>${content}</body></html>`;
+  const headExtra = '<meta name="viewport" content="width=device-width,initial-scale=1" />\n<style>img{max-width:100%;height:auto;display:block;margin:0 auto;}</style>';
+  return `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8" />${headExtra}<title>${title}</title></head><body><h1 class="text-2xl font-semibold mb-2">${title}</h1>${content}</body></html>`;
 }
 
 await fs.mkdir(path.join(outDir, 'api'), { recursive: true });

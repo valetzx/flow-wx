@@ -377,10 +377,11 @@ async function buildArticlePage(url: string, abbr?: string): Promise<Response> {
       }
     });
     const content = proxifyHtml($("#js_content").html() || "");
+    const headExtra = `<meta name="viewport" content="width=device-width,initial-scale=1" />\n<style>img{max-width:100%;height:auto;display:block;margin:0 auto;}</style>`;
     const page = `<!DOCTYPE html>
 <html lang="zh-CN">
   <head>
-    <meta charset="utf-8" />
+    <meta charset="utf-8" />${headExtra}
     <title>${title}</title>
   </head>
   <body>
@@ -414,10 +415,11 @@ async function buildBiliPage(url: string): Promise<Response> {
       }
     });
     const content = $(".opus-module-content").first().html() || "";
+    const headExtra = `<meta name="viewport" content="width=device-width,initial-scale=1" />\n<style>img{max-width:100%;height:auto;display:block;margin:0 auto;}</style>`;
     const page = `<!DOCTYPE html>
 <html lang="zh-CN">
   <head>
-    <meta charset="utf-8" />
+    <meta charset="utf-8" />${headExtra}
     <title>${title}</title>
   </head>
   <body>
