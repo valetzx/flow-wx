@@ -61,7 +61,7 @@ function randomSentence() {
   return fallbackSentences[Math.floor(Math.random() * fallbackSentences.length)];
 }
 
-const WX_URL = process.env.WX_URL || path.join(__dirname, 'article.txt');
+const WX_URL = process.env.WX_URL;
 const DAILY_URL = 'https://www.cikeee.com/api?app_key=pub_23020990025';
 const DAILY_TTL = 60 * 60 * 8000;
 let dailyCache = { data: null, timestamp: 0 };
@@ -101,15 +101,53 @@ function parseArticles(text) {
   return arr;
 }
 
+function serializeArticles(arr) {
+  return arr
+    .map(a => {
+      const lines = [
+        '---',
+        `url: ${a.url || ''}`,
+        `title: ${a.title || ''}`,
+        'tags:'
+      ];
+      if (Array.isArray(a.tags)) {
+        for (const t of a.tags) lines.push(`  - ${t}`);
+      }
+      lines.push(`abbrlink: ${a.abbrlink || ''}`);
+      lines.push(`describe: ${a.describe || ''}`);
+      lines.push(`date: ${a.date || ''}`);
+      lines.push('---');
+      return lines.join('\n');
+    })
+    .join('\n\n');
+}
+
 let articles = [];
-try {
-  const res = await fetch(WX_URL);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const txt = await res.text();
+if (WX_URL) {
+  try {
+    const res = await fetch(WX_URL);
+    if (res.ok) {
+      const txt = await res.text();
+      articles = parseArticles(txt);
+    }
+  } catch {
+    // ignore fetch errors
+  }
+}
+if (articles.length === 0) {
+  const dir = path.join(__dirname, 'articles');
+  let txt = '';
+  try {
+    const files = await fs.readdir(dir);
+    for (const f of files) {
+      if (f.endsWith('.md')) {
+        txt += await fs.readFile(path.join(dir, f), 'utf8') + '\n';
+      }
+    }
+  } catch {
+    // ignore file errors
+  }
   articles = parseArticles(txt);
-} catch {
-  const localText = await fs.readFile(path.join(__dirname, 'article.txt'), 'utf8');
-  articles = parseArticles(localText);
 }
 articles.sort((a, b) => {
   const aLink = (a.abbrlink || '').toString();
@@ -418,6 +456,10 @@ app.get('/api/bil', async (_req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+app.get('/api/articles', (_req, res) => {
+  res.type('text/plain').send(serializeArticles(articles));
 });
 
 app.get('/api/daily', async (req, res) => {

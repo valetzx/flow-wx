@@ -36,7 +36,7 @@ const swOut = `const IMG_CACHE = ${JSON.stringify(cacheImgDomain)};\n${swRaw}`;
 await fs.writeFile(path.join(outDir, 'sw.js'), swOut);
 await fs.copyFile(path.join(__dirname, 'static', 'common.css'), path.join(outDir, 'common.css'));
 await fs.copyFile(path.join(__dirname, 'static', 'ideas.css'), path.join(outDir, 'ideas.css')).catch(() => {});
-await fs.copyFile(path.join(__dirname, 'article.txt'), path.join(outDir, 'article.txt')).catch(() => {});
+await fs.cp(path.join(__dirname, 'articles'), path.join(outDir, 'articles'), { recursive: true }).catch(() => {});
 await fs.copyFile(path.join(__dirname, 'static', 'common.js'), path.join(outDir, 'common.js'));
 await fs.copyFile(path.join(__dirname, 'static', 'sidebar.html'), path.join(outDir, 'sidebar.html'));
 await fs.copyFile(path.join(__dirname, 'static', 'settings.html'), path.join(outDir, 'settings.html'));
@@ -83,18 +83,35 @@ function parseArticles(text) {
   return arr;
 }
 
-const WX_URL = process.env.WX_URL || path.join(__dirname, 'article.txt');
+const WX_URL = process.env.WX_URL;
 const DAILY_URL = 'https://www.cikeee.com/api?app_key=pub_23020990025';
 
 let articles = [];
-try {
-  const res = await fetch(WX_URL);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const txt = await res.text();
+if (WX_URL) {
+  try {
+    const res = await fetch(WX_URL);
+    if (res.ok) {
+      const txt = await res.text();
+      articles = parseArticles(txt);
+    }
+  } catch {
+    // ignore fetch errors
+  }
+}
+if (articles.length === 0) {
+  const dir = path.join(__dirname, 'articles');
+  let txt = '';
+  try {
+    const files = await fs.readdir(dir);
+    for (const f of files) {
+      if (f.endsWith('.md')) {
+        txt += await fs.readFile(path.join(dir, f), 'utf8') + '\n';
+      }
+    }
+  } catch {
+    // ignore file errors
+  }
   articles = parseArticles(txt);
-} catch {
-  const localText = await fs.readFile(path.join(__dirname, 'article.txt'), 'utf8');
-  articles = parseArticles(localText);
 }
 articles.sort((a, b) => {
   const aLink = (a.abbrlink || '').toString();

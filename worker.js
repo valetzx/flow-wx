@@ -10,7 +10,7 @@ import ideasCss from "./static/ideas.css";
 import sidebarHtml from "./static/sidebar.html";
 import settingsHtml from "./static/settings.html";
 // import swHtml from "./sw.js";
-import articleText from "./article.txt";
+import articleText from "./articles/index.ts";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -698,7 +698,7 @@ async function cacheThenNetwork(request) {
       });
     }
 
-    if (pathname === "/article.txt") {
+    if (pathname === "/api/articles") {
       return new Response(articleText, {
         headers: withCors({ "Content-Type": "text/plain; charset=utf-8" }),
       });

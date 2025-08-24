@@ -1,4 +1,4 @@
-const ARTICLE_URL = 'https://flow-l95ei0m8.maozi.io/article.txt'
+const ARTICLE_URL = 'https://flow-l95ei0m8.maozi.io/api/articles'
 
 function parseArticles(text) {
   text = text.trim();
@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
           loadArticlesFromText(text);
         }
       } catch (e) {
-        console.error('Failed to fetch default article.txt', e);
+        console.error('Failed to fetch default articles list', e);
       }
     }
     if (res.wxLocal) {
@@ -231,7 +231,7 @@ document.getElementById('fileInput').addEventListener('change', async (e) => {
 document.getElementById('generateBtn').addEventListener('click', async () => {
   const text = document.getElementById('articleText').value.trim();
   if (!text) {
-    alert('Please input article.txt');
+    alert('Please input articles list');
     return;
   }
   chrome.storage.local.set({ articleText: text });
