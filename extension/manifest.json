@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Flow WX Extractor",
-  "description": "Generate /wx/api data from local article.txt",
+  "description": "Generate /wx/api data from local articles",
   "version": "1.0",
   "permissions": ["storage", "scripting"],
   "host_permissions": ["*://*/*"],

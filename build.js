@@ -36,7 +36,7 @@ const swOut = `const IMG_CACHE = ${JSON.stringify(cacheImgDomain)};\n${swRaw}`;
 await fs.writeFile(path.join(outDir, 'sw.js'), swOut);
 await fs.copyFile(path.join(__dirname, 'static', 'common.css'), path.join(outDir, 'common.css'));
 await fs.copyFile(path.join(__dirname, 'static', 'ideas.css'), path.join(outDir, 'ideas.css')).catch(() => {});
-await fs.copyFile(path.join(__dirname, 'article.txt'), path.join(outDir, 'article.txt')).catch(() => {});
+await fs.cp(path.join(__dirname, 'articles'), path.join(outDir, 'articles'), { recursive: true }).catch(() => {});
 await fs.copyFile(path.join(__dirname, 'static', 'common.js'), path.join(outDir, 'common.js'));
 await fs.copyFile(path.join(__dirname, 'static', 'sidebar.html'), path.join(outDir, 'sidebar.html'));
 await fs.copyFile(path.join(__dirname, 'static', 'settings.html'), path.join(outDir, 'settings.html'));
@@ -83,24 +83,29 @@ function parseArticles(text) {
   return arr;
 }
 
-const WX_URL = process.env.WX_URL || path.join(__dirname, 'article.txt');
+const ARTICLES_DIR = process.env.ARTICLES_DIR || path.join(__dirname, 'articles');
 const DAILY_URL = 'https://www.cikeee.com/api?app_key=pub_23020990025';
 
-let articles = [];
-try {
-  const res = await fetch(WX_URL);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const txt = await res.text();
-  articles = parseArticles(txt);
-} catch {
-  const localText = await fs.readFile(path.join(__dirname, 'article.txt'), 'utf8');
-  articles = parseArticles(localText);
+async function loadArticles() {
+  const arr = [];
+  try {
+    const files = await fs.readdir(ARTICLES_DIR);
+    for (const file of files) {
+      if (!file.endsWith('.md')) continue;
+      const content = await fs.readFile(path.join(ARTICLES_DIR, file), 'utf8');
+      const [meta] = parseArticles(content);
+      if (meta) arr.push(meta);
+    }
+  } catch {}
+  arr.sort((a, b) => {
+    const aLink = (a.abbrlink || '').toString();
+    const bLink = (b.abbrlink || '').toString();
+    return aLink.localeCompare(bLink);
+  });
+  return arr;
 }
-articles.sort((a, b) => {
-  const aLink = (a.abbrlink || '').toString();
-  const bLink = (b.abbrlink || '').toString();
-  return aLink.localeCompare(bLink);
-});
+
+const articles = await loadArticles();
 
 function proxifyHtml(html) {
   const $ = cheerio.load(html, { decodeEntities: false });
