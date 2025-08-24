@@ -79,7 +79,7 @@ function randomSentence() {
   ];
 }
 // 微信文章列表
-const WX_URL = Deno.env.get("WX_URL") || "article.txt";
+const WX_URL = Deno.env.get("WX_URL");
 const DAILY_URL = "https://www.cikeee.com/api?app_key=pub_23020990025";
 const DAILY_TTL = 60 * 60 * 8000;
 let dailyCache: { data: unknown; timestamp: number } = { data: null, timestamp: 0 };
@@ -135,15 +135,52 @@ function parseArticles(text: string): ArticleMeta[] {
   return articles;
 }
 
+function serializeArticles(arr: ArticleMeta[]): string {
+  return arr
+    .map((a) => {
+      const lines = [
+        '---',
+        `url: ${a.url || ''}`,
+        `title: ${a.title || ''}`,
+        'tags:',
+      ];
+      if (Array.isArray(a.tags)) {
+        for (const t of a.tags) lines.push(`  - ${t}`);
+      }
+      lines.push(`abbrlink: ${a.abbrlink || ''}`);
+      lines.push(`describe: ${a.describe || ''}`);
+      lines.push(`date: ${a.date || ''}`);
+      lines.push('---');
+      return lines.join('\n');
+    })
+    .join('\n\n');
+}
+
 let articles: ArticleMeta[] = [];
-try {
-  const res = await fetch(WX_URL);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const text = await res.text();
+if (WX_URL) {
+  try {
+    const res = await fetch(WX_URL);
+    if (res.ok) {
+      const text = await res.text();
+      articles = parseArticles(text);
+    }
+  } catch {
+    // ignore fetch errors
+  }
+}
+if (articles.length === 0) {
+  const dir = join(__dirname, "articles");
+  let text = "";
+  try {
+    for await (const entry of Deno.readDir(dir)) {
+      if (entry.isFile && entry.name.endsWith(".md")) {
+        text += await Deno.readTextFile(join(dir, entry.name)) + "\n";
+      }
+    }
+  } catch {
+    // ignore file errors
+  }
   articles = parseArticles(text);
-} catch {
-  const localText = await Deno.readTextFile(join(__dirname, "article.txt"));
-  articles = parseArticles(localText);
 }
 articles.sort((a, b) => {
   const aLink = (a.abbrlink || '').toString();
@@ -537,6 +574,12 @@ async function handler(req: Request): Promise<Response> {
     } catch (err) {
       return json({ error: err.message }, 500);
     }
+  }
+
+  if (pathname === "/api/articles") {
+    return new Response(serializeArticles(articles), {
+      headers: withCors({ "Content-Type": "text/plain; charset=utf-8" }),
+    });
   }
 
   // /api/daily —— 获取每日电影台词等信息
