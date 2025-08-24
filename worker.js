@@ -10,7 +10,17 @@ import ideasCss from "./static/ideas.css";
 import sidebarHtml from "./static/sidebar.html";
 import settingsHtml from "./static/settings.html";
 // import swHtml from "./sw.js";
-import articleText from "./article.txt";
+import art1 from "./articles/1a1a.md";
+import art2 from "./articles/1indoordesign.md";
+import art3 from "./articles/2a1c.md";
+import art4 from "./articles/2a1d.md";
+import art5 from "./articles/cnbuse.md";
+import art6 from "./articles/cloudflarenotes.md";
+import art7 from "./articles/genpyyds.md";
+import art8 from "./articles/dockerpluginrclone.md";
+import art9 from "./articles/test1.md";
+import art10 from "./articles/cnbdeepseekr1.md";
+import art11 from "./articles/cnbdockerfsat.md";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -49,6 +59,20 @@ function randomSentence() {
 
 let articles = [];
 let articlesInit = false;
+const articleTexts = [art1, art2, art3, art4, art5, art6, art7, art8, art9, art10, art11];
+const articleMap = {
+  "1a1a.md": art1,
+  "1indoordesign.md": art2,
+  "2a1c.md": art3,
+  "2a1d.md": art4,
+  "cnbuse.md": art5,
+  "cloudflarenotes.md": art6,
+  "genpyyds.md": art7,
+  "dockerpluginrclone.md": art8,
+  "test1.md": art9,
+  "cnbdeepseekr1.md": art10,
+  "cnbdockerfsat.md": art11,
+};
 let wxCache = { data: null, timestamp: 0 };
 let bilCache = { data: null, timestamp: 0 };
 let dailyCache = { data: null, timestamp: 0 };
@@ -98,18 +122,7 @@ function parseArticles(text) {
 async function getArticles(env) {
   if (!articlesInit) {
     articlesInit = true;
-    if (env.WX_URL) {
-      try {
-        const res = await fetch(env.WX_URL);
-        if (res.ok) {
-          const txt = await res.text();
-          articles = parseArticles(txt);
-        }
-      } catch {}
-    }
-    if (articles.length === 0) {
-      articles = parseArticles(articleText);
-    }
+    articles = articleTexts.map(t => parseArticles(t)[0]).filter(Boolean);
     articles.sort((a, b) => {
       const aLink = (a.abbrlink || '').toString();
       const bLink = (b.abbrlink || '').toString();
@@ -698,10 +711,14 @@ async function cacheThenNetwork(request) {
       });
     }
 
-    if (pathname === "/article.txt") {
-      return new Response(articleText, {
-        headers: withCors({ "Content-Type": "text/plain; charset=utf-8" }),
-      });
+    if (pathname.startsWith("/articles/")) {
+      const name = pathname.slice("/articles/".length);
+      const content = articleMap[name];
+      if (content) {
+        return new Response(content, {
+          headers: withCors({ "Content-Type": "text/plain; charset=utf-8" }),
+        });
+      }
     }
 
     if (pathname === "/add") {

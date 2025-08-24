@@ -4,13 +4,13 @@
 
 | 变量 | 默认值 | 说明 |
 | --- | --- | --- |
-| `WX_URL` | `必填` | 获取的微信公众号文章列表，如果不填会从本地 `article.txt` 读取 |
+| `ARTICLES_DIR` | `可选` | 微信公众号文章 Markdown 文件目录，默认读取本地 `articles` |
 | `API_DOMAINS` | `可选` | 提供 `/api/wx`、`/api/article` 和 `/api/daily` 的备用域名，多个域名用逗号或空格分隔 |
 | `IMG_DOMAINS` | `可选` | 图片代理 `/img` 的备用域名，多个域名用逗号或空格分隔 |
 
 ## 部署到 Deno  (推荐)
 
-直接fork+star本项目，修改 `article.txt` 以配置需要抓取的文章。每篇文章形如：
+直接 fork+star 本项目，在 `articles/` 目录下新增或修改 Markdown 文件以配置需要抓取的文章。每篇文章形如：
 
 ```txt
 ---
@@ -24,8 +24,7 @@ date: 2024-01-01 12:00:00
 ---
 ```
 
-若文件不以 `---` 开头，则仍按旧格式（每行一个 URL）解析。
-配置完成后在 Deno 面板中选择你 fork 的仓库导入，选择 `server.ts` 进行部署。
+每个文件命名为其 `abbrlink`，如 `1indoordesign.md`。配置完成后在 Deno 面板中选择你 fork 的仓库导入，选择 `server.ts` 进行部署。
 
 ## 部署到 Cloudflare Workers
 
@@ -35,7 +34,7 @@ date: 2024-01-01 12:00:00
 
 项目中的 HTML 与文本文件会在构建时作为字符串引入，规则已在 `wrangler.toml` 中配置。
 
-Workers 会读取 `WX_URL`、`API_DOMAINS` 和 `IMG_DOMAINS` 这几个环境变量。
+Workers 会读取 `API_DOMAINS` 和 `IMG_DOMAINS` 这几个环境变量。
 
 ## 构建静态站点并部署到 GitHub Pages
 
