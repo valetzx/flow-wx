@@ -68,11 +68,13 @@
           <option value="default">默认</option>
           <option value="gist">Gist</option>
           <option value="mark">Mark</option>
+          <option value="comment">评论</option>
         </select>
         <label class="flex items-center gap-2">
           <input id="saveToGist" type="checkbox" class="h-4 w-4">
           <span>存到gists</span>
         </label>
+        <input id="commentTokenInput" type="text" class="p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface hidden" placeholder="CNB_TOKEN">
         <input id="bookmarkTitleInput" type="text" class="p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface" placeholder="标题">
         <input id="bookmarkDescriptionInput" type="text" class="p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface" placeholder="描述 可选">
         <input id="bookmarkUrlInput" type="text" class="p-2 bg-[rgba(var(--on-surface),0.05)] rounded-lg text-on-surface" placeholder="链接 可选">
@@ -114,6 +116,7 @@
       const bookmarkEditModal = document.getElementById('bookmarkEditModal');
       const cardTypeSelect = document.getElementById('cardTypeSelect');
       const saveToGistToggle = document.getElementById('saveToGist');
+      const commentTokenInput = document.getElementById('commentTokenInput');
       const bookmarkTitleInput = document.getElementById('bookmarkTitleInput');
       const bookmarkDescriptionInput = document.getElementById('bookmarkDescriptionInput');
       const bookmarkUrlInput = document.getElementById('bookmarkUrlInput');
@@ -235,17 +238,38 @@
           bookmarkTextarea.placeholder = '每行格式: 标题|链接';
           bookmarkDescriptionInput.classList.add('hidden');
           bookmarkUrlInput.classList.add('hidden');
+          bookmarkTitleInput.classList.remove('hidden');
+          bookmarkTagsInput.classList.remove('hidden');
+          bookmarkHeightInput.classList.remove('hidden');
+          commentTokenInput.classList.add('hidden');
           saveToGistToggle.parentElement.classList.add('hidden');
         } else if (type === 'gist') {
           bookmarkTextarea.placeholder = '内容';
           bookmarkDescriptionInput.classList.add('hidden');
           bookmarkUrlInput.classList.add('hidden');
+          bookmarkTitleInput.classList.remove('hidden');
+          bookmarkTagsInput.classList.remove('hidden');
+          bookmarkHeightInput.classList.remove('hidden');
+          commentTokenInput.classList.add('hidden');
           saveToGistToggle.parentElement.classList.remove('hidden');
+        } else if (type === 'comment') {
+          bookmarkTextarea.placeholder = '评论内容';
+          bookmarkTitleInput.classList.add('hidden');
+          bookmarkDescriptionInput.classList.add('hidden');
+          bookmarkUrlInput.classList.add('hidden');
+          bookmarkTagsInput.classList.add('hidden');
+          bookmarkHeightInput.classList.add('hidden');
+          saveToGistToggle.parentElement.classList.add('hidden');
+          commentTokenInput.classList.remove('hidden');
         } else {
           bookmarkTextarea.placeholder = '内容';
+          bookmarkTitleInput.classList.remove('hidden');
           bookmarkDescriptionInput.classList.remove('hidden');
           bookmarkUrlInput.classList.remove('hidden');
+          bookmarkTagsInput.classList.remove('hidden');
+          bookmarkHeightInput.classList.remove('hidden');
           saveToGistToggle.parentElement.classList.add('hidden');
+          commentTokenInput.classList.add('hidden');
         }
       }
 
@@ -260,6 +284,43 @@
         const tags = bookmarkTagsInput.value.trim().split(/\s+/).filter(Boolean);
         const height = Math.max(120, parseInt(bookmarkHeightInput.value) || 280);
         const content = bookmarkTextarea.value;
+
+        if (type === 'comment') {
+          const messageText = content.trim();
+          const token = commentTokenInput.value.trim();
+          if (!messageText || !token) {
+            alert('请填写评论内容和CNB_TOKEN');
+            return;
+          }
+          const apiUrl = `https://cnbapi.haorwen.top/wss/apps/cnb-room/-/issues/3/comments`;
+          try {
+            const res = await fetch(apiUrl, {
+              method: 'POST',
+              headers: {
+                'accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                body: messageText
+              })
+            });
+            if (!res.ok) {
+              if (res.status === 401) {
+                alert('认证失败，请检查Token');
+              } else {
+                alert(`发送消息失败 (${res.status})`);
+              }
+              return;
+            }
+            localStorage.setItem('cnbToken', token);
+            alert('发送成功');
+          } catch (e) {
+            alert(e.message || '发送消息失败');
+            console.error(e);
+          }
+          return;
+        }
 
         if (type === 'mark') {
           const marks = parseMarks(content);
@@ -729,6 +790,7 @@
         bookmarkTextarea.value = '';
         bookmarkTagsInput.value = '';
         bookmarkHeightInput.value = '280';
+        commentTokenInput.value = localStorage.getItem('cnbToken') || '';
         saveToGistToggle.checked = false;
         editIndex = cards.length;
         updateTypeFields();
