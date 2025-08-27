@@ -942,7 +942,7 @@
           data.forEach(c => {
             let body = c.body || '';
             const images = [];
-            body = body.replace(/<img(?=[^>]*class="cnb-md-image__upload")(?=[^>]*src="([^"]+)")[^>]*>/g, (_, src) => {
+            body = body.replace(/<img(?=[^>]*class="[^"]*cnb-md-image__upload[^"]*")(?=[^>]*src="([^"]+)")[^>]*>/g, (_, src) => {
               images.push(`https://images.weserv.nl?url=https://cnb.cool${src}`);
               return '';
             });
