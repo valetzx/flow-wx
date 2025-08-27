@@ -929,6 +929,7 @@
 
       async function loadComments() {
         const apiUrl = `https://cnbapi.haorwen.top/wss/apps/cnb-room/-/issues/3/comments?page=1&page_size=20`;
+        const existingIds = new Set(cards.filter(c => c.commentId).map(c => c.commentId));
         try {
           const res = await fetch(apiUrl, {
             method: 'GET',
@@ -939,7 +940,9 @@
           });
           if (!res.ok) throw new Error('HTTP ' + res.status);
           const data = await res.json();
+          let updated = false;
           data.forEach(c => {
+            if (existingIds.has(c.id)) return;
             let body = c.body || '';
             const images = [];
             body = body.replace(/<img(?=[^>]*class="[^"]*cnb-md-image__upload[^"]*")(?=[^>]*src="([^"]+)")[^>]*>/g, (_, src) => {
@@ -948,13 +951,18 @@
             });
             body = body.replace(/<[^>]+>/g, '');
             cards.push({
+              commentId: c.id,
               title: c.author?.nickname || c.author?.username || '',
               description: body.trim(),
               tags: ['评论'],
               images
             });
+            updated = true;
           });
-          updateTagsAndRender();
+          if (updated) {
+            save();
+            updateTagsAndRender();
+          }
         } catch (err) {
           console.error('加载评论失败', err);
         }
