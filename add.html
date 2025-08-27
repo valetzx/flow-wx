@@ -390,10 +390,38 @@
         updateTagsAndRender();
       }
 
+      function getRandomColor() {
+        return '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0');
+      }
+
+      function createImage(src, alt) {
+        const img = document.createElement('img');
+        img.className = 'w-full rounded-t-2xl object-cover hover:opacity-90 transition-opacity aspect-video';
+        img.src = src;
+        img.alt = alt;
+        const randomHeight = 180 + Math.random() * 120;
+        img.style.height = `${randomHeight}px`;
+        img.style.backgroundColor = getRandomColor();
+        img.style.minHeight = '120px';
+        img.style.opacity = '0';
+        img.style.transition = 'opacity 0.5s';
+        img.addEventListener('load', () => {
+          img.style.opacity = '1';
+          img.style.backgroundColor = '';
+          img.style.minHeight = '';
+        });
+        return img;
+      }
+
       function createCard(item, index) {
         const wrapper = document.createElement('div');
         wrapper.className = 'masonry-item rounded-2xl shadow overflow-hidden flex flex-col';
         wrapper.style.setProperty('--card-height', (item.height || 280) + 'px');
+        if (Array.isArray(item.images) && item.images.length > 0) {
+          const imgSrc = item.images[Math.floor(Math.random() * item.images.length)];
+          const img = createImage(imgSrc, item.title);
+          wrapper.appendChild(img);
+        }
         const text = document.createElement('div');
         const cardHeight = item.height || 280;
         text.className = 'card-content p-5 flex flex-col gap-2 no-scrollbar';
@@ -911,10 +939,18 @@
           if (!res.ok) throw new Error('HTTP ' + res.status);
           const data = await res.json();
           data.forEach(c => {
+            let body = c.body || '';
+            const images = [];
+            body = body.replace(/<img[^>]*class="cnb-md-image__upload"[^>]*src="([^"]+)"[^>]*>/g, (_, src) => {
+              images.push(`https://images.weserv.nl?url=https://cnb.cool${src}`);
+              return '';
+            });
+            body = body.replace(/<[^>]+>/g, '');
             cards.push({
               title: c.author?.nickname || c.author?.username || '',
-              description: c.body,
-              tags: ['评论']
+              description: body.trim(),
+              tags: ['评论'],
+              images
             });
           });
           updateTagsAndRender();
