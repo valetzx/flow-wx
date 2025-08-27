@@ -390,39 +390,6 @@
         updateTagsAndRender();
       }
 
-      const imgStored = localStorage.getItem('imgDomains') || '';
-      let imgDomains = imgStored ? imgStored.split(/\r?\n|,/).map(s => s.trim()).filter(Boolean) : [];
-      if (imgDomains.length === 0 && Array.isArray(window.IMG_DOMAINS)) {
-        imgDomains = window.IMG_DOMAINS;
-      }
-
-      function buildUrl(path, domain) {
-        return domain ? domain.replace(/\/$/, '') + path : path;
-      }
-
-      function loadImgWithFallback(img) {
-        const path = img.dataset.path;
-        if (!path) return;
-        let index = 0;
-        function attempt() {
-          img.src = buildUrl(path, imgDomains[index] || '');
-        }
-        img.onerror = () => {
-          index++;
-          if (index < imgDomains.length) attempt();
-        };
-        attempt();
-      }
-
-      const observer = new IntersectionObserver((entries, obs) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            loadImgWithFallback(entry.target);
-            obs.unobserve(entry.target);
-          }
-        });
-      }, { rootMargin: '100px' });
-
       function getRandomColor() {
         return '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0');
       }
@@ -430,7 +397,7 @@
       function createImage(src, alt) {
         const img = document.createElement('img');
         img.className = 'w-full rounded-t-2xl object-cover hover:opacity-90 transition-opacity aspect-video';
-        img.dataset.path = src;
+        img.src = src;
         img.alt = alt;
         img.loading = 'lazy';
         const randomHeight = 180 + Math.random() * 120;
@@ -444,7 +411,6 @@
           img.style.backgroundColor = '';
           img.style.minHeight = '';
         });
-        observer.observe(img);
         return img;
       }
 
@@ -976,8 +942,8 @@
           data.forEach(c => {
             let body = c.body || '';
             const images = [];
-            body = body.replace(/<img[^>]*class="cnb-md-image__upload"[^>]*src="([^"]+)"[^>]*>/g, (_, src) => {
-              images.push(`?url=https://cnb.cool${src}`);
+            body = body.replace(/<img(?=[^>]*class="[^"]*cnb-md-image__upload[^"]*")(?=[^>]*src="([^"]+)")[^>]*>/g, (_, src) => {
+              images.push(`https://images.weserv.nl?url=https://cnb.cool${src}`);
               return '';
             });
             body = body.replace(/<[^>]+>/g, '');
