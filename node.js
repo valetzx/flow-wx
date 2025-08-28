@@ -21,8 +21,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// Serve files from the static directory
+// Serve files from the static and articles directories
 app.use(express.static(path.join(__dirname, 'static')));
+app.use('/articles', express.static(path.join(__dirname, 'articles')));
 
 const apiDomains = (process.env.API_DOMAINS || '').split(/[\s,]+/).filter(Boolean);
 const imgDomains = (process.env.IMG_DOMAINS || '').split(/[\s,]+/).filter(Boolean);
@@ -62,7 +63,7 @@ function randomSentence() {
   return fallbackSentences[Math.floor(Math.random() * fallbackSentences.length)];
 }
 
-const WX_URL = process.env.WX_URL || path.join(__dirname, 'article.txt');
+const ARTICLES_DIR = process.env.ARTICLES_DIR || path.join(__dirname, 'articles');
 const DAILY_URL = 'https://www.cikeee.com/api?app_key=pub_23020990025';
 const DAILY_TTL = 60 * 60 * 8000;
 let dailyCache = { data: null, timestamp: 0 };
@@ -102,21 +103,26 @@ function parseArticles(text) {
   return arr;
 }
 
-let articles = [];
-try {
-  const res = await fetch(WX_URL);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const txt = await res.text();
-  articles = parseArticles(txt);
-} catch {
-  const localText = await fs.readFile(path.join(__dirname, 'article.txt'), 'utf8');
-  articles = parseArticles(localText);
+async function loadArticles() {
+  const arr = [];
+  try {
+    const files = await fs.readdir(ARTICLES_DIR);
+    for (const file of files) {
+      if (!file.endsWith('.md')) continue;
+      const content = await fs.readFile(path.join(ARTICLES_DIR, file), 'utf8');
+      const [meta] = parseArticles(content);
+      if (meta) arr.push(meta);
+    }
+  } catch {}
+  arr.sort((a, b) => {
+    const aLink = (a.abbrlink || '').toString();
+    const bLink = (b.abbrlink || '').toString();
+    return aLink.localeCompare(bLink);
+  });
+  return arr;
 }
-articles.sort((a, b) => {
-  const aLink = (a.abbrlink || '').toString();
-  const bLink = (b.abbrlink || '').toString();
-  return aLink.localeCompare(bLink);
-});
+
+const articles = await loadArticles();
 
 async function fetchBiliTitle(url) {
   const controller = new AbortController();

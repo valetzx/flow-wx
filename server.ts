@@ -78,8 +78,8 @@ function randomSentence() {
     Math.floor(Math.random() * fallbackSentences.length)
   ];
 }
-// 微信文章列表
-const WX_URL = Deno.env.get("WX_URL") || "article.txt";
+// 微信文章列表目录
+const ARTICLE_DIR = Deno.env.get("ARTICLE_DIR") || "articles";
 const DAILY_URL = "https://www.cikeee.com/api?app_key=pub_23020990025";
 const DAILY_TTL = 60 * 60 * 8000;
 let dailyCache: { data: unknown; timestamp: number } = { data: null, timestamp: 0 };
@@ -135,21 +135,25 @@ function parseArticles(text: string): ArticleMeta[] {
   return articles;
 }
 
-let articles: ArticleMeta[] = [];
-try {
-  const res = await fetch(WX_URL);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const text = await res.text();
-  articles = parseArticles(text);
-} catch {
-  const localText = await Deno.readTextFile(join(__dirname, "article.txt"));
-  articles = parseArticles(localText);
+async function loadArticles(): Promise<ArticleMeta[]> {
+  const arr: ArticleMeta[] = [];
+  try {
+    for await (const entry of Deno.readDir(join(__dirname, ARTICLE_DIR))) {
+      if (!entry.isFile || !entry.name.endsWith('.md')) continue;
+      const content = await Deno.readTextFile(join(__dirname, ARTICLE_DIR, entry.name));
+      const [meta] = parseArticles(content);
+      if (meta) arr.push(meta as ArticleMeta);
+    }
+  } catch {}
+  arr.sort((a, b) => {
+    const aLink = (a.abbrlink || '').toString();
+    const bLink = (b.abbrlink || '').toString();
+    return aLink.localeCompare(bLink);
+  });
+  return arr;
 }
-articles.sort((a, b) => {
-  const aLink = (a.abbrlink || '').toString();
-  const bLink = (b.abbrlink || '').toString();
-  return aLink.localeCompare(bLink);
-});
+
+const articles: ArticleMeta[] = await loadArticles();
 
 async function fetchBiliTitle(url: string): Promise<string> {
   const controller = new AbortController();
@@ -586,6 +590,18 @@ async function handler(req: Request): Promise<Response> {
       const content = await Deno.readTextFile(filePath);
       return new Response(content, {
         headers: withCors({ "Content-Type": `${type}; charset=utf-8` }),
+      });
+    } catch {
+      return new Response("not found", { status: 404, headers: withCors() });
+    }
+  }
+
+  if (pathname.startsWith("/articles/")) {
+    const name = pathname.slice("/articles/".length);
+    try {
+      const content = await Deno.readTextFile(join(__dirname, ARTICLE_DIR, name));
+      return new Response(content, {
+        headers: withCors({ "Content-Type": "text/plain; charset=utf-8" }),
       });
     } catch {
       return new Response("not found", { status: 404, headers: withCors() });
