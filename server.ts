@@ -558,13 +558,14 @@ async function handler(req: Request): Promise<Response> {
 
   if (pathname === "/api/plugins") {
     try {
-      const plugins: { name: string; file: string }[] = [];
+      const plugins: { name: string; file: string; show: boolean }[] = [];
       for await (const entry of Deno.readDir(pluginDir)) {
         if (!entry.isFile || !entry.name.endsWith(".html")) continue;
         const html = await Deno.readTextFile(join(pluginDir, entry.name));
         const $ = cheerio.load(html);
         const title = $("title").text().trim() || entry.name.replace(/\.html$/, "");
-        plugins.push({ name: title, file: entry.name });
+        const show = $("meta[name='show']").attr("content") === "1";
+        plugins.push({ name: title, file: entry.name, show });
       }
       return json(plugins);
     } catch {

@@ -622,7 +622,9 @@
           const res = await fetch('/api/plugins');
           if (!res.ok) throw new Error('HTTP ' + res.status);
           plugins = await res.json();
+          currentPlugin = plugins.find(p => p.show) || null;
           renderTags(collectTags());
+          if (currentPlugin) await renderPlugin(currentPlugin);
         } catch (err) {
           console.error('加载插件列表失败', err);
         }
