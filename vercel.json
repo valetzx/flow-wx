@@ -2,6 +2,10 @@
   "version": 2,
   "routes": [
     {
+      "src": "/api/plugins",
+      "dest": "/api/plugins"
+    },
+    {
       "src": "/api/(.*)",
       "dest": "https://pigeonpig.github.io/api/$1",
       "headers": {

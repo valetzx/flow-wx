@@ -11,6 +11,7 @@ import sidebarHtml from "./static/sidebar.html";
 import settingsHtml from "./static/settings.html";
 // import swHtml from "./sw.js";
 import articleText from "./article.txt";
+import calculatorHtml from "./plugin/calculator.html";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -52,6 +53,16 @@ let articlesInit = false;
 let wxCache = { data: null, timestamp: 0 };
 let bilCache = { data: null, timestamp: 0 };
 let dailyCache = { data: null, timestamp: 0 };
+
+const pluginFiles = {
+  "calculator.html": calculatorHtml,
+};
+
+const plugins = Object.entries(pluginFiles).map(([file, html]) => {
+  const $ = cheerio.load(html);
+  const name = $("title").text().trim() || file.replace(/\.html$/, "");
+  return { name, file, content: html };
+});
 
 function parseArticles(text) {
   const trimmed = text.trim();
@@ -661,6 +672,26 @@ async function cacheThenNetwork(request) {
       const imgUrl = searchParams.get("url");
       if (!imgUrl) return new Response("missing url", { status: 400, headers: withCors() });
       return await proxyImage(imgUrl);
+    }
+
+    if (pathname === "/api/plugins") {
+      return new Response(
+        JSON.stringify(plugins.map(p => ({ name: p.name, file: p.file }))),
+        {
+          headers: withCors({ "Content-Type": "application/json; charset=utf-8" }),
+        },
+      );
+    }
+
+    if (pathname.startsWith("/plugin/")) {
+      const file = pathname.slice(8);
+      const plugin = plugins.find(p => p.file === file);
+      if (plugin) {
+        return new Response(plugin.content, {
+          headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
+        });
+      }
+      return new Response("not found", { status: 404, headers: withCors() });
     }
 
     if ([

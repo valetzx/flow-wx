@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>计算器</title>
+  <meta name="card-size" content="300x260">
+  <link rel="stylesheet" href="../common.css" />
+  <style>
+    body { background: rgb(var(--card)); color: rgb(var(--on-surface)); font-family: sans-serif; }
+    #calc { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.25rem; }
+    #calc button { padding: 0.5rem; background: rgb(var(--primary)); color: white; border: none; border-radius: 0.25rem; }
+    #calc input { grid-column: span 4; margin-bottom: 0.25rem; padding: 0.5rem; background: rgb(var(--surface)); color: rgb(var(--on-surface)); border: 1px solid rgb(var(--border)); border-radius: 0.25rem; }
+  </style>
+</head>
+<body class="p-2">
+  <script>document.documentElement.className = parent.document.documentElement.className;</script>
+  <div id="calc">
+    <input type="text" id="display" readonly />
+    <button data-v="7">7</button>
+    <button data-v="8">8</button>
+    <button data-v="9">9</button>
+    <button data-op="/">÷</button>
+    <button data-v="4">4</button>
+    <button data-v="5">5</button>
+    <button data-v="6">6</button>
+    <button data-op="*">×</button>
+    <button data-v="1">1</button>
+    <button data-v="2">2</button>
+    <button data-v="3">3</button>
+    <button data-op="-">-</button>
+    <button data-v="0">0</button>
+    <button id="clear">C</button>
+    <button id="equals">=</button>
+    <button data-op="+">+</button>
+  </div>
+  <script>
+    const display = document.getElementById('display');
+    let current = '';
+    document.querySelectorAll('[data-v]').forEach(btn => btn.addEventListener('click', () => {
+      current += btn.dataset.v;
+      display.value = current;
+    }));
+    document.querySelectorAll('[data-op]').forEach(btn => btn.addEventListener('click', () => {
+      current += ' ' + btn.dataset.op + ' ';
+      display.value = current;
+    }));
+    document.getElementById('clear').addEventListener('click', () => {
+      current = '';
+      display.value = '';
+    });
+    document.getElementById('equals').addEventListener('click', () => {
+      try {
+        display.value = eval(current);
+        current = display.value;
+      } catch (e) {
+        display.value = 'Err';
+        current = '';
+      }
+    });
+  </script>
+</body>
+</html>

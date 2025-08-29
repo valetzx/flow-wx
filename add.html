@@ -130,6 +130,9 @@
       const contentEl = document.getElementById('content');
       const isMobile = /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
 
+      let plugins = [];
+      let currentPlugin = null;
+
       const savedToken = localStorage.getItem('githubToken') || '';
       if (savedToken) {
         loadGistsBtn.classList.remove('hidden');
@@ -540,6 +543,17 @@
           btn.className = 'px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary bg-card';
           tagList.appendChild(btn);
         });
+        plugins.forEach(p => {
+          const btn = document.createElement('button');
+          btn.dataset.tag = p.name;
+          btn.dataset.pluginUrl = '/plugin/' + p.file;
+          btn.textContent = p.name;
+          btn.className = 'px-3 py-1 rounded-full text-sm border-2 border-transparent hover:border-primary bg-card';
+          if (currentPlugin && currentPlugin.name === p.name) {
+            btn.classList.add('bg-primary', 'text-white', 'border-primary');
+          }
+          tagList.appendChild(btn);
+        });
       }
 
       function applyFilter() {
@@ -568,6 +582,50 @@
           col.appendChild(createCard(item, idx));
           rIndex++;
         });
+      }
+
+      async function renderPlugin(p) {
+        columns.forEach(col => col.innerHTML = '');
+        try {
+          const res = await fetch('/plugin/' + p.file);
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const html = await res.text();
+          const doc = new DOMParser().parseFromString(html, 'text/html');
+          let width, height;
+          const size = doc.querySelector('meta[name="card-size"]')?.getAttribute('content');
+          if (size) {
+            const m = size.match(/(\d+)x(\d+)/);
+            if (m) {
+              width = parseInt(m[1]);
+              height = parseInt(m[2]);
+            }
+          }
+          const card = document.createElement('div');
+          card.className = 'bg-card text-on-surface rounded-lg overflow-hidden';
+          if (width) card.style.width = width + 'px';
+          if (height) card.style.height = height + 'px';
+          card.innerHTML = doc.body.innerHTML || '';
+          columns[0].appendChild(card);
+          card.querySelectorAll('script').forEach(old => {
+            const s = document.createElement('script');
+            if (old.src) s.src = old.src;
+            s.textContent = old.textContent;
+            old.replaceWith(s);
+          });
+        } catch (err) {
+          console.error('加载插件失败', err);
+        }
+      }
+
+      async function loadPlugins() {
+        try {
+          const res = await fetch('/api/plugins');
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          plugins = await res.json();
+          renderTags(collectTags());
+        } catch (err) {
+          console.error('加载插件列表失败', err);
+        }
       }
 
       function handleEditMark(index) {
@@ -839,10 +897,21 @@
           openCreateModal();
         });
       }
-      tagList.addEventListener('click', (e) => {
+      tagList.addEventListener('click', async (e) => {
         const btn = e.target.closest('button[data-tag]');
         if (!btn) return;
+        const pluginUrl = btn.dataset.pluginUrl;
         const tag = btn.dataset.tag;
+        if (pluginUrl) {
+          currentPlugin = plugins.find(p => '/plugin/' + p.file === pluginUrl) || null;
+          if (currentPlugin) await renderPlugin(currentPlugin);
+          selectedTags = [];
+          Array.from(tagList.querySelectorAll('button[data-tag]')).forEach(b => b.classList.remove('bg-primary', 'text-white', 'border-primary'));
+          btn.classList.add('bg-primary', 'text-white', 'border-primary');
+          return;
+        }
+        currentPlugin = null;
+        Array.from(tagList.querySelectorAll('button[data-plugin-url]')).forEach(b => b.classList.remove('bg-primary', 'text-white', 'border-primary'));
         if (!tag) return;
         if (allowMultiTags) {
           if (selectedTags.includes(tag)) {
@@ -969,6 +1038,7 @@
       }
 
       loadComments();
+      loadPlugins();
       hideSplash(true);
     });
   });

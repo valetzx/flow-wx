@@ -171,6 +171,28 @@ async function buildBiliPage(url) {
 
 await fs.mkdir(path.join(outDir, 'api'), { recursive: true });
 
+const pluginSrcDir = path.join(__dirname, 'plugin');
+const pluginOutDir = path.join(outDir, 'plugin');
+const pluginList = [];
+try {
+  const files = await fs.readdir(pluginSrcDir);
+  await fs.mkdir(pluginOutDir, { recursive: true });
+  for (const file of files) {
+    if (!file.endsWith('.html')) continue;
+    const src = path.join(pluginSrcDir, file);
+    const dest = path.join(pluginOutDir, file);
+    await fs.copyFile(src, dest);
+    const html = await fs.readFile(src, 'utf8');
+    const $ = cheerio.load(html);
+    const title = $('title').text().trim() || file.replace(/\.html$/, '');
+    pluginList.push({ name: title, file });
+  }
+} catch {}
+await fs.writeFile(
+  path.join(outDir, 'api', 'plugins'),
+  JSON.stringify(pluginList, null, 2)
+);
+
 // 抓取 /api/wx 的数据
 let wxData = null;
 try {

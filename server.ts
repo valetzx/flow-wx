@@ -32,6 +32,7 @@ const imgDomains = imgDomainsEnv
   .filter(Boolean);
 const cacheImgDomain = Deno.env.get("IMG_CACHE") || "";
 const cacheDir = join(__dirname, "cache");
+const pluginDir = join(__dirname, "plugin");
 try {
   await Deno.mkdir(cacheDir, { recursive: true });
 } catch {
@@ -552,6 +553,34 @@ async function handler(req: Request): Promise<Response> {
       return json(data);
     } catch (err) {
       return json({ error: err.message }, 500);
+    }
+  }
+
+  if (pathname === "/api/plugins") {
+    try {
+      const plugins: { name: string; file: string }[] = [];
+      for await (const entry of Deno.readDir(pluginDir)) {
+        if (!entry.isFile || !entry.name.endsWith(".html")) continue;
+        const html = await Deno.readTextFile(join(pluginDir, entry.name));
+        const $ = cheerio.load(html);
+        const title = $("title").text().trim() || entry.name.replace(/\.html$/, "");
+        plugins.push({ name: title, file: entry.name });
+      }
+      return json(plugins);
+    } catch {
+      return json([]);
+    }
+  }
+
+  if (pathname.startsWith("/plugin/")) {
+    const file = pathname.slice(8);
+    try {
+      const html = await Deno.readTextFile(join(pluginDir, file));
+      return new Response(html, {
+        headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
+      });
+    } catch {
+      return new Response("not found", { status: 404, headers: withCors() });
     }
   }
 
