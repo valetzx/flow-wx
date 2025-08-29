@@ -61,7 +61,8 @@ const pluginFiles = {
 const plugins = Object.entries(pluginFiles).map(([file, html]) => {
   const $ = cheerio.load(html);
   const name = $("title").text().trim() || file.replace(/\.html$/, "");
-  return { name, file, content: html };
+  const show = $("meta[name='show']").attr("content") === "1";
+  return { name, file, show, content: html };
 });
 
 function parseArticles(text) {
@@ -676,7 +677,7 @@ async function cacheThenNetwork(request) {
 
     if (pathname === "/api/plugins") {
       return new Response(
-        JSON.stringify(plugins.map(p => ({ name: p.name, file: p.file }))),
+        JSON.stringify(plugins.map(p => ({ name: p.name, file: p.file, show: p.show }))),
         {
           headers: withCors({ "Content-Type": "application/json; charset=utf-8" }),
         },

@@ -623,6 +623,13 @@
           if (!res.ok) throw new Error('HTTP ' + res.status);
           plugins = await res.json();
           renderTags(collectTags());
+          const defaultPlugin = plugins.find(p => p.show);
+          if (defaultPlugin) {
+            currentPlugin = defaultPlugin;
+            await renderPlugin(defaultPlugin);
+            const btn = tagList.querySelector(`button[data-plugin-url='/plugin/${defaultPlugin.file}']`);
+            if (btn) btn.classList.add('bg-primary', 'text-white', 'border-primary');
+          }
         } catch (err) {
           console.error('加载插件列表失败', err);
         }

@@ -185,7 +185,8 @@ try {
     const html = await fs.readFile(src, 'utf8');
     const $ = cheerio.load(html);
     const title = $('title').text().trim() || file.replace(/\.html$/, '');
-    pluginList.push({ name: title, file });
+    const show = $('meta[name="show"]').attr('content') === '1';
+    pluginList.push({ name: title, file, show });
   }
 } catch {}
 await fs.writeFile(
