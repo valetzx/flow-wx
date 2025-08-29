@@ -622,7 +622,10 @@
           card.className = 'bg-card text-on-surface rounded-lg overflow-hidden';
           if (width) card.style.width = width + 'px';
           if (height) card.style.height = height + 'px';
-          card.innerHTML = doc.body.innerHTML || '';
+          const head = Array.from(doc.querySelectorAll('head style'))
+            .map(e => e.outerHTML)
+            .join('');
+          card.innerHTML = head + (doc.body.innerHTML || '');
           columns[0].appendChild(card);
           card.querySelectorAll('script').forEach(old => {
             const s = document.createElement('script');
@@ -650,17 +653,20 @@
                 const size = doc.querySelector('meta[name="card-size"]')?.getAttribute('content');
                 if (size) {
                   const m = size.match(/(\d+)x(\d+)/);
-                  if (m) {
-                    p.width = parseInt(m[1]);
-                    p.height = parseInt(m[2]);
-                  }
-                }
-                p.cardHtml = doc.body.innerHTML || '';
-              } catch (e) {
-                console.error('加载插件失败', p.file, e);
+              if (m) {
+                p.width = parseInt(m[1]);
+                p.height = parseInt(m[2]);
               }
             }
+            const head = Array.from(doc.querySelectorAll('head style'))
+              .map(e => e.outerHTML)
+              .join('');
+            p.cardHtml = head + (doc.body.innerHTML || '');
+          } catch (e) {
+            console.error('加载插件失败', p.file, e);
           }
+        }
+      }
           renderTags(collectTags());
           applyFilter();
         } catch (err) {
