@@ -25,7 +25,7 @@ self.addEventListener("activate", (event) => {
 });
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
-  if (url.pathname === "/api/wx" || url.pathname === "/api/bil" || url.pathname === "/api/daily") {
+  if (url.pathname === "/api/wx" || url.pathname === "/api/bil" || url.pathname === "/api/daily" || url.pathname === "/api/plugins") {
     if (event.request.headers.get("x-skip-cache")) {
       event.respondWith(fetchAndCache(event.request));
     } else {
@@ -37,6 +37,8 @@ self.addEventListener("fetch", (event) => {
   ) {
     event.respondWith(cacheThenNetwork(event.request));
   } else if (url.pathname.startsWith("/img")) {
+    event.respondWith(cacheThenNetwork(event.request));
+  } else if (url.pathname.startsWith("/plugin/")) {
     event.respondWith(cacheThenNetwork(event.request));
   } else if (url.pathname.startsWith("/a/") && url.searchParams.get("view") === "1") {
     event.respondWith(cacheThenNetwork(event.request));
