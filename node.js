@@ -37,7 +37,8 @@ app.get('/api/plugins', async (_req, res) => {
       const html = await fs.readFile(path.join(pluginDir, file), 'utf8');
       const $ = cheerio.load(html);
       const title = $('title').text().trim() || file.replace(/\.html$/, '');
-      plugins.push({ name: title, file });
+      const show = $('meta[name="show"]').attr('content') === '1';
+      plugins.push({ name: title, file, show });
     }
     res.json(plugins);
   } catch {

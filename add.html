@@ -582,6 +582,24 @@
           col.appendChild(createCard(item, idx));
           rIndex++;
         });
+        if (selectedTags.length === 0 && !currentPlugin) {
+          plugins.filter(p => p.show && p.cardHtml).forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'bg-card text-on-surface rounded-lg overflow-hidden';
+            if (p.width) card.style.width = p.width + 'px';
+            if (p.height) card.style.height = p.height + 'px';
+            card.innerHTML = p.cardHtml;
+            const col = columns[rIndex % columns.length];
+            col.appendChild(card);
+            card.querySelectorAll('script').forEach(old => {
+              const s = document.createElement('script');
+              if (old.src) s.src = old.src;
+              s.textContent = old.textContent;
+              old.replaceWith(s);
+            });
+            rIndex++;
+          });
+        }
       }
 
       async function renderPlugin(p) {
@@ -622,7 +640,29 @@
           const res = await fetch('/api/plugins');
           if (!res.ok) throw new Error('HTTP ' + res.status);
           plugins = await res.json();
+          for (const p of plugins) {
+            if (p.show) {
+              try {
+                const r = await fetch('/plugin/' + p.file);
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                const html = await r.text();
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const size = doc.querySelector('meta[name="card-size"]')?.getAttribute('content');
+                if (size) {
+                  const m = size.match(/(\d+)x(\d+)/);
+                  if (m) {
+                    p.width = parseInt(m[1]);
+                    p.height = parseInt(m[2]);
+                  }
+                }
+                p.cardHtml = doc.body.innerHTML || '';
+              } catch (e) {
+                console.error('加载插件失败', p.file, e);
+              }
+            }
+          }
           renderTags(collectTags());
+          applyFilter();
         } catch (err) {
           console.error('加载插件列表失败', err);
         }
