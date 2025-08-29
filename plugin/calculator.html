@@ -5,59 +5,229 @@
   <title>计算器</title>
   <meta name="card-size" content="300x260">
   <meta name="show" content="1">
-  <link rel="stylesheet" href="common.css" />
   <style>
-    body { background: rgb(var(--card)); color: rgb(var(--on-surface)); font-family: sans-serif; }
-    #calc { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.25rem; }
-    #calc button { padding: 0.5rem; background: rgb(var(--primary)); color: white; border: none; border-radius: 0.25rem; }
-    #calc input { grid-column: span 4; margin-bottom: 0.25rem; padding: 0.5rem; background: rgb(var(--surface)); color: rgb(var(--on-surface)); border: 1px solid rgb(var(--border)); border-radius: 0.25rem; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Arial, sans-serif;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 10px;
+    }
+    
+    .calculator-container {
+      width: 300px;
+      height: 260px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .display-container {
+      position: relative;
+      margin-bottom: 15px;
+      flex-shrink: 0;
+    }
+    
+    #display {
+      width: 100%;
+      height: 50px;
+      padding: 10px 15px;
+      text-align: right;
+      font-size: 24px;
+      font-weight: 500;
+      background: rgba(255, 255, 255, 0.8);
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+      color: #2c3e50;
+      letter-spacing: 1px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    #calc {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      flex-grow: 1;
+    }
+    
+    #calc button {
+      border: none;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    #calc button:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .number {
+      background: linear-gradient(to bottom, #ffffff, #f5f5f5);
+      color: #2c3e50;
+      border: 1px solid #e0e0e0;
+    }
+    
+    .number:hover {
+      background: linear-gradient(to bottom, #f9f9f9, #e8e8e8);
+    }
+    
+    .operator {
+      background: linear-gradient(to bottom, #ff9966, #ff5e62);
+      color: white;
+    }
+    
+    .operator:hover {
+      background: linear-gradient(to bottom, #ff8566, #ff4b4f);
+    }
+    
+    #clear {
+      background: linear-gradient(to bottom, #ff6666, #ff1a1a);
+      color: white;
+    }
+    
+    #clear:hover {
+      background: linear-gradient(to bottom, #ff5252, #ff0000);
+    }
+    
+    #equals {
+      background: linear-gradient(to bottom, #4CAF50, #2E8B57);
+      color: white;
+      grid-column: span 1;
+    }
+    
+    #equals:hover {
+      background: linear-gradient(to bottom, #45a049, #27803a);
+    }
+    
+    .calculator-title {
+      text-align: center;
+      font-size: 14px;
+      color: #6c757d;
+      margin-bottom: 8px;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+    
+    .history {
+      position: absolute;
+      top: 5px;
+      left: 10px;
+      font-size: 12px;
+      color: #999;
+    }
   </style>
 </head>
-<body class="p-2">
-  <script>document.documentElement.className = parent.document.documentElement.className;</script>
-  <div id="calc">
-    <input type="text" id="display" readonly />
-    <button data-v="7">7</button>
-    <button data-v="8">8</button>
-    <button data-v="9">9</button>
-    <button data-op="/">÷</button>
-    <button data-v="4">4</button>
-    <button data-v="5">5</button>
-    <button data-v="6">6</button>
-    <button data-op="*">×</button>
-    <button data-v="1">1</button>
-    <button data-v="2">2</button>
-    <button data-v="3">3</button>
-    <button data-op="-">-</button>
-    <button data-v="0">0</button>
-    <button id="clear">C</button>
-    <button id="equals">=</button>
-    <button data-op="+">+</button>
+<body>
+  <div class="calculator-container">
+    <div class="calculator-title">科学计算器</div>
+    <div class="display-container">
+      <div class="history"></div>
+      <input type="text" id="display" readonly />
+    </div>
+    <div id="calc">
+      <button data-v="7" class="number">7</button>
+      <button data-v="8" class="number">8</button>
+      <button data-v="9" class="number">9</button>
+      <button data-op="/" class="operator">÷</button>
+      <button data-v="4" class="number">4</button>
+      <button data-v="5" class="number">5</button>
+      <button data-v="6" class="number">6</button>
+      <button data-op="*" class="operator">×</button>
+      <button data-v="1" class="number">1</button>
+      <button data-v="2" class="number">2</button>
+      <button data-v="3" class="number">3</button>
+      <button data-op="-" class="operator">-</button>
+      <button data-v="0" class="number">0</button>
+      <button id="clear" class="clear">C</button>
+      <button id="equals" class="equals">=</button>
+      <button data-op="+" class="operator">+</button>
+    </div>
   </div>
+
   <script>
     const display = document.getElementById('display');
+    const historyDisplay = document.querySelector('.history');
     let current = '';
-    document.querySelectorAll('[data-v]').forEach(btn => btn.addEventListener('click', () => {
-      current += btn.dataset.v;
-      display.value = current;
-    }));
-    document.querySelectorAll('[data-op]').forEach(btn => btn.addEventListener('click', () => {
-      current += ' ' + btn.dataset.op + ' ';
-      display.value = current;
-    }));
+    let lastCalculation = '';
+    
+    // 数字按钮事件
+    document.querySelectorAll('[data-v]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (display.value === 'Err' || display.value === 'Infinity') {
+          current = '';
+        }
+        current += btn.dataset.v;
+        display.value = current;
+      });
+    });
+    
+    // 操作符按钮事件
+    document.querySelectorAll('[data-op]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (display.value === 'Err' || display.value === 'Infinity') {
+          current = '';
+        }
+        current += ' ' + btn.dataset.op + ' ';
+        display.value = current;
+      });
+    });
+    
+    // 清除按钮事件
     document.getElementById('clear').addEventListener('click', () => {
       current = '';
       display.value = '';
+      historyDisplay.textContent = '';
     });
+    
+    // 等号按钮事件
     document.getElementById('equals').addEventListener('click', () => {
+      if (!current) return;
+      
       try {
-        display.value = eval(current);
-        current = display.value;
+        lastCalculation = current + ' =';
+        const result = eval(current);
+        
+        // 处理结果
+        if (typeof result === 'number' && !isNaN(result)) {
+          // 如果是整数，不显示小数部分
+          display.value = result % 1 === 0 ? result : result.toFixed(4);
+          current = display.value;
+          historyDisplay.textContent = lastCalculation;
+        } else {
+          display.value = 'Err';
+          current = '';
+          historyDisplay.textContent = '';
+        }
       } catch (e) {
         display.value = 'Err';
         current = '';
+        historyDisplay.textContent = '';
       }
     });
+    
+    // 初始化显示
+    display.value = '';
   </script>
 </body>
 </html>
