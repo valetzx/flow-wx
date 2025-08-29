@@ -1,50 +1,62 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8" />
   <title>计算器</title>
-  <meta name="card-size" content="300x260">
+  <meta name="card-width" content="320" />
+  <meta name="card-height" content="360" />
+  <link rel="stylesheet" href="../common.css" />
   <style>
-    :root {
-      color-scheme: light dark;
-    }
-    body {
-      margin: 0;
-      background: transparent;
-      color: rgb(var(--on-surface));
-      font-family: ui-sans-serif, system-ui;
-    }
-    input {
-      width: 100%;
-      padding: 4px;
-      margin-bottom: 4px;
-      background: rgb(var(--card));
-      border: 1px solid rgb(var(--border));
-      border-radius: 4px;
-      color: rgb(var(--on-surface));
-    }
-    button {
-      width: 100%;
-      padding: 6px;
-      background: rgb(var(--primary));
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-    }
+    body { background: rgb(var(--card)); color: rgb(var(--on-surface)); font-family: sans-serif; }
+    #calc { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.25rem; }
+    #calc button { padding: 0.5rem; background: rgb(var(--primary)); color: white; border: none; border-radius: 0.25rem; }
+    #calc input { grid-column: span 4; margin-bottom: 0.25rem; padding: 0.5rem; background: rgb(var(--surface)); color: rgb(var(--on-surface)); border: 1px solid rgb(var(--border)); border-radius: 0.25rem; }
   </style>
 </head>
-<body>
-  <div id="calculator" class="p-2">
-    <input id="num1" type="number" placeholder="数字1" />
-    <input id="num2" type="number" placeholder="数字2" />
-    <button id="calcBtn">相加</button>
-    <div id="result" class="mt-2"></div>
+<body class="p-2">
+  <script>document.documentElement.className = parent.document.documentElement.className;</script>
+  <div id="calc">
+    <input type="text" id="display" readonly />
+    <button data-v="7">7</button>
+    <button data-v="8">8</button>
+    <button data-v="9">9</button>
+    <button data-op="/">÷</button>
+    <button data-v="4">4</button>
+    <button data-v="5">5</button>
+    <button data-v="6">6</button>
+    <button data-op="*">×</button>
+    <button data-v="1">1</button>
+    <button data-v="2">2</button>
+    <button data-v="3">3</button>
+    <button data-op="-">-</button>
+    <button data-v="0">0</button>
+    <button id="clear">C</button>
+    <button id="equals">=</button>
+    <button data-op="+">+</button>
   </div>
   <script>
-    document.getElementById('calcBtn').addEventListener('click', () => {
-      const a = parseFloat(document.getElementById('num1').value) || 0;
-      const b = parseFloat(document.getElementById('num2').value) || 0;
-      document.getElementById('result').textContent = a + b;
+    const display = document.getElementById('display');
+    let current = '';
+    document.querySelectorAll('[data-v]').forEach(btn => btn.addEventListener('click', () => {
+      current += btn.dataset.v;
+      display.value = current;
+    }));
+    document.querySelectorAll('[data-op]').forEach(btn => btn.addEventListener('click', () => {
+      current += ' ' + btn.dataset.op + ' ';
+      display.value = current;
+    }));
+    document.getElementById('clear').addEventListener('click', () => {
+      current = '';
+      display.value = '';
+    });
+    document.getElementById('equals').addEventListener('click', () => {
+      try {
+        display.value = eval(current);
+        current = display.value;
+      } catch (e) {
+        display.value = 'Err';
+        current = '';
+      }
     });
   </script>
 </body>
