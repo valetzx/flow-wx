@@ -24,6 +24,27 @@ app.use((req, res, next) => {
 // Serve files from the static directory
 app.use(express.static(path.join(__dirname, 'static')));
 
+// Serve plugin files
+const pluginDir = path.join(__dirname, 'plugin');
+app.use('/plugin', express.static(pluginDir));
+
+app.get('/api/plugins', async (_req, res) => {
+  try {
+    const files = await fs.readdir(pluginDir);
+    const plugins = [];
+    for (const file of files) {
+      if (!file.endsWith('.html')) continue;
+      const html = await fs.readFile(path.join(pluginDir, file), 'utf8');
+      const $ = cheerio.load(html);
+      const title = $('title').text().trim() || file.replace(/\.html$/, '');
+      plugins.push({ name: title, file });
+    }
+    res.json(plugins);
+  } catch {
+    res.json([]);
+  }
+});
+
 const apiDomains = (process.env.API_DOMAINS || '').split(/[\s,]+/).filter(Boolean);
 const imgDomains = (process.env.IMG_DOMAINS || '').split(/[\s,]+/).filter(Boolean);
 const cacheImgDomain = process.env.IMG_CACHE || '';

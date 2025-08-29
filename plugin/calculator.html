@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>计算器</title>
+  <meta name="card-size" content="300x260">
+  <style>
+    :root {
+      color-scheme: light dark;
+    }
+    body {
+      margin: 0;
+      background: transparent;
+      color: rgb(var(--on-surface));
+      font-family: ui-sans-serif, system-ui;
+    }
+    input {
+      width: 100%;
+      padding: 4px;
+      margin-bottom: 4px;
+      background: rgb(var(--card));
+      border: 1px solid rgb(var(--border));
+      border-radius: 4px;
+      color: rgb(var(--on-surface));
+    }
+    button {
+      width: 100%;
+      padding: 6px;
+      background: rgb(var(--primary));
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div id="calculator" class="p-2">
+    <input id="num1" type="number" placeholder="数字1" />
+    <input id="num2" type="number" placeholder="数字2" />
+    <button id="calcBtn">相加</button>
+    <div id="result" class="mt-2"></div>
+  </div>
+  <script>
+    document.getElementById('calcBtn').addEventListener('click', () => {
+      const a = parseFloat(document.getElementById('num1').value) || 0;
+      const b = parseFloat(document.getElementById('num2').value) || 0;
+      document.getElementById('result').textContent = a + b;
+    });
+  </script>
+</body>
+</html>
