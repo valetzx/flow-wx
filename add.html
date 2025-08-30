@@ -585,9 +585,14 @@
         if (selectedTags.length === 0 && !currentPlugin) {
           plugins.filter(p => p.show && p.cardHtml).forEach(p => {
             const card = document.createElement('div');
-            card.className = 'bg-card text-on-surface rounded-lg overflow-hidden';
-            if (p.width) card.style.width = p.width + 'px';
-            if (p.height) card.style.height = p.height + 'px';
+            card.className = 'bg-card text-on-surface rounded-lg' + (p.autoScroll ? '' : ' overflow-hidden');
+            if (p.autoScroll) {
+              card.style.overflowY = 'auto';
+              card.style.height = '230px';
+            } else {
+              if (p.width) card.style.width = p.width + 'px';
+              if (p.height) card.style.height = p.height + 'px';
+            }
             card.innerHTML = p.cardHtml;
             const col = columns[rIndex % columns.length];
             col.appendChild(card);
@@ -609,19 +614,29 @@
           if (!res.ok) throw new Error('HTTP ' + res.status);
           const html = await res.text();
           const doc = new DOMParser().parseFromString(html, 'text/html');
-          let width, height;
+          let width, height, autoScroll = false;
           const size = doc.querySelector('meta[name="card-size"]')?.getAttribute('content');
           if (size) {
-            const m = size.match(/(\d+)x(\d+)/);
-            if (m) {
-              width = parseInt(m[1]);
-              height = parseInt(m[2]);
+            const ma = size.match(/^autox\d+/);
+            if (ma) {
+              autoScroll = true;
+            } else {
+              const m = size.match(/(\d+)x(\d+)/);
+              if (m) {
+                width = parseInt(m[1]);
+                height = parseInt(m[2]);
+              }
             }
           }
           const card = document.createElement('div');
-          card.className = 'bg-card text-on-surface rounded-lg overflow-hidden';
-          if (width) card.style.width = width + 'px';
-          if (height) card.style.height = height + 'px';
+          card.className = 'bg-card text-on-surface rounded-lg' + (autoScroll ? '' : ' overflow-hidden');
+          if (autoScroll) {
+            card.style.overflowY = 'auto';
+            card.style.height = '230px';
+          } else {
+            if (width) card.style.width = width + 'px';
+            if (height) card.style.height = height + 'px';
+          }
           const head = Array.from(doc.querySelectorAll('head style'))
             .map(e => e.outerHTML)
             .join('');
@@ -652,12 +667,17 @@
                 const doc = new DOMParser().parseFromString(html, 'text/html');
                 const size = doc.querySelector('meta[name="card-size"]')?.getAttribute('content');
                 if (size) {
-                  const m = size.match(/(\d+)x(\d+)/);
-              if (m) {
-                p.width = parseInt(m[1]);
-                p.height = parseInt(m[2]);
-              }
-            }
+                  const ma = size.match(/^autox\d+/);
+                  if (ma) {
+                    p.autoScroll = true;
+                  } else {
+                    const m = size.match(/(\d+)x(\d+)/);
+                    if (m) {
+                      p.width = parseInt(m[1]);
+                      p.height = parseInt(m[2]);
+                    }
+                  }
+                }
             const head = Array.from(doc.querySelectorAll('head style'))
               .map(e => e.outerHTML)
               .join('');
