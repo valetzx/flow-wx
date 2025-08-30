@@ -64,11 +64,42 @@ function setupSplash() {
   });
 }
 
+function setupTagListDrag() {
+  const tagList = document.getElementById('tagList');
+  if (!tagList) return;
+  let isDown = false;
+  let startX = 0;
+  let scrollLeft = 0;
+  tagList.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    isDown = true;
+    startX = e.pageX - tagList.offsetLeft;
+    scrollLeft = tagList.scrollLeft;
+    tagList.classList.add('cursor-grabbing');
+  });
+  tagList.addEventListener('mouseleave', () => {
+    isDown = false;
+    tagList.classList.remove('cursor-grabbing');
+  });
+  tagList.addEventListener('mouseup', () => {
+    isDown = false;
+    tagList.classList.remove('cursor-grabbing');
+  });
+  tagList.addEventListener('mousemove', (e) => {
+    if (!isDown) return;
+    e.preventDefault();
+    const x = e.pageX - tagList.offsetLeft;
+    const walk = x - startX;
+    tagList.scrollLeft = scrollLeft - walk;
+  });
+}
+
 window.commonReady = new Promise(resolve => {
   document.addEventListener('DOMContentLoaded', async () => {
     await includeHTML();
     initDarkMode();
     setupSplash();
+    setupTagListDrag();
     resolve();
   });
 });
