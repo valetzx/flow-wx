@@ -51,4 +51,8 @@ function initCaptcha() {
         });
     }
 }
-    
+document.addEventListener('DOMContentLoaded', () => {
+  (window.commonReady ? window.commonReady : Promise.resolve()).then(() => {
+    initCaptcha();   // 等 sidebar.html 注入后再绑事件
+  });
+});
