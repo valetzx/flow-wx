@@ -1,3 +1,13 @@
+---
+url: https://mp.weixin.qq.com/s/D0djf-EDZGX44oqGsbo8NQ
+title:
+tags:
+  - 日常
+  - 设计
+abbrlink: yizhan01
+describe: 分享一套落地的小型开放式城市驿站，邻学校，室内设家长休憩区（免费热水、空调、阅读角）与临时办公空间，二层含咖啡小食轻商业等
+date: 2025-09-14 21:20
+---
 
 ---
 url: https://mp.weixin.qq.com/s?__biz=MzA5NzQ4ODg5OA==&tempkey=MTMyN19MSXM4UUljL1k1b0JFQ3l1cDFRZC1ycjB6eVpHT3UzX1pFXzc1QmVRaEdZU2xSYmJFdWU1aVI0TzhoWTk3UDZKalZMMGtCTFVuQi1PaWtjTWtSZzV4Q0RZYUdRRTlkUWVSYlJ1N0hwQ3dYekw4MEFQdWFjV1pqWGQ1YUN6WEd3cHp2ZU5Ua2NYR3dwbGZfYklxZGNONldJQ21qV2k1ejNjZDB6V1Fnfn4%3D&chksm=10a1584027d6d156adbdc5e78ac1c88b1c59eba36c0091f517860b53529a90f76fbc8881a206#rd
@@ -17,6 +27,17 @@ tags:
 abbrlink: 1indoordesign
 describe: ▁▁
 date: 2024-09-05 22:36
+---
+
+---
+url: https://mp.weixin.qq.com/s/jMZ-xwe4lM1yu1vxU0nngQ
+title: 
+tags:
+  - 案例
+  - 设计
+abbrlink: 2a1e
+describe:   
+date: 2025-09-02 18:07
 ---
 
 ---
