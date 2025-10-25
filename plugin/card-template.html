@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>卡片模板</title>
+  <meta name="card-size" content="300x280">
+  <meta name="show" content="0">
+  <style>
+    /* 可在此处添加针对该卡片的额外样式 */
+  </style>
+</head>
+<body>
+  <script>document.documentElement.className = parent.document.documentElement.className;</script>
+  <div id="plugin-card">
+    <img id="plugin-img" class="w-full rounded-t-2xl object-cover hover:opacity-90 transition-opacity aspect-video" alt="" loading="lazy">
+    <div class="card-content p-5 flex flex-col gap-2 no-scrollbar">
+      <h2 id="plugin-title" class="text-xl font-semibold mb-1"></h2>
+      <p id="plugin-desc" class="text-sm leading-relaxed"></p>
+      <div class="flex items-end mt-auto gap-2">
+        <div id="plugin-tags" class="flex-1 flex overflow-x-auto whitespace-nowrap gap-1 no-scrollbar"></div>
+        <button class="text-xs text-[rgb(var(--card))] flex-none">ㅤ</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    // 可根据需要修改以下配置
+    const config = {
+      src: '', // 图片链接，留空则不渲染图片
+      title: '标题',
+      content: '内容',
+      tags: ['标签'],
+      height: 280, // 卡片高度
+    };
+
+    const card = document.getElementById('plugin-card');
+    card.className = 'masonry-item rounded-2xl shadow overflow-hidden flex flex-col';
+    card.style.setProperty('--card-height', config.height + 'px');
+
+    const img = document.getElementById('plugin-img');
+    if (config.src) {
+      img.src = config.src;
+      img.style.height = Math.round(config.height * 0.71) + 'px';
+    } else {
+      img.remove();
+    }
+
+    document.getElementById('plugin-title').textContent = config.title;
+    document.getElementById('plugin-desc').textContent = config.content;
+    document.querySelector('#plugin-card .card-content').style.maxHeight = config.height + 'px';
+
+    const tagBox = document.getElementById('plugin-tags');
+    config.tags.forEach(t => {
+      const span = document.createElement('span');
+      span.className = 'text-xs text-gray-400';
+      span.textContent = '#' + t;
+      tagBox.appendChild(span);
+    });
+  </script>
+</body>
+</html>
