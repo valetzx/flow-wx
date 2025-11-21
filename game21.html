@@ -319,15 +319,16 @@
             position: absolute;
             background: rgba(44, 62, 80, 0.95);
             color: #fff;
-            padding: 8px 12px;
+            padding: 12px 18px;
             border-radius: 8px;
-            font-size: 0.85em;
+            font-size: 1em;
             pointer-events: none;
             z-index: 2000;
             display: none;
             white-space: pre-line;
             border: 1px solid #fff;
             box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2);
+            line-height: 1.4;
         }
 
         /* 隐藏所有滚动条 */
@@ -581,6 +582,11 @@
                 </div>
                 <button class="btn-game" onclick="game.start()" style="font-size:1.8em; padding:15px 40px;">👉
                     开始挑战</button>
+                <!-- 添加快捷键提示 -->
+                <div style="text-align: center; margin-top: 10px; font-size: 0.9em; color: #666;">
+                    <div>🎮 游戏快捷键:</div>
+                    <div><b>Z</b> - 要牌 | <b>X</b> - 不要 | <b>B</b> - 背包</div>
+                </div>
             </div>
         </div>
 
@@ -920,6 +926,22 @@
                         if (mainEl) {
                             mainEl.innerHTML = item ? item.icon : '';
                             mainEl.title = item ? item.name : '点击打开背包';
+
+                            // 为主界面装备栏添加tooltip
+                            if (item) {
+                                mainEl.onmouseenter = (e) => {
+                                    const tt = document.getElementById('tooltip');
+                                    tt.innerText = `${item.name}\n${item.desc}`;
+                                    tt.style.display = 'block';
+                                    const rect = mainEl.getBoundingClientRect();
+                                    tt.style.left = rect.right + 5 + 'px';
+                                    tt.style.top = rect.top + 'px';
+                                };
+                                mainEl.onmouseleave = () => document.getElementById('tooltip').style.display = 'none';
+                            } else {
+                                mainEl.onmouseenter = null;
+                                mainEl.onmouseleave = null;
+                            }
                         }
                     }
                 };
@@ -930,11 +952,25 @@
 
                 const aiStrip = document.getElementById('ai-equip-strip');
                 aiStrip.innerHTML = '';
-                store.aiEquip.forEach(it => {
+                store.aiEquip.forEach((it, index) => {
                     const div = document.createElement('div');
                     div.className = 'equip-slot';
                     div.innerText = it ? it.icon : '';
                     div.title = it ? it.name : '';
+
+                    // 为AI装备栏添加tooltip
+                    if (it) {
+                        div.onmouseenter = (e) => {
+                            const tt = document.getElementById('tooltip');
+                            tt.innerText = `${it.name}\n${it.desc}`;
+                            tt.style.display = 'block';
+                            const rect = div.getBoundingClientRect();
+                            tt.style.left = rect.right + 5 + 'px';
+                            tt.style.top = rect.top + 'px';
+                        };
+                        div.onmouseleave = () => document.getElementById('tooltip').style.display = 'none';
+                    }
+
                     aiStrip.appendChild(div);
                 });
                 game.updateBuffs();  // 添加这行来更新分数显示
@@ -1392,7 +1428,119 @@
 
             // 初始化自定义鼠标指针
             initCustomCursor();
+
+            // 添加快捷键监听
+            initKeyboardShortcuts();
         };
+
+        // 快捷键功能
+        function initKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                // 防止在输入框中触发快捷键
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                    return;
+                }
+
+                const key = e.key.toLowerCase();
+
+                // ESC键：关闭所有弹窗
+                if (key === 'escape') {
+                    closeAllModals();
+                    return;
+                }
+
+                // 检查是否有弹窗打开
+                const isModalOpen = document.querySelector('.modal-overlay[style*="display: flex"]');
+
+                if (isModalOpen) {
+                    // 弹窗打开时的快捷键
+                    handleModalShortcuts(key);
+                } else {
+                    // 游戏进行中的快捷键
+                    handleGameShortcuts(key);
+                }
+            });
+        }
+
+        function closeAllModals() {
+            // 关闭背包弹窗
+            const bagModal = document.getElementById('bag-modal');
+            if (bagModal.style.display === 'flex') {
+                inventory.toggle();
+                return;
+            }
+
+            // 关闭确认弹窗
+            const confirmModal = document.getElementById('confirm-modal');
+            if (confirmModal.style.display === 'flex') {
+                confirmModal.style.display = 'none';
+                return;
+            }
+
+            // 关闭观星弹窗
+            const starModal = document.getElementById('star-modal');
+            if (starModal.style.display === 'flex') {
+                starModal.style.display = 'none';
+                return;
+            }
+        }
+
+        function handleModalShortcuts(key) {
+            switch (key) {
+                case 'z':
+                    // 确认操作
+                    const confirmModal = document.getElementById('confirm-modal');
+                    if (confirmModal.style.display === 'flex') {
+                        game.confirmNewRound(true);
+                    }
+                    break;
+
+                case 'x':
+                    // 取消操作
+                    const confirmModal2 = document.getElementById('confirm-modal');
+                    if (confirmModal2.style.display === 'flex') {
+                        game.confirmNewRound(false);
+                    }
+
+                    const starModal = document.getElementById('star-modal');
+                    if (starModal.style.display === 'flex') {
+                        starModal.style.display = 'none';
+                    }
+                    break;
+
+                case 'b':
+                case 'escape':
+                    // 关闭背包
+                    const bagModal = document.getElementById('bag-modal');
+                    if (bagModal.style.display === 'flex') {
+                        inventory.toggle();
+                    }
+                    break;
+            }
+        }
+
+        function handleGameShortcuts(key) {
+            switch (key) {
+                case 'z':
+                    // 要牌
+                    if (game.isPlayerTurn && !document.getElementById('btn-hit').disabled) {
+                        game.playerAction('hit');
+                    }
+                    break;
+
+                case 'x':
+                    // 不要
+                    if (game.isPlayerTurn && !document.getElementById('btn-pass').disabled) {
+                        game.playerAction('pass');
+                    }
+                    break;
+
+                case 'b':
+                    // 打开/关闭背包
+                    inventory.toggle();
+                    break;
+            }
+        }
 
         // 自定义鼠标指针功能
         function initCustomCursor() {
