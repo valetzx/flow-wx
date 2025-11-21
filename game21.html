@@ -77,7 +77,6 @@
             align-items: center;
             font-size: 1.4em;
             box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
-            cursor: default;
         }
 
         /* 主区域垂直居中 */
@@ -170,7 +169,6 @@
             background: white;
             border: 3px solid var(--ink-color);
             border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
-            cursor: pointer;
             font-family: var(--ui-font);
             box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.2);
             transition: transform 0.1s;
@@ -191,7 +189,6 @@
 
         .btn-game:disabled {
             opacity: 0.5;
-            cursor: not-allowed;
             box-shadow: none;
         }
 
@@ -266,7 +263,6 @@
             background: white;
             border: 3px solid var(--ink-color);
             border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
-            cursor: pointer;
             font-family: var(--ui-font);
             box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.2);
             transition: transform 0.1s;
@@ -306,7 +302,6 @@
 
         .ctx-btn {
             padding: 8px 15px;
-            cursor: pointer;
             font-family: var(--ui-font);
             border-bottom: 1px dashed #ccc;
             transition: background 0.1s;
@@ -350,6 +345,39 @@
             -ms-overflow-style: none;
         }
 
+        /* 自定义鼠标指针 */
+        * {
+            cursor: none !important;
+        }
+
+        .custom-cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 165, 0, 0.8);
+            border: 2px solid #2b2b2b;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s ease, background 0.2s ease;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .custom-cursor.click {
+            transform: scale(0.6);
+            transition: transform 0.15s ease;
+        }
+
+        /* 鼠标悬停在可点击元素上时变为蓝色 */
+        button:hover,
+        .item-slot:hover,
+        .equip-slot:hover,
+        .ctx-btn:hover,
+        .bag-close:hover,
+        .modal-btn:hover {
+            cursor: none !important;
+        }
+
         /* 背包弹窗 */
         .bag-window {
             width: 95%;
@@ -378,7 +406,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            cursor: pointer;
             font-weight: bold;
             box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
         }
@@ -447,7 +474,6 @@
             justify-content: center;
             align-items: center;
             font-size: 1.1em;
-            cursor: pointer;
             position: relative;
         }
 
@@ -504,6 +530,10 @@
                 opacity: 0.3;
                 filter: grayscale(1);
             }
+        }
+        /* 定义隐藏元素的class */
+        .buff-hidden-element {
+        display: none; /* 完全隐藏，不占据空间 */
         }
 
         /* 爱心闪烁动画 */
@@ -564,7 +594,7 @@
                     <div>
                         <span>😈 AI对手</span>
                         <span class="score-tag" id="ai-point-display">0/21</span>
-                        <small id="ai-buffs"></small>
+                        <small id="ai-buffs" class="buff-hidden-element"></small>
                     </div>
                     <div class="hearts-container" id="ai-hearts-container"></div>
                 </div>
@@ -595,7 +625,7 @@
                     <div>
                         <span>🤠 你的手牌</span>
                         <span class="score-tag" id="player-point-display">0/21</span>
-                        <small id="player-buffs"></small>
+                        <small id="player-buffs" class="buff-hidden-element"></small>
                     </div>
                     <div class="hearts-container" id="player-hearts-container"></div>
                 </div>
@@ -692,11 +722,13 @@
             weapon: { id: 'weapon', icon: '⚔️', name: '刺刀', type: 'equip', prob: 0.5, desc: '装备：输掉的人额外-1分\n(双方生效)' },
             shield: { id: 'shield', icon: '🛡️', name: '木盾', type: 'equip', prob: 0.5, desc: '装备：免受本次扣分惩罚\n(仅对自己)' },
             field: { id: 'field', icon: '⛺', name: '营地', type: 'equip', prob: 0.5, desc: '装备：最大点数上限变为24\n(双方生效)' },
+            insurance: { id: 'insurance', icon: '❤️', name: '心之容器', type: 'equip', prob: 0.4, desc: '装备：若对手爆牌，你可以恢复1点血' },
             swap: { id: 'swap', icon: '🔃', name: '交换', type: 'use', prob: 0.5, desc: '消耗：交换双方最后一张牌' },
             undo: { id: 'undo', icon: '↩️', name: '撤回', type: 'use', prob: 0.5, desc: '消耗：丢弃你的最后一张牌' },
             axe: { id: 'axe', icon: '🪓', name: '手斧', type: 'use', prob: 0.5, desc: '消耗：破坏对方一件装备' },
             star: { id: 'star', icon: '🌟', name: '观星', type: 'use', prob: 0.4, desc: '消耗：偷看牌堆底部的牌' },
-            book: { id: 'book', icon: '📖', name: '禁书', type: 'use', prob: 0.5, desc: '消耗：随机抽指定点数的牌' }
+            book: { id: 'book', icon: '📖', name: '禁书', type: 'use', prob: 0.5, desc: '消耗：随机抽指定点数的牌' },
+            reset: { id: 'reset', icon: '🔄', name: '重置', type: 'use', prob: 0.3, desc: '消耗：重置双方的底牌' },
         };
 
         const store = {
@@ -888,7 +920,6 @@
                         if (mainEl) {
                             mainEl.innerHTML = item ? item.icon : '';
                             mainEl.title = item ? item.name : '点击打开背包';
-                            mainEl.style.cursor = 'pointer';
                         }
                     }
                 };
@@ -1076,6 +1107,34 @@
                     else this.ui.msg(`牌库里没有 ${item.target}`);
                     return true;
                 }
+                if (key === 'reset') {
+                    if (store.deck.length === 0) { this.ui.msg("牌库空了"); return false; }
+
+                    // 只重置底牌：将双方的第一张牌洗回牌库，然后重新抽第一张牌
+                    if (store.playerHand.length > 0) {
+                        const playerFirstCard = store.playerHand[0];
+                        store.deck.push(playerFirstCard);
+                        // 从牌库中抽取一张新牌替换第一张牌
+                        const playerIdx = Math.floor(Math.random() * store.deck.length);
+                        const newPlayerCard = store.deck[playerIdx];
+                        store.deck.splice(playerIdx, 1);
+                        store.playerHand[0] = newPlayerCard;
+                    }
+
+                    if (store.aiHand.length > 0) {
+                        const aiFirstCard = store.aiHand[0];
+                        store.deck.push(aiFirstCard);
+                        // 从牌库中抽取一张新牌替换第一张牌
+                        const aiIdx = Math.floor(Math.random() * store.deck.length);
+                        const newAiCard = store.deck[aiIdx];
+                        store.deck.splice(aiIdx, 1);
+                        store.aiHand[0] = newAiCard;
+                    }
+
+                    this.redrawAll();
+                    this.ui.msg("重置了双方的底牌!");
+                    return true;
+                }
                 return false;
             },
 
@@ -1149,6 +1208,19 @@
                 // 木盾效果：免受本次扣分惩罚
                 if (pDmg > 0 && pShield) {
                     pDmg = 0; msg += " (盾牌防御!)";
+                }
+
+                // 心之容器效果：若对手爆牌，己方恢复1点血
+                const pInsurance = store.equip.some(x => x && x.id.startsWith('insurance'));
+                const aInsurance = store.aiEquip.some(x => x && x.id.startsWith('insurance'));
+
+                if (pInsurance && aSum > limit) {
+                    store.playerHearts = Math.min(store.playerHearts + 1, parseInt(document.getElementById('hearts-count').innerText));
+                    msg += " (心之容器: 恢复1血!)";
+                }
+                if (aInsurance && pSum > limit) {
+                    store.aiHearts = Math.min(store.aiHearts + 1, parseInt(document.getElementById('hearts-count').innerText));
+                    msg += " (对手心之容器: 恢复1血!)";
                 }
 
                 // 应用伤害到爱心系统
@@ -1317,7 +1389,82 @@
             document.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
             });
+
+            // 初始化自定义鼠标指针
+            initCustomCursor();
         };
+
+        // 自定义鼠标指针功能
+        function initCustomCursor() {
+            // 创建自定义鼠标指针元素
+            const cursor = document.createElement('div');
+            cursor.className = 'custom-cursor';
+            document.body.appendChild(cursor);
+
+            // 鼠标移动计时器
+            let mouseMoveTimer;
+            const hideCursorAfterInactivity = () => {
+                cursor.style.display = 'none';
+            };
+
+            // 重置计时器函数
+            const resetInactivityTimer = () => {
+                clearTimeout(mouseMoveTimer);
+                cursor.style.display = 'block';
+                mouseMoveTimer = setTimeout(hideCursorAfterInactivity, 5000); // 5秒后隐藏
+            };
+
+            // 鼠标移动事件
+            document.addEventListener('mousemove', (e) => {
+                cursor.style.left = e.clientX - 10 + 'px';
+                cursor.style.top = e.clientY - 10 + 'px';
+
+                // 检测鼠标是否悬停在可点击元素上
+                const hoveredElement = document.elementFromPoint(e.clientX, e.clientY);
+                const isHoveringClickable = hoveredElement && (
+                    hoveredElement.tagName === 'BUTTON' ||
+                    hoveredElement.classList.contains('item-slot') ||
+                    hoveredElement.classList.contains('equip-slot') ||
+                    hoveredElement.classList.contains('ctx-btn') ||
+                    hoveredElement.classList.contains('bag-close') ||
+                    hoveredElement.classList.contains('modal-btn')
+                );
+
+                if (isHoveringClickable) {
+                    cursor.style.background = 'rgba(189, 255, 150, 0.8)';
+                } else {
+                    cursor.style.background = 'rgba(255, 245, 227, 0.8)';
+                }
+
+                // 重置不活动计时器
+                resetInactivityTimer();
+            });
+
+            // 鼠标点击事件
+            document.addEventListener('mousedown', () => {
+                cursor.classList.add('click');
+                resetInactivityTimer(); // 点击时重置计时器
+            });
+
+            document.addEventListener('mouseup', () => {
+                cursor.classList.remove('click');
+                resetInactivityTimer(); // 释放时重置计时器
+            });
+
+            // 确保鼠标指针在弹窗等元素上也能正确显示
+            document.addEventListener('mouseenter', () => {
+                cursor.style.display = 'block';
+                resetInactivityTimer(); // 鼠标进入页面时重置计时器
+            });
+
+            document.addEventListener('mouseleave', () => {
+                cursor.style.display = 'none';
+                // 鼠标离开页面时不需要重置计时器
+            });
+
+            // 初始化时启动计时器
+            resetInactivityTimer();
+        }
     </script>
 </body>
 
