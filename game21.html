@@ -1175,7 +1175,6 @@
 
                     setTimeout(() => {
                         document.getElementById('confirm-modal').style.display = 'flex';
-                        document.querySelector('.modal-message').innerText = finalMsg + "\\n\\n对方: " + aSum + " / 己方: " + pSum;
                     }, 1500);
                 } else {
                     setTimeout(() => {
@@ -1198,8 +1197,8 @@
                 // 渲染玩家爱心
                 const playerContainer = document.getElementById('player-hearts-container');
                 playerContainer.innerHTML = '';
-                const maxHearts = Math.max(store.playerHearts, store.aiHearts);
-                for (let i = 0; i < maxHearts; i++) {
+                const playerMaxHearts = parseInt(document.getElementById('hearts-count').innerText);
+                for (let i = 0; i < playerMaxHearts; i++) {
                     const heart = document.createElement('span');
                     heart.className = 'heart' + (i >= store.playerHearts ? ' lost' : '');
                     heart.innerText = '❤️';
@@ -1209,19 +1208,12 @@
                 // 渲染AI爱心
                 const aiContainer = document.getElementById('ai-hearts-container');
                 aiContainer.innerHTML = '';
-                for (let i = 0; i < maxHearts; i++) {
+                const aiMaxHearts = parseInt(document.getElementById('hearts-count').innerText);
+                for (let i = 0; i < aiMaxHearts; i++) {
                     const heart = document.createElement('span');
                     heart.className = 'heart' + (i >= store.aiHearts ? ' lost' : '');
                     heart.innerText = '❤️';
                     aiContainer.appendChild(heart);
-                }
-
-                // 添加警告效果（爱心数量少于3时闪烁）
-                if (store.playerHearts <= 3 && store.playerHearts > 0) {
-                    const playerHearts = document.querySelectorAll('#player-hearts-container .heart:not(.lost)');
-                    playerHearts.forEach(heart => {
-                        heart.classList.add('warning');
-                    });
                 }
 
                 if (store.aiHearts <= 3 && store.aiHearts > 0) {
@@ -1298,6 +1290,7 @@
                     const selectedHearts = parseInt(document.getElementById('hearts-count').innerText);
                     store.playerHearts = selectedHearts;
                     store.aiHearts = selectedHearts;
+                    this.updateHearts();  // 确保更新爱心显示
                 }
                 this.newRound();
             }
