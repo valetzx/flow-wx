@@ -4,6 +4,7 @@ import mainHtml from "./main.html";
 import ideasHtml from "./ideas.html";
 import addHtml from "./add.html";
 import adminHtml from "./admin.html";
+import game21 from "./game21.html";
 import commonCss from "./static/common.css";
 import ideasCss from "./static/ideas.css";
 //import { commonJs } from "./static/common.js?raw";
@@ -376,6 +377,7 @@ export default {
     const ideasPage = injectConfig(ideasHtml, apiDomains, imgDomains);
     const addPage = injectConfig(addHtml, apiDomains, imgDomains);
     const adminPage = injectConfig(adminHtml, apiDomains, imgDomains);
+    const gamePage = injectConfig(game21, apiDomains, imgDomains);
 
     const articles = await getArticles(env);
 
@@ -726,6 +728,12 @@ async function cacheThenNetwork(request) {
 
     if (pathname === "/ideas") {
       return new Response(ideasPage, {
+        headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
+      });
+    }
+
+    if (pathname === "/game21") {
+      return new Response(gamePage, {
         headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
       });
     }

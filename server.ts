@@ -48,6 +48,9 @@ function injectConfig(html: string): string {
 const indexHtml = injectConfig(
   await Deno.readTextFile(join(__dirname, "main.html")),
 );
+const game21 = injectConfig(
+  await Deno.readTextFile(join(__dirname, "game21.html")),
+);
 const ideasHtml = injectConfig(
   await Deno.readTextFile(join(__dirname, "ideas.html")),
 );
@@ -633,6 +636,12 @@ async function handler(req: Request): Promise<Response> {
   // /ideas —— 灵感瀑布流页面
   if (pathname === "/ideas") {
     return new Response(ideasHtml, {
+      headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
+    });
+  }
+
+  if (pathname === "/game21") {
+    return new Response(game21, {
       headers: withCors({ "Content-Type": "text/html; charset=utf-8" }),
     });
   }

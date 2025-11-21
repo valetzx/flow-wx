@@ -59,6 +59,7 @@ function injectConfig(html) {
 }
 
 const indexHtml = injectConfig(await fs.readFile(path.join(__dirname, 'main.html'), 'utf8'));
+const game21 = injectConfig(await fs.readFile(path.join(__dirname, 'game21.html'), 'utf8'));
 const ideasHtml = injectConfig(await fs.readFile(path.join(__dirname, 'ideas.html'), 'utf8'));
 const addHtml = injectConfig(await fs.readFile(path.join(__dirname, 'add.html'), 'utf8'));
 const adminHtml = injectConfig(await fs.readFile(path.join(__dirname, 'admin.html'), 'utf8'));
@@ -516,6 +517,10 @@ app.get('/@admin', (req, res) => {
 
 app.get('/ideas', (req, res) => {
   res.type('html').send(ideasHtml);
+});
+
+app.get('/game21', (req, res) => {
+  res.type('html').send(game21);
 });
 
 app.get('/add', (req, res) => {
