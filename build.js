@@ -42,7 +42,6 @@ await fs.copyFile(path.join(__dirname, 'static', 'common.js'), path.join(outDir,
 await fs.copyFile(path.join(__dirname, 'static', 'sidebar.js'), path.join(outDir, 'sidebar.js'));
 await fs.copyFile(path.join(__dirname, 'static', 'sidebar.html'), path.join(outDir, 'sidebar.html'));
 await fs.copyFile(path.join(__dirname, 'static', 'settings.html'), path.join(outDir, 'settings.html'));
-await fs.copyFile(path.join(__dirname, 'static', 'game21.html'), path.join(outDir, 'game21.html'));
 
 const cheerio = await import('cheerio');
 

@@ -28,6 +28,10 @@
       "dest": "/ideas.html"
     },
     {
+      "src": "/game21",
+      "dest": "/game21.html"
+    },
+    {
       "src": "/add",
       "dest": "/add.html"
     }
