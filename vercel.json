@@ -1,5 +1,11 @@
 {
   "version": 2,
+  "builds": [
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    }
+  ],
   "rewrites": [
     { "source": "/oauth/fallback", "destination": "/api/oauth/fallback" },
     { "source": "/a/(.*)", "destination": "https://wx-api-deno.onmicrosoft.cn/a/$1" },
