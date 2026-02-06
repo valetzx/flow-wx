@@ -6,7 +6,7 @@
     { "source": "/ideas", "destination": "/ideas.html" },
     { "source": "/game21", "destination": "/game21.html" },
     { "source": "/add", "destination": "/add.html" },
-    { "source": "/api/cnb" },
+    { "source": "/api/cnb/(.*)" },
     { "source": "/api/(.*)", "destination": "https://pigeonpig.github.io/api/$1" }
   ],
   "headers": [
