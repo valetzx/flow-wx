@@ -5,9 +5,7 @@
     { "source": "/a/(.*)", "destination": "https://wx-api-deno.onmicrosoft.cn/a/$1" },
     { "source": "/ideas", "destination": "/ideas.html" },
     { "source": "/game21", "destination": "/game21.html" },
-    { "source": "/add", "destination": "/add.html" },
-    { "source": "/api/cnb/(.*)" },
-    { "source": "/api/(.*)", "destination": "https://pigeonpig.github.io/api/$1" }
+    { "source": "/add", "destination": "/add.html" }
   ],
   "headers": [
     {
