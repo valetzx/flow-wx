@@ -1,4 +1,3 @@
-// api/oauth/fallback.js
 export default async function handler(req, res) {
   try {
     const { code, state, scope } = req.query;

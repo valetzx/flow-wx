@@ -1,4 +1,3 @@
-// api/cnb/token.js
 import axios from 'axios';
 
 // 从Vercel环境变量读取
